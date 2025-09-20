@@ -1,6 +1,5 @@
-
-import { createServerClient } from "@supabase/ssr"
-import { type NextRequest, NextResponse } from "next/server"
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
 
 export function createClient(request: NextRequest) {
   // Create an unmodified response
@@ -10,31 +9,55 @@ export function createClient(request: NextRequest) {
     },
   });
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !supabaseKey) {
-    // This error will be caught by the middleware and handled gracefully.
-    throw new Error("Supabase URL and Anon Key are required in middleware.");
-  }
-
   const supabase = createServerClient(
-    supabaseUrl,
-    supabaseKey,
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() {
-          return request.cookies.getAll()
+        get(name: string) {
+          return request.cookies.get(name)?.value;
         },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            request.cookies.set(name, value);
-            response.cookies.set(name, value, options);
+        set(name: string, value: string, options: CookieOptions) {
+          // If the cookie is updated, update the request for the next middleware
+          request.cookies.set({
+            name,
+            value,
+            ...options,
+          });
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          });
+          // Also update the response so it sends the new cookie
+          response.cookies.set({
+            name,
+            value,
+            ...options,
+          });
+        },
+        remove(name: string, options: CookieOptions) {
+          // If the cookie is removed, update the request for the next middleware
+          request.cookies.set({
+            name,
+            value: "",
+            ...options,
+          });
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          });
+          // Also update the response so it sends the removed cookie
+          response.cookies.set({
+            name,
+            value: "",
+            ...options,
           });
         },
       },
-    },
-  )
+    }
+  );
 
-  return { supabase, response }
+  return { supabase, response };
 }
