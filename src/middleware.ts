@@ -1,44 +1,43 @@
 
 import { NextResponse, type NextRequest } from 'next/server'
-import { createClient } from '@/utils/supabase/middleware'
 
-export async function middleware(request: NextRequest) {
-  const { supabase, response } = createClient(request)
-
-  // Refresh session if expired - required for Server Components
-  // https://supabase.com/docs/guides/auth/auth-helpers/nextjs#managing-session-with-middleware
-  const { data: { session } } = await supabase.auth.getSession()
-
+export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Define protected routes
-  const protectedRoutes = ['/dashboard']
+  // Ambil cookie sesi dari request
+  const sessionCookie = request.cookies.get('session');
 
-  const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
+  // Definisikan rute yang dilindungi
+  const protectedRoutes = ['/dashboard'];
+  const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
 
+  // 1. Logika untuk rute yang dilindungi
   if (isProtectedRoute) {
-    // Our custom login page uses a simple cookie, not Supabase auth
-    const sessionCookie = request.cookies.get('session');
+    // Jika tidak ada cookie sesi dan pengguna mencoba mengakses rute yang dilindungi,
+    // alihkan ke halaman login.
     if (!sessionCookie) {
-      return NextResponse.redirect(new URL('/login', request.url))
+      return NextResponse.redirect(new URL('/login', request.url));
     }
   }
 
-  // If user is logged in and tries to access login page, redirect to dashboard
-  const sessionCookie = request.cookies.get('session');
+  // 2. Logika untuk halaman login
+  // Jika pengguna sudah memiliki sesi dan mencoba mengakses halaman login,
+  // alihkan mereka ke dashboard.
   if (sessionCookie && pathname === '/login') {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
+    return NextResponse.redirect(new URL('/dashboard', request.url));
   }
   
-  // If user requests to log out, clear the session cookie
+  // 3. Logika untuk logout
   if (pathname === '/logout') {
-      const logoutResponse = NextResponse.redirect(new URL('/login', request.url));
-      // Manually clear the cookie used by our custom login logic
-      logoutResponse.cookies.delete('session'); 
-      return logoutResponse;
+      // Buat respons untuk mengalihkan ke halaman login
+      const response = NextResponse.redirect(new URL('/login', request.url));
+      // Hapus cookie sesi untuk logout
+      response.cookies.delete('session');
+      return response;
   }
 
-  return response
+  // Jika tidak ada kondisi di atas yang terpenuhi, lanjutkan request seperti biasa.
+  return NextResponse.next();
 }
 
 export const config = {
