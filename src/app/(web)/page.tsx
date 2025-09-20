@@ -90,7 +90,7 @@ function HomePageContent({ fleet, promotions }: { fleet: Vehicle[], promotions: 
         const brands = new Set(
             fleet
                 .map(v => v.brand)
-                .filter(Boolean) // Filter out null, undefined, or empty strings
+                .filter((b): b is string => !!b) // Filter out null, undefined, or empty strings
         );
         return ['all', ...Array.from(brands)];
     }, [fleet]);
@@ -100,10 +100,11 @@ function HomePageContent({ fleet, promotions }: { fleet: Vehicle[], promotions: 
         const types = new Set(
             fleet
                 .map(v => v.type)
-                .filter(Boolean) // Filter out null, undefined, or empty strings
+                .filter((t): t is string => !!t) // Filter out null, undefined, or empty strings
         );
         return ['all', ...Array.from(types)];
     }, [fleet]);
+
 
     const sortedFleet = useMemo(() => {
         return [...filteredFleet].sort((a, b) => {
@@ -304,5 +305,3 @@ export default async function HomePage() {
     </LanguageProvider>
   )
 }
-
-    
