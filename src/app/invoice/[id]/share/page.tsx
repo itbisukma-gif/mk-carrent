@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import type { Order } from '@/lib/types';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,9 +38,14 @@ export default function SharedInvoicePage() {
     const [isDownloading, setIsDownloading] = useState(false);
     const [order, setOrder] = useState<Order | null>(null);
     const [isLoading, setIsLoading] = useState(true);
-    const supabase = createClient();
+    const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
     
     useEffect(() => {
+        setSupabase(createClient());
+    }, []);
+
+    useEffect(() => {
+        if (!supabase) return;
         const orderId = params.id as string;
         if (orderId) {
             const fetchOrder = async () => {

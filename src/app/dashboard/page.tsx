@@ -74,6 +74,7 @@ import {
 } from '@/components/ui/popover'
 import { createClient } from '@/utils/supabase/client';
 import { upsertDriver, deleteDriver, updateDriverStatus } from './actions'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 export const dynamic = 'force-dynamic';
 
@@ -174,11 +175,12 @@ export default function DashboardPage() {
   const [fleet, setFleet] = useState<Vehicle[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const supabase = createClient();
+  const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
   
   const [date, setDate] = React.useState<DateRange | undefined>(undefined);
 
   useEffect(() => {
+    setSupabase(createClient());
     // Set initial date range only on the client-side to avoid hydration errors
     setDate({
       from: new Date(),
@@ -192,6 +194,7 @@ export default function DashboardPage() {
   const { toast } = useToast();
 
    const fetchData = async () => {
+        if (!supabase) return;
         setIsLoading(true);
         const { data: driverData, error: driverError } = await supabase.from('drivers').select('*').order('created_at', { ascending: false });
         const { data: vehicleData, error: vehicleError } = await supabase.from('vehicles').select('*');
@@ -209,7 +212,7 @@ export default function DashboardPage() {
 
     useEffect(() => {
         fetchData();
-    }, []);
+    }, [supabase]);
   
   const stats = useMemo(() => {
     const pendingOrders = orders.filter(o => o.status === 'pending').length;

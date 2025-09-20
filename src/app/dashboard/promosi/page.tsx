@@ -20,6 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { createClient } from '@/utils/supabase/client';
 import { upsertVehicle } from '../armada/actions';
 import { upsertPromotion, deletePromotion } from './actions';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 
 export const dynamic = 'force-dynamic';
@@ -192,9 +193,14 @@ export default function PromosiPage() {
     const { toast } = useToast();
     const plugin = useRef(Autoplay({ delay: 5000, stopOnInteraction: true }));
     const [isDeleting, startDeleteTransition] = useTransition();
-    const supabase = createClient();
+    const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
+
+    useEffect(() => {
+        setSupabase(createClient());
+    }, []);
 
     const fetchData = async () => {
+        if (!supabase) return;
         setIsLoading(true);
         const { data: promoData, error: promoError } = await supabase.from('promotions').select('*');
         const { data: vehicleData, error: vehicleError } = await supabase.from('vehicles').select('*');
@@ -210,7 +216,7 @@ export default function PromosiPage() {
 
     useEffect(() => {
         fetchData();
-    }, []);
+    }, [supabase]);
 
     const handleAddClick = () => {
         setSelectedPromo(null);

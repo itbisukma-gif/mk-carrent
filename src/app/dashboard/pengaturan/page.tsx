@@ -13,6 +13,7 @@ import type { ContactInfo, TermsContent } from "@/lib/types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PlusCircle, Trash2, Loader2 } from "lucide-react";
 import { createClient } from '@/utils/supabase/client';
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export const dynamic = 'force-dynamic';
 
@@ -49,13 +50,18 @@ export default function PengaturanPage() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, startSavingTransition] = useTransition();
-  const supabase = createClient();
+  const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
 
   const [contactInfo, setContactInfo] = useState<ContactInfo | null>(null);
   const [terms, setTerms] = useState<TermsContent | null>(null);
   const [socialLinks, setSocialLinks] = useState<SocialLinkItem[]>([]);
 
   useEffect(() => {
+    setSupabase(createClient());
+  }, []);
+
+  useEffect(() => {
+    if (!supabase) return;
     const fetchData = async () => {
         setIsLoading(true);
         const { data: contactData, error: contactError } = await supabase.from('contact_info').select('*').single();

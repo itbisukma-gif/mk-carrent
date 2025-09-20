@@ -10,13 +10,19 @@ import { useLanguage } from '@/hooks/use-language';
 import { cn } from '@/lib/utils';
 import { WhatsAppIcon } from './icons';
 import { createClient } from '@/utils/supabase/client';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export function WhatsappFab() {
   const [contactInfo, setContactInfo] = useState<ContactInfo | null>(null);
   const { dictionary } = useLanguage();
-  const supabase = createClient();
+  const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
 
   useEffect(() => {
+    setSupabase(createClient());
+  }, []);
+
+  useEffect(() => {
+    if (!supabase) return;
     const fetchContactInfo = async () => {
         const { data } = await supabase.from('contact_info').select('whatsapp').single();
         setContactInfo(data as ContactInfo);

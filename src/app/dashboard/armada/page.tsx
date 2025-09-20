@@ -20,6 +20,7 @@ import { useVehicleLogo } from "@/hooks/use-vehicle-logo";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { upsertVehicle, deleteVehicle } from "./actions";
 import { createClient } from '@/utils/supabase/client';
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export const dynamic = 'force-dynamic';
 
@@ -351,9 +352,14 @@ export default function ArmadaPage() {
   const [isFormOpen, setFormOpen] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const { toast } = useToast();
-  const supabase = createClient();
+  const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
   
+  useEffect(() => {
+    setSupabase(createClient());
+  }, []);
+
   const fetchFleet = async () => {
+    if (!supabase) return;
     setIsLoading(true);
     const { data, error } = await supabase
         .from('vehicles')
@@ -370,7 +376,7 @@ export default function ArmadaPage() {
 
   useEffect(() => {
     fetchFleet();
-  }, []);
+  }, [supabase]);
 
   const handleAddClick = () => {
     setSelectedVehicle(null);

@@ -23,6 +23,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { createClient } from '@/utils/supabase/client';
 import { upsertTestimonial, deleteTestimonial, addGalleryItem, deleteGalleryItem, upsertFeature, deleteFeature } from './actions';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export const dynamic = 'force-dynamic';
 
@@ -202,9 +203,14 @@ function GalleryEditor({ vehicles }: { vehicles: Vehicle[] }) {
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [selectedVehicleName, setSelectedVehicleName] = useState<string | undefined>(undefined);
     const [isPending, startTransition] = useTransition();
-    const supabase = createClient();
+    const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
+
+    useEffect(() => {
+        setSupabase(createClient());
+    }, []);
 
     const fetchGallery = async () => {
+        if (!supabase) return;
         setIsLoading(true);
         const { data, error } = await supabase.from('gallery').select('*').order('created_at', { ascending: false });
         if (error) toast({ variant: 'destructive', title: 'Gagal memuat galeri', description: error.message });
@@ -214,7 +220,7 @@ function GalleryEditor({ vehicles }: { vehicles: Vehicle[] }) {
 
     useEffect(() => {
         fetchGallery();
-    }, []);
+    }, [supabase]);
 
     const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -379,9 +385,14 @@ function FeatureEditor() {
     const [selectedFeature, setSelectedFeature] = useState<FeatureItem | null>(null);
     const { toast } = useToast();
     const [isPending, startTransition] = useTransition();
-    const supabase = createClient();
+    const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
+
+    useEffect(() => {
+        setSupabase(createClient());
+    }, []);
 
     const fetchFeatures = async () => {
+        if (!supabase) return;
         setIsLoading(true);
         const { data, error } = await supabase.from('features').select('*').order('created_at', { ascending: false });
         if (error) toast({ variant: 'destructive', title: 'Gagal memuat keunggulan', description: error.message });
@@ -391,7 +402,7 @@ function FeatureEditor() {
 
     useEffect(() => {
         fetchFeatures();
-    }, []);
+    }, [supabase]);
 
 
     const handleAddClick = () => {
@@ -499,13 +510,18 @@ export default function TestimoniPage() {
   const [selectedTestimonial, setSelectedTestimonial] = useState<Testimonial | null>(null);
   const { toast } = useToast();
   const [isDeleting, startDeleteTransition] = useTransition();
-  const supabase = createClient();
+  const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
 
   const [filter, setFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
+  useEffect(() => {
+    setSupabase(createClient());
+  }, []);
+
   const fetchData = async () => {
+    if (!supabase) return;
     setIsLoading(true);
     const { data: testimonialsData, error: testimonialsError } = await supabase.from('testimonials').select('*').order('created_at', { ascending: false });
     const { data: vehiclesData, error: vehiclesError } = await supabase.from('vehicles').select('*');
@@ -521,7 +537,7 @@ export default function TestimoniPage() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [supabase]);
 
   const filteredTestimonials = useMemo(() => {
     if (filter === 'all') {

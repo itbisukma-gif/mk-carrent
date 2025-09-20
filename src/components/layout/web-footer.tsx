@@ -10,6 +10,7 @@ import { useState, useEffect } from 'react';
 import type { ContactInfo } from '@/lib/types';
 import Image from 'next/image';
 import { createClient } from '@/utils/supabase/client';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 function SocialLink({ platform, url }: { platform: string; url: string; }) {
   if (!url) return null;
@@ -30,9 +31,14 @@ export function WebFooter({ className }: { className?: string }) {
   const pathname = usePathname();
   const { dictionary } = useLanguage();
   const [contactInfo, setContactInfo] = useState<ContactInfo | null>(null);
-  const supabase = createClient();
+  const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
 
   useEffect(() => {
+    setSupabase(createClient());
+  }, []);
+
+  useEffect(() => {
+    if (!supabase) return;
     const fetchContactInfo = async () => {
         const { data } = await supabase.from('contact_info').select('*').single();
         setContactInfo(data);

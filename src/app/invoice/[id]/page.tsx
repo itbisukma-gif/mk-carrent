@@ -13,6 +13,7 @@ import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { createClient } from '@/utils/supabase/client';
 import type { Order } from '@/lib/types';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,7 +36,7 @@ export default function InvoicePage() {
     const params = useParams();
     const router = useRouter();
     const { toast } = useToast();
-    const supabase = createClient();
+    const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
 
     const [isDownloading, setIsDownloading] = useState(false);
     const [isAdmin, setIsAdmin] = useState(false);
@@ -43,6 +44,7 @@ export default function InvoicePage() {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
+        setSupabase(createClient());
         // Check for session cookie on client-side to determine if user is an admin
         if (typeof window !== 'undefined') {
             const sessionCookie = document.cookie.split('; ').find(row => row.startsWith('session='));
@@ -50,6 +52,10 @@ export default function InvoicePage() {
                 setIsAdmin(true);
             }
         }
+    }, []);
+
+    useEffect(() => {
+        if (!supabase) return;
         
         const orderId = params.id as string;
         if (orderId) {

@@ -37,11 +37,12 @@ import { id } from 'date-fns/locale';
 import { useLanguage } from '@/hooks/use-language';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/utils/supabase/client';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 
 export const OrderForm = forwardRef<HTMLDivElement, { vehicle: Vehicle }>(({ vehicle }, ref) => {
     const { dictionary, language } = useLanguage();
-    const supabase = createClient();
+    const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
     const [activeTab, setActiveTab] = useState('reservation');
     const [rentalDays, setRentalDays] = useState(1);
     const [startDate, setStartDate] = useState<Date | undefined>(undefined);
@@ -57,11 +58,15 @@ export const OrderForm = forwardRef<HTMLDivElement, { vehicle: Vehicle }>(({ veh
 
 
     useEffect(() => {
+        setSupabase(createClient());
         // Set initial dates only on the client-side to avoid hydration errors
         const today = startOfDay(new Date());
         setStartDate(today);
         setEndDate(addDays(today, 1));
+    }, []);
 
+    useEffect(() => {
+        if (!supabase) return;
         // Fetch available drivers
         const fetchDrivers = async () => {
             const { data, error } = await supabase

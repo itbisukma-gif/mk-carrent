@@ -7,15 +7,21 @@ import type { FeatureItem } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/utils/supabase/client';
 import { Loader2 } from 'lucide-react';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 
 export function FeaturesSection() {
     const [features, setFeatures] = useState<FeatureItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [expandedId, setExpandedId] = useState<string | null>(null);
-    const supabase = createClient();
+    const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
 
     useEffect(() => {
+        setSupabase(createClient());
+    }, []);
+
+    useEffect(() => {
+        if (!supabase) return;
         const fetchFeatures = async () => {
             setIsLoading(true);
             const { data, error } = await supabase.from('features').select('*').order('created_at');

@@ -276,7 +276,7 @@ function KonfirmasiComponent() {
         return `${days} ${dictionary.confirmation.days}`;
     }, [startDateStr, endDateStr, searchParams, dictionary, language]);
 
-    if (!vehicleId || !total || !service || !paymentMethod || !customerName || !customerPhone || !supabase) {
+    if (!vehicleId || !total || !service || !paymentMethod || !customerName || !customerPhone) {
         return (
              <div className="container mx-auto max-w-lg py-8 md:py-12 px-4">
                  <Alert variant="destructive">
@@ -304,6 +304,7 @@ function KonfirmasiComponent() {
     const formatCurrency = (value: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(value);
     
     const handleUploadSuccess = async (proofUrl: string) => {
+        if (!supabase) return;
         const newOrder: Omit<Order, 'created_at'> = {
             id: orderId,
             customerName: customerName,
@@ -571,5 +572,3 @@ export default function KonfirmasiPage() {
         </LanguageProvider>
     )
 }
-
-    

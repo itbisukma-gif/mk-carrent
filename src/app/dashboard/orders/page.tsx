@@ -22,6 +22,7 @@ import { formatDistanceToNow, differenceInHours } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { createClient } from '@/utils/supabase/client';
 import { updateDriverStatus } from '../actions';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export const dynamic = 'force-dynamic';
 
@@ -314,9 +315,14 @@ export default function OrdersPage() {
     const [drivers, setDrivers] = useState<Driver[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const { toast } = useToast();
-    const supabase = createClient();
+    const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
+
+    useEffect(() => {
+        setSupabase(createClient());
+    }, []);
 
     const fetchOrderData = async () => {
+        if (!supabase) return;
         setIsLoading(true);
         const { data: orderData, error: orderError } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
         const { data: driverData, error: driverError } = await supabase.from('drivers').select('*');
@@ -338,7 +344,7 @@ export default function OrdersPage() {
     
     useEffect(() => {
         fetchOrderData();
-    }, []);
+    }, [supabase]);
 
     const { pendingOrders, approvedOrders, completedOrders } = useMemo(() => {
         return {

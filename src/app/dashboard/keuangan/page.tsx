@@ -22,6 +22,7 @@ import type { ComboboxItem } from '@/components/ui/combobox';
 import { bankAccounts as initialBankAccounts, serviceCosts as initialServiceCosts } from '@/lib/data';
 import logos from '@/lib/logo-urls.json';
 import { createClient } from '@/utils/supabase/client';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,7 +33,7 @@ export default function KeuanganPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>(initialBankAccounts);
   const [serviceCosts, setServiceCosts] = useState(initialServiceCosts);
-  const supabase = createClient();
+  const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
 
 
   const formatCurrency = (value: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(value);
@@ -47,8 +48,12 @@ export default function KeuanganPage() {
   const [accountNumber, setAccountNumber] = useState("");
   const [accountName, setAccountName] = useState("");
 
+  useEffect(() => {
+    setSupabase(createClient());
+  }, []);
 
   useEffect(() => {
+    if (!supabase) return;
     const fetchOrders = async () => {
         setIsLoading(true);
         const { data, error } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
