@@ -1,3 +1,4 @@
+
 "use client";
 
 import { createClient } from '@supabase/supabase-js'
@@ -6,10 +7,20 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-// Lakukan pengecekan untuk memastikan variabel lingkungan ada
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Supabase URL and Anon Key are required.')
+// Fungsi untuk membuat klien Supabase dengan aman
+const createSupabaseClient = () => {
+    // Lakukan pengecekan untuk memastikan variabel lingkungan ada
+    if (!supabaseUrl || !supabaseAnonKey) {
+        console.warn('Supabase URL and/or Anon Key are not set. Supabase client will not be initialized.');
+        // Kembalikan objek dummy atau null untuk mencegah crash saat build
+        // di mana environment variables mungkin tidak tersedia.
+        // Di lingkungan client-side atau server-side yang sebenarnya, ini akan diisi.
+        return null;
+    }
+    return createClient(supabaseUrl, supabaseAnonKey);
 }
 
 // Buat dan ekspor klien Supabase
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Jika null, setiap upaya untuk menggunakannya akan gagal saat runtime,
+// tetapi tidak akan menghentikan proses build.
+export const supabase = createSupabaseClient()!;
