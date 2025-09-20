@@ -24,7 +24,9 @@ export function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
   const formatCurrency = (value: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(value);
   
   const hasDiscount = vehicle.discountPercentage && vehicle.discountPercentage > 0;
-  const discountedPrice = hasDiscount && vehicle.price ? vehicle.price * (1 - vehicle.discountPercentage / 100) : vehicle.price;
+  const discountedPrice = (hasDiscount && vehicle.price && vehicle.discountPercentage)
+    ? vehicle.price * (1 - vehicle.discountPercentage / 100)
+    : vehicle.price;
 
   const { logoUrl } = useVehicleLogo(vehicle.brand);
 
