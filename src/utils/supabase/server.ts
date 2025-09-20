@@ -76,7 +76,7 @@ export const createServiceRoleClient = () => {
 
 export const uploadImageFromDataUri = async (dataUri: string, folder: string, fileNamePrefix: string) => {
     // Use the service role client for all storage operations from the server
-    const supabase = createServiceRoleClient();
+    const supabase = createServiceRole_client();
     const matches = dataUri.match(/^data:(image\/(?:png|jpeg|jpg));base64,(.*)$/);
     
     if (!matches || matches.length !== 3) {
