@@ -1,8 +1,8 @@
-
 'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { createClient } from '@/utils/supabase/client';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,8 @@ import { useToast } from '@/hooks/use-toast';
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const supabase = createClient();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -21,28 +23,27 @@ export default function LoginPage() {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-    if (email === 'admin@example.com' && password === 'password') {
-      document.cookie = "session=true; path=/; max-age=86400;"; // Expires in 24 hours
+    if (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Login Gagal',
+        description: error.message || 'Email atau password yang Anda masukkan salah.',
+      });
+      setIsLoading(false);
+    } else {
       toast({
         title: 'Login Berhasil',
         description: 'Anda akan diarahkan ke dashboard.',
       });
-      // Force a full page reload to ensure the middleware can re-evaluate the session
-      // before redirecting to the new route. This is more robust than router.push().
-      window.location.href = '/dashboard';
-    } else {
-      toast({
-        variant: 'destructive',
-        title: 'Login Gagal',
-        description: 'Email atau password yang Anda masukkan salah.',
-      });
-       setIsLoading(false);
+      // Redirect to dashboard. The middleware will handle session checks.
+      // Using router.refresh() to ensure the server-side state (including cookies) is updated.
+      router.refresh();
     }
-    // No need to set isLoading to false here for the success case,
-    // as the page will redirect.
   };
 
   return (

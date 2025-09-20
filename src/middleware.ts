@@ -14,21 +14,20 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith(route)
   );
   
+  // If trying to access a protected route without a session, redirect to login
   if (isProtectedRoute && !session) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
   
+  // If there is a session and the user tries to access the login page, redirect to dashboard
   if (session && pathname === "/login") {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
+  // Handle logout
   if (pathname === "/logout") {
     const logoutResponse = NextResponse.redirect(new URL("/login", request.url));
     await supabase.auth.signOut();
-    // Manually clear the custom session cookie if it exists from old logic
-    if (request.cookies.has("session")) {
-        logoutResponse.cookies.delete("session");
-    }
     return logoutResponse;
   }
 
