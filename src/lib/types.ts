@@ -1,5 +1,4 @@
 
-
 export type Driver = {
   id: string;
   created_at?: string;
@@ -19,7 +18,6 @@ export type Vehicle = {
   transmission: 'Manual' | 'Matic';
   price: number | null;
   fuel: string | null;
-  code: string | null;
   year: number | null;
   rating: number | null;
   dataAiHint: string | null;

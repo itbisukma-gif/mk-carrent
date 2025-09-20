@@ -289,10 +289,6 @@ function VehicleForm({ vehicle, onSave, onCancel }: { vehicle?: Vehicle | null; 
                             <Input id="type" placeholder="cth. MPV" {...register('type')} />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="code">Kode Unit</Label>
-                            <Input id="code" placeholder="cth. AVZ-001" {...register('code')} />
-                        </div>
-                        <div className="space-y-2">
                             <Label htmlFor="passengers">Jumlah Penumpang</Label>
                             <Input id="passengers" type="number" placeholder="cth. 7" {...register('passengers')} />
                         </div>

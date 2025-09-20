@@ -1,7 +1,8 @@
 'use client'
 
-import { notFound, useParams } from 'next/navigation';
+import { notFound, useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
+import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -40,11 +41,13 @@ export const dynamic = 'force-dynamic';
 
 function VehicleDetail() {
   const params = useParams();
+  const router = useRouter();
   const { dictionary } = useLanguage();
   const { toast } = useToast();
   const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
   
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
+  const [variants, setVariants] = useState<Vehicle[]>([]);
   const [otherVehicles, setOtherVehicles] = useState<Vehicle[]>([]);
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [gallery, setGallery] = useState<GalleryItem[]>([]);
@@ -70,7 +73,7 @@ function VehicleDetail() {
     const fetchData = async () => {
         setIsLoading(true);
         
-        // Fetch vehicle
+        // Fetch current vehicle
         const { data: vehicleData, error: vehicleError } = await supabase.from('vehicles').select('*').eq('id', vehicleId).single();
         if (vehicleError || !vehicleData) {
             console.error('Error fetching vehicle', vehicleError);
@@ -79,17 +82,31 @@ function VehicleDetail() {
         }
         setVehicle(vehicleData);
 
-        // Fetch other vehicles
-        const { data: otherVehiclesData } = await supabase.from('vehicles').select('*').neq('id', vehicleId).limit(6);
+        // Fetch variants (same brand and name, but different id)
+        const { data: variantData } = await supabase
+            .from('vehicles')
+            .select('*')
+            .eq('brand', vehicleData.brand)
+            .eq('name', vehicleData.name)
+            .neq('id', vehicleData.id);
+        setVariants(variantData || []);
+
+        // Fetch other vehicles (different name)
+        const { data: otherVehiclesData } = await supabase
+          .from('vehicles')
+          .select('*')
+          .neq('brand', vehicleData.brand)
+          .neq('name', vehicleData.name)
+          .limit(6);
         setOtherVehicles(otherVehiclesData || []);
 
         const vehicleFullName = `${vehicleData.brand} ${vehicleData.name}`;
 
-        // Fetch testimonials for this vehicle
+        // Fetch testimonials for this vehicle model (brand and name)
         const { data: testimonialsData } = await supabase.from('testimonials').select('*').eq('vehicleName', vehicleFullName);
         setTestimonials(testimonialsData || []);
 
-        // Fetch gallery for this vehicle
+        // Fetch gallery for this vehicle model (brand and name)
         const { data: galleryData } = await supabase.from('gallery').select('*').eq('vehicleName', vehicleFullName);
         setGallery(galleryData || []);
 
@@ -99,6 +116,9 @@ function VehicleDetail() {
     fetchData();
   }, [params.id, supabase]);
 
+  const handleVariantChange = (variantId: string) => {
+    router.push(`/mobil/${variantId}`);
+  };
 
   const handleSubmitReview = async () => {
       if (userRating === 0 || !userComment.trim() || !vehicle) {
@@ -118,7 +138,6 @@ function VehicleDetail() {
           toast({ variant: 'destructive', title: 'Gagal Mengirim Ulasan', description: result.error.message });
       } else {
           toast({ title: 'Ulasan Terkirim', description: 'Terima kasih atas masukan Anda!' });
-          // Manually add the new testimonial to the local state to see it immediately
           if (result.data) {
              setTestimonials(prev => [result.data!, ...prev]);
           }
@@ -149,6 +168,7 @@ function VehicleDetail() {
   ];
 
   const { logoUrl } = useVehicleLogo(vehicle.brand);
+  const allVariants = [vehicle, ...variants].sort((a, b) => a.transmission.localeCompare(b.transmission));
 
   return (
     <div className="container py-6 md:py-10">
@@ -189,6 +209,25 @@ function VehicleDetail() {
             <StarRating rating={vehicle.rating || 0} totalReviews={testimonials.length} />
           </div>
           
+          {allVariants.length > 1 && (
+            <Card>
+              <CardHeader className="p-4">
+                <CardTitle className="text-base">Varian Tersedia</CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 pt-0">
+                <Tabs value={vehicle.id} onValueChange={handleVariantChange}>
+                  <TabsList className="grid w-full grid-cols-2">
+                    {allVariants.map(v => (
+                      <TabsTrigger key={v.id} value={v.id}>
+                        {v.transmission}
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                </Tabs>
+              </CardContent>
+            </Card>
+          )}
+
           <Card>
             <CardHeader className='p-4'>
                 <CardTitle className="text-base">{dictionary.vehicleDetail.details.title}</CardTitle>
