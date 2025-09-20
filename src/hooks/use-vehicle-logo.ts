@@ -21,6 +21,11 @@ export function useVehicleLogo(brandName: string) {
         let isMounted = true;
         
         const findLogo = async () => {
+            if (!brandName) {
+                if (isMounted) setLogoUrl(null);
+                return;
+            }
+            
             const brandKey = brandName.toLowerCase().replace(/ /g, '-') as BrandLogoKey;
 
             // 1. Check local JSON file first
