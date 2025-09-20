@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useTransition, useEffect } from "react";
@@ -28,6 +29,11 @@ function VehicleCard({ vehicle, onEdit, onDelete }: { vehicle: Vehicle, onEdit: 
         ? vehicle.price * (1 - vehicle.discountPercentage / 100)
         : vehicle.price;
     const isSpecialUnit = vehicle.unitType === 'khusus';
+
+    const formatPrice = (price: number | null) => {
+        if (price === null) return 'N/A';
+        return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(price);
+    }
 
     return (
         <Card className="overflow-hidden flex flex-col group">
@@ -114,12 +120,12 @@ function VehicleCard({ vehicle, onEdit, onDelete }: { vehicle: Vehicle, onEdit: 
                     <p className="text-sm text-muted-foreground">Harga / hari</p>
                     {hasDiscount && discountedPrice ? (
                         <div className="text-right">
-                            <p className="text-sm text-muted-foreground line-through">{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(vehicle.price || 0)}</p>
-                            <p className="text-lg font-bold text-primary">{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(discountedPrice)}</p>
+                            <p className="text-sm text-muted-foreground line-through">{formatPrice(vehicle.price)}</p>
+                            <p className="text-lg font-bold text-primary">{formatPrice(discountedPrice)}</p>
                         </div>
                     ) : (
                         <p className="text-lg font-bold text-primary">
-                            {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(vehicle.price || 0)}
+                           {formatPrice(vehicle.price)}
                         </p>
                     )}
                 </div>
@@ -169,13 +175,14 @@ function VehicleForm({ vehicle, onSave, onCancel }: { vehicle?: Vehicle | null; 
                  return;
             }
 
-            const vehicleData = {
+            const vehicleData: Vehicle = {
                 ...data,
                 price: Number(data.price),
                 year: data.year ? Number(data.year) : null,
                 passengers: data.passengers ? Number(data.passengers) : null,
                 stock: data.unitType === 'khusus' ? Number(data.stock) : null,
-                rating: data.rating || 5,
+                rating: data.rating || 5, // Ensure rating is not null
+                discountPercentage: data.discountPercentage || null,
             };
 
             const result = await upsertVehicle(vehicleData);
@@ -345,7 +352,8 @@ export default function ArmadaPage() {
   
   const fetchFleet = async () => {
     setIsLoading(true);
-    const { data, error } = await import('@/lib/supabase').then(m => m.supabase)
+    const { supabase } = await import('@/lib/supabase');
+    const { data, error } = await supabase
         .from('vehicles')
         .select('*')
         .order('created_at', { ascending: false });
@@ -360,7 +368,7 @@ export default function ArmadaPage() {
 
   useEffect(() => {
     fetchFleet();
-  }, [toast]);
+  }, []);
 
   const handleAddClick = () => {
     setSelectedVehicle(null);
@@ -474,3 +482,5 @@ export default function ArmadaPage() {
     </div>
   );
 }
+
+    
