@@ -1,16 +1,22 @@
 
 'use server';
 
-import { createClient } from '@/utils/supabase/server';
+import { createClient, uploadImageFromDataUri } from '@/utils/supabase/server';
 import type { Vehicle } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
 
 export async function upsertVehicle(vehicleData: Vehicle) {
     const supabase = createClient();
 
-    // If vehicleData has an id, it's an update. If not, it's an insert.
-    // Supabase's upsert handles this. If id is provided and exists, it updates.
-    // If id is not provided or doesn't exist, it inserts.
+    try {
+        if (vehicleData.photo && vehicleData.photo.startsWith('data:image')) {
+            vehicleData.photo = await uploadImageFromDataUri(vehicleData.photo, 'vehicles', `vehicle-${vehicleData.id}`);
+        }
+    } catch (uploadError) {
+        console.error("Vehicle image upload failed:", uploadError);
+        return { data: null, error: { message: (uploadError as Error).message } };
+    }
+
     const { data, error } = await supabase
         .from('vehicles')
         .upsert(vehicleData, { onConflict: 'id' })
@@ -23,13 +29,19 @@ export async function upsertVehicle(vehicleData: Vehicle) {
     }
 
     revalidatePath('/dashboard/armada');
-    revalidatePath('/'); // Also revalidate home page
+    revalidatePath('/');
     
     return { data, error: null };
 }
 
 export async function deleteVehicle(vehicleId: string) {
     const supabase = createClient();
+    
+    const { data: itemData, error: fetchError } = await supabase.from('vehicles').select('photo').eq('id', vehicleId).single();
+    if (fetchError) {
+        console.error("Error fetching vehicle for deletion:", fetchError);
+        return { error: fetchError };
+    }
     
     const { error } = await supabase
         .from('vehicles')
@@ -41,8 +53,14 @@ export async function deleteVehicle(vehicleId: string) {
         return { error };
     }
 
+    if(itemData.photo) {
+        const bucketName = 'mudakarya-bucket';
+        const filePath = itemData.photo.substring(itemData.photo.indexOf(bucketName) + bucketName.length + 1);
+        await supabase.storage.from(bucketName).remove([filePath]);
+    }
+
     revalidatePath('/dashboard/armada');
-    revalidatePath('/'); // Also revalidate home page
+    revalidatePath('/');
 
     return { error: null };
 }
