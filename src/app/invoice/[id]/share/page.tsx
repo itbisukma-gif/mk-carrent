@@ -11,7 +11,7 @@ import { Phone, ArrowLeft, Printer, Download, Loader2, AlertTriangle } from 'luc
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
-import { getSupabase } from '@/lib/supabase';
+import { createClient } from '@/utils/supabase/client';
 import type { Order } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
@@ -37,11 +37,11 @@ export default function SharedInvoicePage() {
     const [isDownloading, setIsDownloading] = useState(false);
     const [order, setOrder] = useState<Order | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const supabase = createClient();
     
     useEffect(() => {
         const orderId = params.id as string;
-        const supabase = getSupabase();
-        if (orderId && supabase) {
+        if (orderId) {
             const fetchOrder = async () => {
                 const { data, error } = await supabase
                     .from('orders')
@@ -62,7 +62,7 @@ export default function SharedInvoicePage() {
             setIsLoading(false);
         }
 
-    }, [params.id]);
+    }, [params.id, supabase]);
 
 
     if (isLoading) {

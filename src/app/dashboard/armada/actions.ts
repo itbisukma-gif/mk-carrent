@@ -1,57 +1,12 @@
 
 'use server';
 
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { createClient } from '@/utils/supabase/server';
 import type { Vehicle } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
 
-// This is a helper function to create a Supabase client that can be used in Server Components and Server Actions.
-// It reads the Supabase URL and anon key from environment variables and the session cookie from the request.
-const createClient = () => {
-  const cookieStore = cookies()
-
-  // Guard clause to prevent error during build process
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-    return null;
-  }
-
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
-        },
-        set(name: string, value: string, options: CookieOptions) {
-          try {
-            cookieStore.set({ name, value, ...options })
-          } catch (error) {
-            // The `set` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing
-            // user sessions.
-          }
-        },
-        remove(name: string, options: CookieOptions) {
-          try {
-            cookieStore.set({ name, value: '', ...options })
-          } catch (error) {
-            // The `delete` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing
-            // user sessions.
-          }
-        },
-      },
-    }
-  )
-}
-
 export async function upsertVehicle(vehicleData: Vehicle) {
     const supabase = createClient();
-    if (!supabase) {
-        return { data: null, error: { message: 'Supabase credentials are not configured.' } };
-    }
 
     // If vehicleData has an id, it's an update. If not, it's an insert.
     // Supabase's upsert handles this. If id is provided and exists, it updates.
@@ -75,9 +30,6 @@ export async function upsertVehicle(vehicleData: Vehicle) {
 
 export async function deleteVehicle(vehicleId: string) {
     const supabase = createClient();
-    if (!supabase) {
-        return { error: { message: 'Supabase credentials are not configured.' } };
-    }
     
     const { error } = await supabase
         .from('vehicles')

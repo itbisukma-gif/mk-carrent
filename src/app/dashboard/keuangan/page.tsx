@@ -21,7 +21,7 @@ import { cn } from '@/lib/utils';
 import type { ComboboxItem } from '@/components/ui/combobox';
 import { bankAccounts as initialBankAccounts, serviceCosts as initialServiceCosts } from '@/lib/data';
 import logos from '@/lib/logo-urls.json';
-import { getSupabase } from '@/lib/supabase';
+import { createClient } from '@/utils/supabase/client';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,6 +32,7 @@ export default function KeuanganPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>(initialBankAccounts);
   const [serviceCosts, setServiceCosts] = useState(initialServiceCosts);
+  const supabase = createClient();
 
 
   const formatCurrency = (value: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(value);
@@ -48,13 +49,7 @@ export default function KeuanganPage() {
 
 
   useEffect(() => {
-    const supabase = getSupabase();
     const fetchOrders = async () => {
-        if (!supabase) {
-            setIsLoading(false);
-            toast({ variant: 'destructive', title: 'Gagal memuat data keuangan', description: 'Supabase client tidak terinisialisasi.' });
-            return;
-        }
         setIsLoading(true);
         const { data, error } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
         if (error) {
@@ -65,7 +60,7 @@ export default function KeuanganPage() {
         setIsLoading(false);
     }
     fetchOrders();
-  }, [toast]);
+  }, [toast, supabase]);
 
 
   const financialReport = orders.map((order, index) => ({

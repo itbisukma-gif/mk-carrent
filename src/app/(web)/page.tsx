@@ -42,12 +42,13 @@ import { VehicleCard } from '@/components/vehicle-card';
 import { useLanguage } from '@/hooks/use-language';
 import { LanguageProvider } from '@/app/language-provider';
 import { FeaturesSection } from '@/components/features-section';
-import { getSupabase } from '@/lib/supabase';
+import { createClient } from '@/utils/supabase/client';
 
 export const dynamic = 'force-dynamic';
 
 function HomePageContent() {
     const { dictionary } = useLanguage();
+    const supabase = createClient();
     const [fleet, setFleet] = useState<Vehicle[]>([]);
     const [promotions, setPromotions] = useState<Promotion[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -63,12 +64,7 @@ function HomePageContent() {
     )
     
     useEffect(() => {
-        const supabase = getSupabase();
         const fetchData = async () => {
-            if (!supabase) {
-                setIsLoading(false);
-                return;
-            }
             setIsLoading(true);
             const { data: fleetData } = await supabase.from('vehicles').select('*');
             const { data: promotionsData } = await supabase.from('promotions').select('*');
@@ -77,7 +73,7 @@ function HomePageContent() {
             setIsLoading(false);
         }
         fetchData();
-    }, []);
+    }, [supabase]);
 
     const loadMoreCars = () => {
         setVisibleCars(prev => prev + 4);

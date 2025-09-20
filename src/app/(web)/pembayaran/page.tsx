@@ -13,12 +13,12 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Banknote, QrCode, ArrowLeft, Loader2 } from 'lucide-react';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, differenceInCalendarDays } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { useLanguage } from '@/hooks/use-language';
 import { LanguageProvider } from '@/app/language-provider';
 import { useToast } from '@/hooks/use-toast';
-import { getSupabase } from '@/lib/supabase';
+import { createClient } from '@/utils/supabase/client';
 import type { Vehicle } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
@@ -28,9 +28,10 @@ function PembayaranComponent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { toast } = useToast();
+    const supabase = createClient();
     
     const vehicleId = searchParams.get('vehicleId');
-    const days = parseInt(searchParams.get('days') || '1', 10);
+    const daysStr = searchParams.get('days');
     const service = searchParams.get('service');
     const startDateStr = searchParams.get('startDate');
     const endDateStr = searchParams.get('endDate');
@@ -40,14 +41,20 @@ function PembayaranComponent() {
     const [paymentMethod, setPaymentMethod] = useState('bank');
     const [fullName, setFullName] = useState('');
     const [phone, setPhone] = useState('');
+    
+    const days = useMemo(() => {
+        if (startDateStr && endDateStr) {
+            return differenceInCalendarDays(new Date(endDateStr), new Date(startDateStr)) || 1;
+        }
+        return parseInt(daysStr || '1', 10);
+    }, [startDateStr, endDateStr, daysStr]);
+
 
     useEffect(() => {
-        const supabase = getSupabase();
         if (!vehicleId) {
             notFound();
         }
         const fetchVehicle = async () => {
-            if (!supabase) return;
             const { data, error } = await supabase
                 .from('vehicles')
                 .select('*')
@@ -63,7 +70,7 @@ function PembayaranComponent() {
         };
 
         fetchVehicle();
-    }, [vehicleId]);
+    }, [vehicleId, supabase]);
 
 
     const { rentalPeriod, baseRentalCost, maticFee, driverFee, fuelFee, discountAmount, totalCost } = useMemo(() => {
@@ -117,7 +124,7 @@ function PembayaranComponent() {
 
     const confirmationUrl = useMemo(() => {
         if (!isFormValid || !vehicle) return '#';
-        let url = `/konfirmasi?paymentMethod=${paymentMethod}&total=${totalCost}&vehicleId=${vehicle.id}&days=${calculatedDuration}&service=${service}&name=${encodeURIComponent(fullName)}&phone=${encodeURIComponent(phone)}`;
+        let url = `/konfirmasi?paymentMethod=${paymentMethod}&total=${totalCost}&vehicleId=${vehicle.id}&days=${days}&service=${service}&name=${encodeURIComponent(fullName)}&phone=${encodeURIComponent(phone)}`;
         if (startDateStr) url += `&startDate=${startDateStr}`;
         if (endDateStr) url += `&endDate=${endDateStr}`;
         if (maticFee > 0) url += `&maticFee=${maticFee}`;

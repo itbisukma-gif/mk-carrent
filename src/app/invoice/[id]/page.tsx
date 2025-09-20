@@ -11,9 +11,8 @@ import { ArrowLeft, Download, Loader2, UserCheck, Share2, AlertTriangle } from '
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { getSupabase } from '@/lib/supabase';
+import { createClient } from '@/utils/supabase/client';
 import type { Order } from '@/lib/types';
-import { serviceCosts } from '@/lib/data';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,6 +35,7 @@ export default function InvoicePage() {
     const params = useParams();
     const router = useRouter();
     const { toast } = useToast();
+    const supabase = createClient();
 
     const [isDownloading, setIsDownloading] = useState(false);
     const [isAdmin, setIsAdmin] = useState(false);
@@ -52,8 +52,7 @@ export default function InvoicePage() {
         }
         
         const orderId = params.id as string;
-        const supabase = getSupabase();
-        if (orderId && supabase) {
+        if (orderId) {
             const fetchOrder = async () => {
                 const { data, error } = await supabase
                     .from('orders')
@@ -73,7 +72,7 @@ export default function InvoicePage() {
             setIsLoading(false);
         }
 
-    }, [params.id]);
+    }, [params.id, supabase]);
 
     if (isLoading) {
         return (

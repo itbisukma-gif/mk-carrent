@@ -23,7 +23,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { BankAccount, Order, Vehicle, Driver } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { WhatsAppIcon } from "@/components/icons";
-import { getSupabase } from '@/lib/supabase';
+import { createClient } from '@/utils/supabase/client';
 
 export const dynamic = 'force-dynamic';
 
@@ -68,8 +68,7 @@ function BankAccountDetails({ bank }: { bank: BankAccount }) {
 // In a real app, this would be an API call to a serverless function
 // that uploads the file to Firebase Storage. We'll simulate it for now.
 async function uploadFile(file: File, orderId: string): Promise<string> {
-    const supabase = getSupabase();
-    if (!supabase) throw new Error("Supabase client not initialized");
+    const supabase = createClient();
     if (!file) throw new Error("No file provided for upload.");
 
     const fileExtension = file.name.split('.').pop();
@@ -207,6 +206,7 @@ function KonfirmasiComponent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { toast } = useToast();
+    const supabase = createClient();
 
     const [vehicle, setVehicle] = useState<Vehicle | null>(null);
     const [driver, setDriver] = useState<Driver | null>(null);
@@ -237,13 +237,11 @@ function KonfirmasiComponent() {
 
 
     useEffect(() => {
-        const supabase = getSupabase();
         // This should only run on the client-side to avoid hydration mismatch
         const randomOrderId = `ORD-${Math.floor(Math.random() * 90000) + 10000}`;
         setOrderId(randomOrderId);
 
         const fetchVehicleAndDriver = async () => {
-            if (!supabase) return;
             if (vehicleId) {
                 const { data: vehicleData } = await supabase.from('vehicles').select('*').eq('id', vehicleId).single();
                 setVehicle(vehicleData);
@@ -254,7 +252,7 @@ function KonfirmasiComponent() {
             }
         };
         fetchVehicleAndDriver();
-    }, [vehicleId, driverId]);
+    }, [vehicleId, driverId, supabase]);
 
     const rentalPeriod = useMemo(() => {
         if (startDateStr && endDateStr) {
@@ -292,12 +290,6 @@ function KonfirmasiComponent() {
     const formatCurrency = (value: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(value);
     
     const handleUploadSuccess = async (proofUrl: string) => {
-        const supabase = getSupabase();
-        if (!supabase) {
-            toast({ variant: 'destructive', title: 'Kesalahan Konfigurasi', description: 'Supabase client tidak terinisialisasi.' });
-            return;
-        }
-
         const newOrder: Omit<Order, 'created_at'> = {
             id: orderId,
             customerName: customerName,

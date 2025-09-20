@@ -10,7 +10,7 @@ import type { ContactInfo } from "@/lib/types";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { WhatsAppIcon } from "@/components/icons";
-import { getSupabase } from '@/lib/supabase';
+import { createClient } from '@/utils/supabase/client';
 import { useToast } from "@/hooks/use-toast";
 
 export const dynamic = 'force-dynamic';
@@ -46,17 +46,12 @@ function SocialButton({ platform, url }: { platform: string; url: string; }) {
 function KontakPageContent() {
     const { dictionary } = useLanguage();
     const { toast } = useToast();
+    const supabase = createClient();
     const [contactInfo, setContactInfo] = useState<ContactInfo | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        const supabase = getSupabase();
         const fetchContactInfo = async () => {
-            if (!supabase) {
-                setIsLoading(false);
-                toast({ variant: 'destructive', title: 'Gagal memuat informasi kontak.', description: 'Supabase client tidak terinisialisasi.' });
-                return;
-            }
             setIsLoading(true);
             const { data, error } = await supabase.from('contact_info').select('*').single();
             if (error || !data) {
@@ -67,7 +62,7 @@ function KontakPageContent() {
             setIsLoading(false);
         };
         fetchContactInfo();
-    }, [toast]);
+    }, [toast, supabase]);
 
     if (isLoading) {
         return (

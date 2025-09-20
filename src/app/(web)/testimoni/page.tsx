@@ -10,7 +10,7 @@ import { LanguageProvider } from "@/app/language-provider";
 import { FeaturesSection } from "@/components/features-section";
 import { useState, useEffect } from "react";
 import type { Testimonial, GalleryItem } from "@/lib/types";
-import { getSupabase } from "@/lib/supabase";
+import { createClient } from '@/utils/supabase/client';
 import { useToast } from "@/hooks/use-toast";
 
 export const dynamic = 'force-dynamic';
@@ -31,18 +31,13 @@ function StarRating({ rating }: { rating: number }) {
 function TestimonialsPageContent() {
     const { dictionary } = useLanguage();
     const { toast } = useToast();
+    const supabase = createClient();
     const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
     const [gallery, setGallery] = useState<GalleryItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        const supabase = getSupabase();
         const fetchData = async () => {
-            if (!supabase) {
-                setIsLoading(false);
-                toast({ variant: 'destructive', title: 'Gagal memuat data', description: 'Supabase client tidak terinisialisasi.' });
-                return;
-            }
             setIsLoading(true);
             const { data: testimonialsData, error: testimonialsError } = await supabase.from('testimonials').select('*').order('created_at', { ascending: false });
             const { data: galleryData, error: galleryError } = await supabase.from('gallery').select('*').order('created_at', { ascending: false });
@@ -56,7 +51,7 @@ function TestimonialsPageContent() {
             setIsLoading(false);
         };
         fetchData();
-    }, [toast]);
+    }, [toast, supabase]);
 
     return (
         <>

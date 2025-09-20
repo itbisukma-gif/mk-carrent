@@ -1,8 +1,11 @@
 
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server'
+import { updateSession } from '@/utils/supabase/middleware'
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
+  // First, run the session updater. This will refresh session cookies.
+  const sessionResponse = await updateSession(request)
+
   const url = request.nextUrl.clone();
   const { pathname } = request.nextUrl;
   const hostname = request.headers.get('host') || 'localhost';
@@ -12,11 +15,10 @@ export function middleware(request: NextRequest) {
   const adminDomain = `admin.${mainDomain}`;
   const isLocalhost = hostname.includes('localhost');
 
-  // Get session cookie
-  const sessionCookie = request.cookies.get('session');
+  // Get session cookie from the potentially updated response
+  const sessionCookie = sessionResponse.cookies.get('session');
 
   // --- Admin Subdomain/Path Logic ---
-  // This logic applies if we are on the admin subdomain OR on localhost and the path starts with /dashboard
   const isAdminPath = (!isLocalhost && hostname === adminDomain) || (isLocalhost && (pathname.startsWith('/dashboard') || pathname.startsWith('/login')));
 
   if (isAdminPath) {
@@ -34,6 +36,8 @@ export function middleware(request: NextRequest) {
     if (pathname === '/logout') {
       const response = NextResponse.redirect(new URL('/login', request.url));
       response.cookies.set('session', '', { maxAge: -1, path: '/' });
+      // Also clear Supabase auth cookies
+      response.cookies.delete(`sb-${process.env.NEXT_PUBLIC_SUPABASE_URL!.split('.')[0].substring(8)}-auth-token`, { path: '/' });
       return response;
     }
     
@@ -43,7 +47,8 @@ export function middleware(request: NextRequest) {
         return NextResponse.rewrite(url);
     }
     
-    return NextResponse.next();
+    // For all other valid admin paths, return the response from updateSession
+    return sessionResponse;
   }
 
   // --- Main Domain Logic ---
@@ -52,7 +57,8 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/', request.url));
   }
   
-  return NextResponse.next();
+  // For all public paths, return the response from updateSession
+  return sessionResponse;
 }
 
 // Config matcher to run on every request
@@ -60,12 +66,11 @@ export const config = {
   matcher: [
     /*
      * Match all request paths except for the ones starting with:
-     * - api (API routes)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - logo-icon.png (logo file)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|logo-icon.png).*)',
+    '/((?!_next/static|_next/image|favicon.ico|logo-icon.png).*)',
   ],
 }

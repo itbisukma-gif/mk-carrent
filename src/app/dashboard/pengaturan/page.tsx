@@ -12,7 +12,7 @@ import { useState, useEffect, useTransition } from "react";
 import type { ContactInfo, TermsContent } from "@/lib/types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PlusCircle, Trash2, Loader2 } from "lucide-react";
-import { getSupabase } from "@/lib/supabase";
+import { createClient } from '@/utils/supabase/client';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,15 +33,13 @@ type SocialLinkItem = {
 
 // Server Actions
 async function updateContactInfo(data: ContactInfo) {
-    const supabase = getSupabase();
-    if (!supabase) return { error: { message: "Supabase client not initialized." } };
+    const supabase = createClient();
     const { error } = await supabase.from('contact_info').update(data).eq('id', 1);
     return { error };
 }
 
 async function updateTermsContent(data: TermsContent) {
-    const supabase = getSupabase();
-    if (!supabase) return { error: { message: "Supabase client not initialized." } };
+    const supabase = createClient();
     const { error } = await supabase.from('terms_content').update(data).eq('id', 1);
     return { error };
 }
@@ -51,19 +49,14 @@ export default function PengaturanPage() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, startSavingTransition] = useTransition();
+  const supabase = createClient();
 
   const [contactInfo, setContactInfo] = useState<ContactInfo | null>(null);
   const [terms, setTerms] = useState<TermsContent | null>(null);
   const [socialLinks, setSocialLinks] = useState<SocialLinkItem[]>([]);
 
   useEffect(() => {
-    const supabase = getSupabase();
     const fetchData = async () => {
-        if (!supabase) {
-            setIsLoading(false);
-            toast({ variant: 'destructive', title: 'Gagal memuat data pengaturan', description: 'Supabase client tidak terinisialisasi.' });
-            return;
-        }
         setIsLoading(true);
         const { data: contactData, error: contactError } = await supabase.from('contact_info').select('*').single();
         const { data: termsData, error: termsError } = await supabase.from('terms_content').select('*').single();
@@ -84,7 +77,7 @@ export default function PengaturanPage() {
         setIsLoading(false);
     }
     fetchData();
-  }, [toast]);
+  }, [toast, supabase]);
    
    const handleContactChange = (field: keyof Omit<ContactInfo, SocialPlatformKey>, value: string) => {
     setContactInfo(prev => prev ? ({ ...prev, [field]: value }) : null);

@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 import type { ContactInfo } from '@/lib/types';
 import Image from 'next/image';
-import { getSupabase } from '@/lib/supabase';
+import { createClient } from '@/utils/supabase/client';
 
 function SocialLink({ platform, url }: { platform: string; url: string; }) {
   if (!url) return null;
@@ -30,16 +30,15 @@ export function WebFooter({ className }: { className?: string }) {
   const pathname = usePathname();
   const { dictionary } = useLanguage();
   const [contactInfo, setContactInfo] = useState<ContactInfo | null>(null);
+  const supabase = createClient();
 
   useEffect(() => {
-    const supabase = getSupabase();
     const fetchContactInfo = async () => {
-        if (!supabase) return;
         const { data } = await supabase.from('contact_info').select('*').single();
         setContactInfo(data);
     };
     fetchContactInfo();
-  }, []);
+  }, [supabase]);
 
   const hasSocialMedia = contactInfo && (contactInfo.instagram || contactInfo.facebook || contactInfo.twitter || contactInfo.tiktok || contactInfo.telegram);
 

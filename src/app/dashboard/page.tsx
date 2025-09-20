@@ -72,7 +72,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
-import { getSupabase } from '@/lib/supabase'
+import { createClient } from '@/utils/supabase/client';
 import { upsertDriver, deleteDriver, updateDriverStatus } from './actions'
 
 export const dynamic = 'force-dynamic';
@@ -174,6 +174,7 @@ export default function DashboardPage() {
   const [fleet, setFleet] = useState<Vehicle[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const supabase = createClient();
   
   const [date, setDate] = React.useState<DateRange | undefined>(undefined);
 
@@ -191,12 +192,6 @@ export default function DashboardPage() {
   const { toast } = useToast();
 
    const fetchData = async () => {
-        const supabase = getSupabase();
-        if (!supabase) {
-            setIsLoading(false);
-            toast({ variant: "destructive", title: "Gagal memuat data", description: "Supabase client tidak terinisialisasi." });
-            return;
-        }
         setIsLoading(true);
         const { data: driverData, error: driverError } = await supabase.from('drivers').select('*').order('created_at', { ascending: false });
         const { data: vehicleData, error: vehicleError } = await supabase.from('vehicles').select('*');

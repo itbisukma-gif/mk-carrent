@@ -32,7 +32,7 @@ import { OrderForm } from '@/components/order-form';
 import { Separator } from '@/components/ui/separator';
 import { useVehicleLogo } from '@/hooks/use-vehicle-logo';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { getSupabase } from '@/lib/supabase';
+import { createClient } from '@/utils/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { upsertTestimonial } from '@/app/dashboard/testimoni/actions';
 
@@ -42,6 +42,7 @@ function VehicleDetail() {
   const params = useParams();
   const { dictionary } = useLanguage();
   const { toast } = useToast();
+  const supabase = createClient();
   
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
   const [otherVehicles, setOtherVehicles] = useState<Vehicle[]>([]);
@@ -56,9 +57,8 @@ function VehicleDetail() {
   const plugin = useRef(Autoplay({ delay: 3000, stopOnInteraction: true }));
   
   useEffect(() => {
-    const supabase = getSupabase();
     const vehicleId = params.id as string;
-    if (!vehicleId || !supabase) return;
+    if (!vehicleId) return;
 
     const fetchData = async () => {
         setIsLoading(true);
@@ -90,7 +90,7 @@ function VehicleDetail() {
     };
 
     fetchData();
-  }, [params.id]);
+  }, [params.id, supabase]);
 
 
   const handleSubmitReview = async () => {

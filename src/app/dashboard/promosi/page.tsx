@@ -17,26 +17,12 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import type { Promotion, Vehicle } from '@/lib/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { getSupabase } from '@/lib/supabase';
+import { createClient } from '@/utils/supabase/client';
 import { upsertVehicle } from '../armada/actions';
+import { upsertPromotion, deletePromotion } from './actions';
+
 
 export const dynamic = 'force-dynamic';
-
-// Server actions for promotions
-async function upsertPromotion(promoData: Omit<Promotion, 'created_at'>) {
-    const supabase = getSupabase();
-    if (!supabase) return { data: null, error: { message: 'Supabase client not initialized.' } };
-    const { data, error } = await supabase.from('promotions').upsert(promoData, { onConflict: 'id' }).select().single();
-    return { data, error };
-}
-
-async function deletePromotion(promoId: string) {
-    const supabase = getSupabase();
-    if (!supabase) return { error: { message: 'Supabase client not initialized.' } };
-    const { error } = await supabase.from('promotions').delete().eq('id', promoId);
-    return { error };
-}
-
 
 // Form component for adding/editing a promotion
 function PromotionForm({ promotion, vehicles, onSave, onCancel }: { promotion?: Promotion | null; vehicles: Vehicle[]; onSave: () => void; onCancel: () => void; }) {
@@ -206,14 +192,9 @@ export default function PromosiPage() {
     const { toast } = useToast();
     const plugin = useRef(Autoplay({ delay: 5000, stopOnInteraction: true }));
     const [isDeleting, startDeleteTransition] = useTransition();
+    const supabase = createClient();
 
     const fetchData = async () => {
-        const supabase = getSupabase();
-        if (!supabase) {
-            setIsLoading(false);
-            toast({ variant: 'destructive', title: 'Gagal memuat data', description: 'Supabase client tidak terinisialisasi.' });
-            return;
-        }
         setIsLoading(true);
         const { data: promoData, error: promoError } = await supabase.from('promotions').select('*');
         const { data: vehicleData, error: vehicleError } = await supabase.from('vehicles').select('*');

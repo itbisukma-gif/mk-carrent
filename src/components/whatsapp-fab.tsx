@@ -9,21 +9,20 @@ import type { ContactInfo } from '@/lib/types';
 import { useLanguage } from '@/hooks/use-language';
 import { cn } from '@/lib/utils';
 import { WhatsAppIcon } from './icons';
-import { getSupabase } from '@/lib/supabase';
+import { createClient } from '@/utils/supabase/client';
 
 export function WhatsappFab() {
   const [contactInfo, setContactInfo] = useState<ContactInfo | null>(null);
   const { dictionary } = useLanguage();
+  const supabase = createClient();
 
   useEffect(() => {
-    const supabase = getSupabase();
     const fetchContactInfo = async () => {
-        if (!supabase) return;
         const { data } = await supabase.from('contact_info').select('whatsapp').single();
         setContactInfo(data as ContactInfo);
     };
     fetchContactInfo();
-  }, []);
+  }, [supabase]);
 
   if (!contactInfo || !contactInfo.whatsapp) {
     return null;
