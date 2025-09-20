@@ -5,6 +5,7 @@ export async function middleware(request: NextRequest) {
   const { supabase, response } = createClient(request)
 
   // Refresh session if expired - required for Server Components
+  // https://supabase.com/docs/guides/auth/auth-helpers/nextjs#managing-session-with-middleware
   const { data: { session } } = await supabase.auth.getSession()
 
   const { pathname } = request.nextUrl
@@ -27,11 +28,10 @@ export async function middleware(request: NextRequest) {
   // If user requests to log out, clear the session cookie
   if (pathname === '/logout') {
       const logoutResponse = NextResponse.redirect(new URL('/login', request.url));
-      // Manually clear the cookie used by Supabase
-      logoutResponse.cookies.delete('session'); // The custom cookie from login page
+      // Manually clear the cookie used by our custom login logic
+      logoutResponse.cookies.delete('session', { path: '/' }); 
       return logoutResponse;
   }
-
 
   return response
 }
