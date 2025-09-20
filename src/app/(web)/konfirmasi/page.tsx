@@ -12,7 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { CheckCircle, Loader2, ClipboardCopy, Upload, AlertCircle, ArrowLeft, Paperclip, Phone, FileCheck, Download } from "lucide-react";
-import { bankAccounts, fleet, orders, drivers } from "@/lib/data";
+import { bankAccounts, fleet, drivers } from "@/lib/data";
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -21,9 +21,10 @@ import { id } from 'date-fns/locale';
 import { useLanguage } from "@/hooks/use-language";
 import { LanguageProvider } from "@/app/language-provider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { BankAccount, Order } from "@/lib/types";
+import type { BankAccount, Order, Vehicle } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { WhatsAppIcon } from "@/components/icons";
+import { supabase } from "@/lib/supabase";
 
 function BankAccountDetails({ bank }: { bank: BankAccount }) {
     const { dictionary } = useLanguage();
@@ -63,28 +64,42 @@ function BankAccountDetails({ bank }: { bank: BankAccount }) {
     );
 }
 
-// SIMULATED UPLOAD FUNCTION
 // In a real app, this would be an API call to a serverless function
-// that uploads the file to Firebase Storage.
-async function uploadFile(file: File): Promise<string> {
-    console.log(`[UPLOAD_START] Memulai upload untuk file: ${file.name}, ukuran: ${file.size} bytes`);
-    
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
+// that uploads the file to Firebase Storage. We'll simulate it for now.
+async function uploadFile(file: File, orderId: string): Promise<string> {
+    if (!file) throw new Error("No file provided for upload.");
 
-    // Simulate a potential error (e.g., file too large, invalid type)
-    if (file.size > 5 * 1024 * 1024) { // 5MB limit
-      throw new Error("Ukuran file terlalu besar. Maksimal 5MB.");
+    const fileExtension = file.name.split('.').pop();
+    const fileName = `${orderId}.${fileExtension}`;
+    const filePath = `public/proofs/${fileName}`;
+
+    // Upload file to Supabase Storage
+    const { error: uploadError } = await supabase.storage
+        .from('mudakarya-bucket')
+        .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: true, // Overwrite file if it exists
+        });
+
+    if (uploadError) {
+        console.error("Error uploading file to Supabase:", uploadError);
+        throw new Error(`Gagal mengunggah file: ${uploadError.message}`);
     }
 
-    // Simulate successful upload and return a fake URL
-    const fakeUrl = URL.createObjectURL(file);
-    console.log(`[UPLOAD_SUCCESS] File berhasil di-upload. URL Lokal: ${fakeUrl}`);
-    return fakeUrl;
+    // Get public URL of the uploaded file
+    const { data: urlData } = supabase.storage
+        .from('mudakarya-bucket')
+        .getPublicUrl(filePath);
+
+    if (!urlData.publicUrl) {
+        throw new Error("Gagal mendapatkan URL publik untuk file yang diunggah.");
+    }
+
+    return urlData.publicUrl;
 }
 
 
-function UploadProof({ onUploadSuccess }: { onUploadSuccess: (proofUrl: string) => void }) {
+function UploadProof({ onUpload, orderId }: { onUpload: (proofUrl: string) => void, orderId: string }) {
     const { dictionary } = useLanguage();
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -107,13 +122,11 @@ function UploadProof({ onUploadSuccess }: { onUploadSuccess: (proofUrl: string) 
         
         setUploadState('uploading');
         setErrorMessage('');
-        console.log("[HANDLE_UPLOAD] Tombol kirim ditekan. Memanggil fungsi uploadFile...");
 
         try {
-            const uploadedUrl = await uploadFile(selectedFile);
+            const uploadedUrl = await uploadFile(selectedFile, orderId);
             setUploadState('success');
-            console.log('[HANDLE_UPLOAD_SUCCESS] Proses upload selesai tanpa error.');
-            onUploadSuccess(uploadedUrl); 
+            onUpload(uploadedUrl); 
 
         } catch (error) {
             console.error("[HANDLE_UPLOAD_ERROR] Terjadi error saat meng-upload file:", error);
@@ -123,7 +136,7 @@ function UploadProof({ onUploadSuccess }: { onUploadSuccess: (proofUrl: string) 
         }
     };
 
-    const isSubmitDisabled = !selectedFile || uploadState === 'uploading';
+    const isSubmitDisabled = !selectedFile || uploadState === 'uploading' || !orderId;
     
     return (
         <Card className="mt-8">
@@ -151,7 +164,12 @@ function UploadProof({ onUploadSuccess }: { onUploadSuccess: (proofUrl: string) 
                         Pilih File
                     </Label>
                     <Button onClick={handleUpload} disabled={isSubmitDisabled} className="transition-all duration-200 ease-in-out hover:scale-105 hover:shadow-md active:scale-100">
-                        {uploadState === 'uploading' ? dictionary.confirmation.upload.uploading : dictionary.confirmation.upload.submit}
+                        {uploadState === 'uploading' ? (
+                            <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                {dictionary.confirmation.upload.uploading}
+                            </>
+                        ) : dictionary.confirmation.upload.submit}
                     </Button>
                 </div>
                 <Input
@@ -185,6 +203,10 @@ function KonfirmasiComponent() {
     const { dictionary, language } = useLanguage();
     const router = useRouter();
     const searchParams = useSearchParams();
+    const { toast } = useToast();
+
+    const [vehicle, setVehicle] = useState<Vehicle | null>(null);
+    const [driver, setDriver] = useState<any>(null);
     const [uploadSuccess, setUploadSuccess] = useState(false);
     
     // Get all params from URL
@@ -200,8 +222,6 @@ function KonfirmasiComponent() {
     const customerPhone = searchParams.get('phone');
     const driverId = searchParams.get('driverId');
 
-    const vehicle = fleet.find(v => v.id === vehicleId);
-    const driver = useMemo(() => drivers.find(d => d.id === driverId), [driverId]);
     const showDriverContact = driver && (service === 'dengan-supir' || service === 'all-include');
 
     
@@ -217,7 +237,19 @@ function KonfirmasiComponent() {
         // This should only run on the client-side to avoid hydration mismatch
         const randomOrderId = `ORD-${Math.floor(Math.random() * 90000) + 10000}`;
         setOrderId(randomOrderId);
-    }, []);
+
+        const fetchVehicleAndDriver = async () => {
+            if (vehicleId) {
+                const { data: vehicleData } = await supabase.from('vehicles').select('*').eq('id', vehicleId).single();
+                setVehicle(vehicleData);
+            }
+            if (driverId) {
+                 const { data: driverData } = await supabase.from('drivers').select('*').eq('id', driverId).single();
+                 setDriver(driverData);
+            }
+        };
+        fetchVehicleAndDriver();
+    }, [vehicleId, driverId]);
 
     const rentalPeriod = useMemo(() => {
         if (startDateStr && endDateStr) {
@@ -254,8 +286,8 @@ function KonfirmasiComponent() {
 
     const formatCurrency = (value: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(value);
     
-    const handleUploadSuccess = (proofUrl: string) => {
-        const newOrder: Order = {
+    const handleUploadSuccess = async (proofUrl: string) => {
+        const newOrder: Omit<Order, 'createdAt'> = {
             id: orderId,
             customerName: customerName,
             customerPhone: customerPhone,
@@ -265,20 +297,23 @@ function KonfirmasiComponent() {
             transmission: vehicle.transmission,
             service: service.replace('-', ' '),
             driver: driver ? driver.name : null,
+            driverId: driver ? driver.id : null,
+            vehicleId: vehicle.id,
             paymentProof: proofUrl,
             status: 'pending',
             paymentMethod: paymentMethod === 'bank' ? 'Transfer Bank' : 'QRIS',
             total: Number(total),
-            createdAt: new Date().toISOString(),
         };
 
-        // In a real app, this would be an API call.
-        // Here, we're mutating the imported array to simulate it.
-        orders.unshift(newOrder); 
-        console.log('New order added to mock data:', newOrder);
-        console.log('Current orders:', orders);
+        const { error } = await supabase.from('orders').insert(newOrder);
 
-        setUploadSuccess(true);
+        if (error) {
+            console.error('Error creating order in Supabase:', error);
+            toast({ variant: 'destructive', title: 'Gagal Membuat Pesanan', description: error.message });
+        } else {
+            console.log('New order added to Supabase:', newOrder);
+            setUploadSuccess(true);
+        }
     };
 
     if (uploadSuccess) {
@@ -501,7 +536,8 @@ function KonfirmasiComponent() {
                 </Card>
 
                 <UploadProof 
-                    onUploadSuccess={handleUploadSuccess}
+                    onUpload={handleUploadSuccess}
+                    orderId={orderId}
                 />
                 
         </div>
@@ -518,7 +554,3 @@ export default function KonfirmasiPage() {
         </LanguageProvider>
     )
 }
-
-    
-
-    

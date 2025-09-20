@@ -62,20 +62,21 @@ export type OrderStatus = 'pending' | 'disetujui' | 'tidak disetujui' | 'selesai
 
 export type Order = {
   id: string;
-  customerName: string;
-  customerPhone: string;
-  carName: string;
-  type: string;
-  fuel: string;
-  transmission: 'Manual' | 'Matic';
-  service: string;
+  customerName: string | null;
+  customerPhone: string | null;
+  carName: string | null;
+  type: string | null;
+  fuel: string | null;
+  transmission: 'Manual' | 'Matic' | null;
+  service: string | null;
   driver: string | null;
-  paymentProof: string;
-  status: OrderStatus;
-  paymentMethod: 'QRIS' | 'Transfer Bank';
-  total: number;
+  paymentProof: string | null;
+  status: OrderStatus | null;
+  paymentMethod: 'QRIS' | 'Transfer Bank' | null;
+  total: number | null;
   createdAt: string; // ISO 8601 date string
   driverId?: string | null;
+  vehicleId?: string | null;
 };
     
 export type ContactInfo = {

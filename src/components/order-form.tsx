@@ -31,12 +31,13 @@ import {
 
 
 import type { Vehicle, Driver } from '@/lib/types';
-import { drivers as allDrivers, serviceCosts } from '@/lib/data';
+import { serviceCosts } from '@/lib/data';
 import { Minus, Plus, CalendarIcon, ChevronDown } from 'lucide-react';
 import { format, addDays, differenceInCalendarDays, isBefore, startOfDay } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { useLanguage } from '@/hooks/use-language';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/lib/supabase';
 
 
 export const OrderForm = forwardRef<HTMLDivElement, { vehicle: Vehicle }>(({ vehicle }, ref) => {
@@ -47,10 +48,11 @@ export const OrderForm = forwardRef<HTMLDivElement, { vehicle: Vehicle }>(({ veh
     const [endDate, setEndDate] = useState<Date | undefined>(undefined);
     const [service, setService] = useState('lepas-kunci');
     const [driverId, setDriverId] = useState<string | undefined>(undefined);
+    const [availableDrivers, setAvailableDrivers] = useState<Driver[]>([]);
+
     const [isStartCalendarOpen, setStartCalendarOpen] = useState(false);
     const [isEndCalendarOpen, setEndCalendarOpen] = useState(false);
 
-    const availableDrivers = useMemo(() => allDrivers.filter(d => d.status === 'Tersedia'), []);
     const showDriverSelection = service === 'dengan-supir' || service === 'all-include';
 
 
@@ -59,6 +61,20 @@ export const OrderForm = forwardRef<HTMLDivElement, { vehicle: Vehicle }>(({ veh
         const today = startOfDay(new Date());
         setStartDate(today);
         setEndDate(addDays(today, 1));
+
+        // Fetch available drivers
+        const fetchDrivers = async () => {
+            const { data, error } = await supabase
+                .from('drivers')
+                .select('*')
+                .eq('status', 'Tersedia');
+            
+            if (data) {
+                setAvailableDrivers(data);
+            }
+        };
+
+        fetchDrivers();
     }, []);
 
     // Reset driver selection if service changes to not require one
@@ -88,7 +104,7 @@ export const OrderForm = forwardRef<HTMLDivElement, { vehicle: Vehicle }>(({ veh
             return { totalCost: 0, discountAmount: 0, baseRentalCost: 0, maticFee: 0, driverFee: 0, fuelFee: 0 };
         }
         
-        const rental = vehicle.price * calculatedDuration;
+        const rental = (vehicle.price || 0) * calculatedDuration;
         const mFee = vehicle.transmission === 'Matic' ? serviceCosts.matic * calculatedDuration : 0;
         const dFee = (service === 'dengan-supir' || service === 'all-include') ? serviceCosts.driver * calculatedDuration : 0;
         
@@ -163,7 +179,7 @@ export const OrderForm = forwardRef<HTMLDivElement, { vehicle: Vehicle }>(({ veh
         
         <div className="p-6 border-b flex-shrink-0">
             <div className="flex items-center gap-4">
-                <Image src={vehicle.photo} alt={vehicle.name} width={120} height={80} className="rounded-lg object-cover" data-ai-hint={vehicle.dataAiHint} />
+                <Image src={vehicle.photo || ''} alt={vehicle.name || ''} width={120} height={80} className="rounded-lg object-cover" data-ai-hint={vehicle.dataAiHint || ''} />
                 <div>
                     <h3 className="font-bold text-lg">{vehicle.brand} {vehicle.name}</h3>
                     <p className="text-sm text-muted-foreground">{vehicle.type}</p>

@@ -263,8 +263,3 @@ export let promotions: Promotion[] = [
       imageUrl: 'https://picsum.photos/seed/promo2/1280/720',
     }
 ];
-
-
-
-
-    

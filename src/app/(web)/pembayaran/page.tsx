@@ -2,10 +2,10 @@
 
 'use client';
 
-import { Suspense, useMemo, useState } from 'react';
+import { Suspense, useMemo, useState, useEffect } from 'react';
 import { useSearchParams, notFound, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { fleet, drivers, serviceCosts } from '@/lib/data';
+import { serviceCosts } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -19,6 +19,8 @@ import { id } from 'date-fns/locale';
 import { useLanguage } from '@/hooks/use-language';
 import { LanguageProvider } from '@/app/language-provider';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/lib/supabase';
+import type { Vehicle } from '@/lib/types';
 
 
 function PembayaranComponent() {
@@ -34,16 +36,37 @@ function PembayaranComponent() {
     const endDateStr = searchParams.get('endDate');
     const driverId = searchParams.get('driverId');
 
+    const [vehicle, setVehicle] = useState<Vehicle | null>(null);
     const [paymentMethod, setPaymentMethod] = useState('bank');
     const [fullName, setFullName] = useState('');
     const [phone, setPhone] = useState('');
 
+    useEffect(() => {
+        if (!vehicleId) {
+            notFound();
+        }
+        const fetchVehicle = async () => {
+            const { data, error } = await supabase
+                .from('vehicles')
+                .select('*')
+                .eq('id', vehicleId)
+                .single();
+            
+            if (error || !data) {
+                console.error('Vehicle not found:', error);
+                notFound();
+            } else {
+                setVehicle(data);
+            }
+        };
 
-    const vehicle = fleet.find((v) => v.id === vehicleId);
+        fetchVehicle();
+    }, [vehicleId]);
 
     if (!vehicle) {
-        notFound();
+        return <div>{dictionary.loading}...</div>;
     }
+
 
     const { rentalPeriod, baseRentalCost, maticFee, driverFee, fuelFee, discountAmount, totalCost } = useMemo(() => {
         let period = `${days} ${dictionary.payment.days}`;
@@ -54,7 +77,7 @@ function PembayaranComponent() {
             period = `${format(start, 'd LLL yy', { locale })} - ${format(end, 'd LLL yy', { locale })}`;
         }
         
-        const rentalCost = vehicle.price * days;
+        const rentalCost = (vehicle.price || 0) * days;
         const mFee = vehicle.transmission === 'Matic' ? serviceCosts.matic * days : 0;
         const dFee = (service === 'dengan-supir' || service === 'all-include') ? serviceCosts.driver * days : 0;
         
@@ -128,7 +151,7 @@ function PembayaranComponent() {
                 </CardHeader>
                 <CardContent>
                         <div className="flex items-center gap-4 mb-6">
-                        <Image src={vehicle.photo} alt={vehicle.name} width={120} height={80} className="rounded-lg object-cover" data-ai-hint={vehicle.dataAiHint} />
+                        <Image src={vehicle.photo || ''} alt={vehicle.name || ''} width={120} height={80} className="rounded-lg object-cover" data-ai-hint={vehicle.dataAiHint || ''} />
                         <div>
                             <h3 className="font-bold text-lg">{vehicle.brand} {vehicle.name}</h3>
                             <p className="text-sm text-muted-foreground">{vehicle.type} - {vehicle.transmission}</p>
@@ -269,9 +292,3 @@ export default function PembayaranPage() {
         </LanguageProvider>
     )
 }
-
-    
-
-    
-
-    

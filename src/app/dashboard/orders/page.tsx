@@ -2,18 +2,17 @@
 
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useTransition } from 'react';
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { Send, Eye, Share, CheckCircle, User, Car, ShieldCheck, Clock, AlertTriangle } from "lucide-react";
+import { Send, Eye, Share, CheckCircle, Car, ShieldCheck, Clock, AlertTriangle, Loader2 } from "lucide-react";
 import Link from "next/link";
 import type { Driver, Order, OrderStatus } from '@/lib/types';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
-import { drivers as initialDrivers, orders as initialOrders } from '@/lib/data';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
@@ -22,9 +21,29 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { formatDistanceToNow, differenceInHours } from 'date-fns';
 import { id } from 'date-fns/locale';
+import { supabase } from '@/lib/supabase';
+import { updateDriverStatus } from '../actions';
+
+// Server action to update order status
+async function updateOrderStatus(orderId: string, status: OrderStatus) {
+    const { data, error } = await supabase
+        .from('orders')
+        .update({ status })
+        .eq('id', orderId);
+    return { data, error };
+}
+
+// Server action to update order driver
+async function updateOrderDriver(orderId: string, driverName: string, driverId: string) {
+    const { data, error } = await supabase
+        .from('orders')
+        .update({ driver: driverName, driverId: driverId })
+        .eq('id', orderId);
+    return { data, error };
+}
 
 
-const getStatusInfo = (status: OrderStatus) => {
+const getStatusInfo = (status: OrderStatus | null) => {
     switch (status) {
         case 'disetujui':
             return { label: 'Disetujui', className: 'bg-green-100 text-green-800 border-green-200 hover:bg-green-100' };
@@ -39,21 +58,85 @@ const getStatusInfo = (status: OrderStatus) => {
     }
 }
 
-function OrderCard({ order, drivers, onStatusChange, onDriverChange, onComplete }: { order: Order, drivers: Driver[], onStatusChange: (orderId: string, status: OrderStatus) => void, onDriverChange: (orderId: string, driverName: string) => void, onComplete: (orderId: string) => void }) {
+function OrderCard({ order, drivers, onDataChange }: { order: Order, drivers: Driver[], onDataChange: () => void }) {
+    const { toast } = useToast();
     const [isClient, setIsClient] = useState(false);
+    const [isPending, startTransition] = useTransition();
     
     useEffect(() => {
         setIsClient(true);
     }, []);
 
     const statusInfo = getStatusInfo(order.status);
-    const requiresDriver = order.service.toLowerCase().includes("supir") || order.service.toLowerCase().includes("all");
+    const requiresDriver = order.service?.toLowerCase().includes("supir") || order.service?.toLowerCase().includes("all");
 
-    // Ensure createdAt is a valid date object before using it
     const orderDate = order.createdAt ? new Date(order.createdAt) : new Date();
     const timeSinceCreation = isClient ? formatDistanceToNow(orderDate, { addSuffix: true, locale: id }) : '...';
     const hoursSinceCreation = differenceInHours(new Date(), orderDate);
     const needsAttention = order.status === 'pending' && hoursSinceCreation > 1;
+
+    const handleStatusChange = (newStatus: OrderStatus) => {
+        startTransition(async () => {
+            const { error } = await updateOrderStatus(order.id, newStatus);
+            if (error) {
+                toast({ variant: 'destructive', title: 'Gagal Memperbarui Status', description: error.message });
+            } else {
+                toast({ title: 'Status Diperbarui', description: `Status pesanan ${order.id} telah diubah.` });
+                onDataChange();
+            }
+        });
+    };
+
+    const handleDriverChange = (driverValue: string) => {
+        const [driverId, driverName] = driverValue.split('|');
+        if (!driverId || !driverName) return;
+
+        startTransition(async () => {
+            // Free up old driver if there was one
+            if (order.driverId) {
+                await updateDriverStatus(order.driverId, 'Tersedia');
+            }
+
+            // Assign new driver to order
+            const { error: orderError } = await updateOrderDriver(order.id, driverName, driverId);
+            if (orderError) {
+                toast({ variant: 'destructive', title: 'Gagal Menugaskan Driver', description: orderError.message });
+                return;
+            }
+
+            // Set new driver's status to 'Bertugas'
+            const { error: driverError } = await updateDriverStatus(driverId, 'Bertugas');
+            if (driverError) {
+                toast({ variant: 'destructive', title: 'Gagal Memperbarui Status Driver', description: driverError.message });
+            } else {
+                toast({ title: "Driver Ditugaskan", description: `${driverName} telah ditugaskan ke pesanan ${order.id}.` });
+            }
+
+            onDataChange();
+        });
+    };
+    
+    const handleSelesaikanPesanan = () => {
+        startTransition(async () => {
+             // If a driver was assigned, set their status back to 'Tersedia'
+            if (order.driverId) {
+                const { error: driverError } = await updateDriverStatus(order.driverId, 'Tersedia');
+                if (driverError) {
+                    toast({ variant: 'destructive', title: 'Gagal Memperbarui Status Driver', description: driverError.message });
+                    // Continue even if this fails, as finishing the order is more important
+                }
+            }
+            
+            const { error: orderError } = await updateOrderStatus(order.id, 'selesai');
+            if (orderError) {
+                toast({ variant: 'destructive', title: 'Gagal Menyelesaikan Pesanan', description: orderError.message });
+            } else {
+                 toast({ title: "Pesanan Selesai", description: `Pesanan dengan ID ${order.id} telah ditandai sebagai selesai.` });
+            }
+
+            onDataChange();
+        });
+    };
 
     return (
          <Card className="flex flex-col">
@@ -94,9 +177,9 @@ function OrderCard({ order, drivers, onStatusChange, onDriverChange, onComplete 
                         <span className="text-muted-foreground">Driver</span>
                          {requiresDriver ? (
                             <Select 
-                                value={order.driver || undefined} 
-                                onValueChange={(driverName) => onDriverChange(order.id, driverName)}
-                                disabled={order.status === 'disetujui' || order.status === 'selesai'}
+                                value={order.driverId ? `${order.driverId}|${order.driver}` : undefined} 
+                                onValueChange={handleDriverChange}
+                                disabled={order.status === 'disetujui' || order.status === 'selesai' || isPending}
                             >
                                 <SelectTrigger className="w-[180px] h-8 text-xs">
                                 <SelectValue placeholder="Pilih Driver" />
@@ -105,7 +188,7 @@ function OrderCard({ order, drivers, onStatusChange, onDriverChange, onComplete 
                                     {drivers.map(d => 
                                         <SelectItem 
                                             key={d.id} 
-                                            value={d.name}
+                                            value={`${d.id}|${d.name}`}
                                             disabled={d.status === 'Bertugas' && order.driver !== d.name}
                                             className="text-xs"
                                         >
@@ -137,12 +220,18 @@ function OrderCard({ order, drivers, onStatusChange, onDriverChange, onComplete 
                             </DialogDescription>
                         </DialogHeader>
                         <div className="relative mt-4 aspect-video w-full">
-                        <Image 
-                            src={order.paymentProof} 
-                            alt="Bukti Pembayaran" 
-                            fill
-                            className="rounded-md object-contain" 
-                        />
+                        {order.paymentProof ? (
+                           <Image 
+                                src={order.paymentProof} 
+                                alt="Bukti Pembayaran" 
+                                fill
+                                className="rounded-md object-contain" 
+                            />
+                        ) : (
+                            <div className="flex items-center justify-center h-full bg-muted text-muted-foreground rounded-md">
+                                Tidak ada bukti bayar
+                            </div>
+                        )}
                         </div>
                     </DialogContent>
                 </Dialog>
@@ -157,8 +246,8 @@ function OrderCard({ order, drivers, onStatusChange, onDriverChange, onComplete 
                             </Button>
                             <AlertDialog>
                                 <AlertDialogTrigger asChild>
-                                    <Button size="sm" variant="default" className='bg-blue-600 hover:bg-blue-700'>
-                                        <Send className="h-3 w-3 mr-2" />
+                                    <Button size="sm" variant="default" className='bg-blue-600 hover:bg-blue-700' disabled={isPending}>
+                                        {isPending ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : <Send className="h-3 w-3 mr-2" />}
                                         Selesaikan
                                     </Button>
                                 </AlertDialogTrigger>
@@ -171,7 +260,7 @@ function OrderCard({ order, drivers, onStatusChange, onDriverChange, onComplete 
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
                                         <AlertDialogCancel>Batal</AlertDialogCancel>
-                                        <AlertDialogAction onClick={() => onComplete(order.id)}>Ya, Selesaikan</AlertDialogAction>
+                                        <AlertDialogAction onClick={handleSelesaikanPesanan}>Ya, Selesaikan</AlertDialogAction>
                                     </AlertDialogFooter>
                                 </AlertDialogContent>
                             </AlertDialog>
@@ -192,15 +281,15 @@ function OrderCard({ order, drivers, onStatusChange, onDriverChange, onComplete 
                     {order.status !== 'selesai' && order.status !== 'tidak disetujui' && (
                          <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant={order.status === 'disetujui' ? "secondary" : "default"} size="sm">
-                                    <ShieldCheck className="h-4 w-4 mr-2" />
+                                <Button variant={order.status === 'disetujui' ? "secondary" : "default"} size="sm" disabled={isPending}>
+                                    {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4 mr-2" />}
                                     {order.status === 'pending' ? 'Verifikasi' : 'Ubah Status'}
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                                  <DropdownMenuLabel>Ubah Status Pesanan</DropdownMenuLabel>
                                  <DropdownMenuSeparator />
-                                <DropdownMenuRadioGroup value={order.status} onValueChange={(value) => onStatusChange(order.id, value as OrderStatus)}>
+                                <DropdownMenuRadioGroup value={order.status || 'pending'} onValueChange={(value) => handleStatusChange(value as OrderStatus)}>
                                     <DropdownMenuRadioItem value="pending">Pending</DropdownMenuRadioItem>
                                     <DropdownMenuRadioItem value="disetujui">Disetujui</DropdownMenuRadioItem>
                                     <DropdownMenuRadioItem value="tidak disetujui">Ditolak</DropdownMenuRadioItem>
@@ -216,9 +305,34 @@ function OrderCard({ order, drivers, onStatusChange, onDriverChange, onComplete 
 
 
 export default function OrdersPage() {
-    const [orders, setOrders] = useState<Order[]>(initialOrders);
-    const [drivers, setDrivers] = useState<Driver[]>(initialDrivers);
+    const [orders, setOrders] = useState<Order[]>([]);
+    const [drivers, setDrivers] = useState<Driver[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
     const { toast } = useToast();
+
+    const fetchOrderData = async () => {
+        setIsLoading(true);
+        const { data: orderData, error: orderError } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
+        const { data: driverData, error: driverError } = await supabase.from('drivers').select('*');
+
+        if (orderError) {
+            toast({ variant: 'destructive', title: 'Gagal mengambil data pesanan', description: orderError.message });
+        } else {
+            setOrders(orderData || []);
+        }
+
+        if (driverError) {
+            toast({ variant: 'destructive', title: 'Gagal mengambil data driver', description: driverError.message });
+        } else {
+            setDrivers(driverData || []);
+        }
+
+        setIsLoading(false);
+    }
+    
+    useEffect(() => {
+        fetchOrderData();
+    }, []);
 
     const { pendingOrders, approvedOrders, completedOrders } = useMemo(() => {
         return {
@@ -227,57 +341,25 @@ export default function OrdersPage() {
             completedOrders: orders.filter(o => o.status === 'selesai' || o.status === 'tidak disetujui'),
         }
     }, [orders]);
-
-    const handleStatusChange = (orderId: string, newStatus: OrderStatus) => {
-        setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
-        toast({
-            title: "Status Diperbarui",
-            description: `Status untuk pesanan ${orderId} telah diubah.`
-        });
-    };
     
-    const handleDriverChange = (orderId: string, driverName: string) => {
-        const order = orders.find(o => o.id === orderId);
-        if (!order) return;
-
-        // Free up the old driver if there was one
-        if (order.driver) {
-             setDrivers(prevDrivers => 
-                prevDrivers.map(d => d.name === order.driver ? { ...d, status: 'Tersedia' } : d)
-            );
-        }
-        
-        // Update the order with the new driver
-        setOrders(prevOrders => prevOrders.map(o => o.id === orderId ? { ...o, driver: driverName } : o));
-        
-        // Set the new driver's status to 'Bertugas'
-        setDrivers(prevDrivers => 
-            prevDrivers.map(d => d.name === driverName ? { ...d, status: 'Bertugas' } : d)
-        );
-
-        toast({
-            title: "Driver Ditugaskan",
-            description: `${driverName} telah ditugaskan ke pesanan ${orderId}.`
-        });
-    };
-
-    const handleSelesaikanPesanan = (orderId: string) => {
-        const order = orders.find(o => o.id === orderId);
-        if (!order) return;
-
-        // If a driver was assigned, set their status back to 'Tersedia'
-        if (order.driver) {
-            setDrivers(prevDrivers => 
-                prevDrivers.map(d => d.name === order.driver ? { ...d, status: 'Tersedia' } : d)
-            );
-        }
-        handleStatusChange(orderId, 'selesai');
-        
-        toast({
-            title: "Pesanan Selesai",
-            description: `Pesanan dengan ID ${orderId} telah ditandai sebagai selesai.`,
-        });
-    };
+    if (isLoading) {
+        return (
+            <div className="flex flex-col gap-8">
+                <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
+                    <div>
+                    <h1 className="text-3xl font-bold tracking-tight">List Order</h1>
+                    <p className="text-muted-foreground">
+                        Kelola order masuk dan status persetujuannya.
+                    </p>
+                    </div>
+                </div>
+                <div className="text-center py-16 flex items-center justify-center gap-2 text-muted-foreground">
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    <span>Memuat data pesanan...</span>
+                </div>
+            </div>
+        )
+    }
     
   return (
     <div className="flex flex-col gap-8">
@@ -316,9 +398,7 @@ export default function OrdersPage() {
                     key={order.id} 
                     order={order}
                     drivers={drivers}
-                    onStatusChange={handleStatusChange}
-                    onDriverChange={handleDriverChange}
-                    onComplete={handleSelesaikanPesanan}
+                    onDataChange={fetchOrderData}
                    />
                 ))}
             </div>
@@ -337,9 +417,7 @@ export default function OrdersPage() {
                     key={order.id} 
                     order={order}
                     drivers={drivers}
-                    onStatusChange={handleStatusChange}
-                    onDriverChange={handleDriverChange}
-                    onComplete={handleSelesaikanPesanan}
+                    onDataChange={fetchOrderData}
                    />
                 ))}
             </div>
@@ -358,9 +436,7 @@ export default function OrdersPage() {
                     key={order.id} 
                     order={order}
                     drivers={drivers}
-                    onStatusChange={handleStatusChange}
-                    onDriverChange={handleDriverChange}
-                    onComplete={handleSelesaikanPesanan}
+                    onDataChange={fetchOrderData}
                    />
                 ))}
             </div>
@@ -375,7 +451,3 @@ export default function OrdersPage() {
     </div>
   );
 }
-
-    
-
-    
