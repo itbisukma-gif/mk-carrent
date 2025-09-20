@@ -36,7 +36,6 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 
 
-import { promotions as initialPromotions } from '@/lib/data';
 import type { Promotion, Vehicle } from '@/lib/types';
 import { Filter } from 'lucide-react';
 import { VehicleCard } from '@/components/vehicle-card';
@@ -45,15 +44,13 @@ import { LanguageProvider } from '@/app/language-provider';
 import { FeaturesSection } from '@/components/features-section';
 import { supabase } from '@/lib/supabase';
 
-function HomePageContent({ fleet }: { fleet: Vehicle[] }) {
+function HomePageContent({ fleet, promotions }: { fleet: Vehicle[], promotions: Promotion[] }) {
     const { dictionary } = useLanguage();
     const [visibleCars, setVisibleCars] = useState(6);
     const [searchQuery, setSearchQuery] = useState('');
     const [filters, setFilters] = useState({ brand: 'all', type: 'all' });
     const [sortBy, setSortBy] = useState('price-asc');
     const [isSheetOpen, setSheetOpen] = useState(false);
-    // Promotions are now loaded from dummy data
-    const [promotions, setPromotions] = useState<Promotion[]>(initialPromotions);
     
     const plugin = useRef(
       Autoplay({ delay: 5000, stopOnInteraction: true })
@@ -305,15 +302,16 @@ function HomePageContent({ fleet }: { fleet: Vehicle[] }) {
 }
 
 export default async function HomePage() {
-  const { data: fleet, error } = await supabase.from('vehicles').select('*');
+  const { data: fleet, error: fleetError } = await supabase.from('vehicles').select('*');
+  const { data: promotions, error: promoError } = await supabase.from('promotions').select('*');
 
-  if (error) {
-    console.error('Error fetching fleet:', error);
-    // Optionally, render an error state
+  if (fleetError || promoError) {
+    console.error('Error fetching data:', fleetError || promoError);
   }
+
   return (
     <LanguageProvider>
-      <HomePageContent fleet={fleet || []} />
+      <HomePageContent fleet={fleet || []} promotions={promotions || []} />
     </LanguageProvider>
   )
 }

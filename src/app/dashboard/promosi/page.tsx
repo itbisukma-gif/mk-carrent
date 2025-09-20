@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, ChangeEvent, useRef } from 'react';
+import { useState, ChangeEvent, useRef, useEffect, useTransition } from 'react';
 import Image from 'next/image';
 import Autoplay from "embla-carousel-autoplay"
 import { Button } from "@/components/ui/button";
@@ -13,56 +13,94 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
-import { PlusCircle, Edit, Trash2, Upload, Eye, Car } from "lucide-react";
+import { PlusCircle, Edit, Trash2, Upload, Eye, Car, Loader2 } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import type { Promotion, Vehicle } from '@/lib/types';
-import { promotions as initialPromotions, fleet as initialFleet } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { supabase } from '@/lib/supabase';
+import { upsertVehicle } from '../armada/actions';
+
+// Server actions for promotions
+async function upsertPromotion(promoData: Omit<Promotion, 'created_at'>) {
+    const { data, error } = await supabase.from('promotions').upsert(promoData, { onConflict: 'id' }).select().single();
+    return { data, error };
+}
+
+async function deletePromotion(promoId: string) {
+    const { error } = await supabase.from('promotions').delete().eq('id', promoId);
+    return { error };
+}
 
 
 // Form component for adding/editing a promotion
-function PromotionForm({ promotion, onSave, onCancel }: { promotion?: Promotion | null; onSave: (data: Promotion, discount?: number) => void; onCancel: () => void; }) {
+function PromotionForm({ promotion, vehicles, onSave, onCancel }: { promotion?: Promotion | null; vehicles: Vehicle[]; onSave: () => void; onCancel: () => void; }) {
     const { toast } = useToast();
+    const [isPending, startTransition] = useTransition();
+
     const [title, setTitle] = useState(promotion?.title || '');
     const [description, setDescription] = useState(promotion?.description || '');
     const [previewUrl, setPreviewUrl] = useState<string | null>(promotion?.imageUrl || null);
-    const [file, setFile] = useState<File | null>(null);
-    const [vehicleId, setVehicleId] = useState<string | undefined>(promotion?.vehicleId);
+    const [vehicleId, setVehicleId] = useState<string | undefined>(promotion?.vehicleId || undefined);
     
-    // Find initial discount if editing
-    const initialVehicle = initialFleet.find(v => v.id === promotion?.vehicleId);
-    const [discount, setDiscount] = useState<number | undefined>(initialVehicle?.discountPercentage);
+    const initialVehicle = vehicles.find(v => v.id === promotion?.vehicleId);
+    const [discount, setDiscount] = useState<number | undefined>(initialVehicle?.discountPercentage || undefined);
 
 
     const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
         if (event.target.files && event.target.files[0]) {
-            const selectedFile = event.target.files[0];
-            setFile(selectedFile);
-            setPreviewUrl(URL.createObjectURL(selectedFile));
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setPreviewUrl(reader.result as string);
+            };
+            reader.readAsDataURL(event.target.files[0]);
         }
     };
 
     const handleSave = () => {
-        if (!title || !description || !previewUrl) {
-            // Basic validation
-            toast({
-                variant: 'destructive',
-                title: 'Formulir Tidak Lengkap',
-                description: 'Judul, deskripsi, dan gambar tidak boleh kosong.',
-            });
-            return;
-        }
+        startTransition(async () => {
+            if (!title || !description || !previewUrl) {
+                toast({ variant: 'destructive', title: 'Formulir Tidak Lengkap' });
+                return;
+            }
 
-        const newId = promotion?.id || `promo-${Date.now()}`;
-        
-        onSave({
-            id: newId,
-            title,
-            description,
-            imageUrl: previewUrl, // In a real app, this would be the URL from blob storage
-            vehicleId: vehicleId,
-        }, discount);
+            const newId = promotion?.id || `promo-${Date.now()}`;
+            
+            const promoData: Omit<Promotion, 'created_at'> = {
+                id: newId,
+                title,
+                description,
+                imageUrl: previewUrl,
+                vehicleId: vehicleId === 'none' ? undefined : vehicleId,
+            };
+
+            const { error: promoError } = await upsertPromotion(promoData);
+            if (promoError) {
+                toast({ variant: 'destructive', title: 'Gagal Menyimpan Promosi', description: promoError.message });
+                return;
+            }
+
+            // Apply discount to the selected vehicle
+            if (vehicleId && vehicleId !== 'none') {
+                const vehicleToUpdate = vehicles.find(v => v.id === vehicleId);
+                if (vehicleToUpdate) {
+                    const updatedVehicle: Vehicle = { ...vehicleToUpdate, discountPercentage: discount };
+                    await upsertVehicle(updatedVehicle);
+                }
+            }
+            
+            // Remove discount from old vehicle if it was changed
+            if (promotion?.vehicleId && promotion.vehicleId !== vehicleId) {
+                 const oldVehicle = vehicles.find(v => v.id === promotion.vehicleId);
+                 if(oldVehicle) {
+                    const updatedOldVehicle: Vehicle = { ...oldVehicle, discountPercentage: null };
+                    await upsertVehicle(updatedOldVehicle);
+                 }
+            }
+
+            toast({ title: "Promosi Disimpan" });
+            onSave();
+        });
     };
 
     return (
@@ -74,9 +112,7 @@ function PromotionForm({ promotion, onSave, onCancel }: { promotion?: Promotion 
                         <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="cth. Promo Libur Lebaran" />
                     </div>
                     <div className="space-y-2">
-                        <div className="flex justify-between items-center">
-                            <Label htmlFor="description">Deskripsi Singkat</Label>
-                        </div>
+                        <Label htmlFor="description">Deskripsi Singkat</Label>
                         <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="cth. Diskon hingga 25% untuk semua tipe mobil!" rows={3} />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
@@ -88,7 +124,7 @@ function PromotionForm({ promotion, onSave, onCancel }: { promotion?: Promotion 
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="none">Tidak ada (Promo Umum)</SelectItem>
-                                    {initialFleet.map((vehicle) => (
+                                    {vehicles.map((vehicle) => (
                                         <SelectItem key={vehicle.id} value={vehicle.id}>
                                             {vehicle.brand} {vehicle.name}
                                         </SelectItem>
@@ -145,23 +181,44 @@ function PromotionForm({ promotion, onSave, onCancel }: { promotion?: Promotion 
                 </div>
             </div>
             <DialogFooter className="pt-4 border-t px-6 pb-6 bg-background rounded-b-lg">
-                <Button variant="outline" onClick={onCancel}>Batal</Button>
-                <Button onClick={handleSave}>Simpan Promosi</Button>
+                <Button variant="outline" onClick={onCancel} disabled={isPending}>Batal</Button>
+                <Button onClick={handleSave} disabled={isPending}>
+                    {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {isPending ? 'Menyimpan...' : 'Simpan Promosi'}
+                </Button>
             </DialogFooter>
         </>
     );
 }
 
 export default function PromosiPage() {
-    // Data is now managed by state, ready for API integration
-    const [promotions, setPromotions] = useState<Promotion[]>(initialPromotions);
-    const [fleet, setFleet] = useState<Vehicle[]>(initialFleet);
+    const [promotions, setPromotions] = useState<Promotion[]>([]);
+    const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
     const [isFormOpen, setFormOpen] = useState(false);
     const [selectedPromo, setSelectedPromo] = useState<Promotion | null>(null);
     const { toast } = useToast();
-    const plugin = useRef(
-      Autoplay({ delay: 5000, stopOnInteraction: true })
-    )
+    const plugin = useRef(Autoplay({ delay: 5000, stopOnInteraction: true }));
+    const [isDeleting, startDeleteTransition] = useTransition();
+
+    const fetchData = async () => {
+        setIsLoading(true);
+        const { data: promoData, error: promoError } = await supabase.from('promotions').select('*');
+        const { data: vehicleData, error: vehicleError } = await supabase.from('vehicles').select('*');
+
+        if (promoError || vehicleError) {
+            toast({ variant: 'destructive', title: 'Gagal memuat data', description: promoError?.message || vehicleError?.message });
+        } else {
+            setPromotions(promoData || []);
+            setVehicles(vehicleData || []);
+        }
+        setIsLoading(false);
+    }
+
+    useEffect(() => {
+        fetchData();
+    }, []);
 
     const handleAddClick = () => {
         setSelectedPromo(null);
@@ -173,66 +230,44 @@ export default function PromosiPage() {
         setFormOpen(true);
     };
 
-    const handleDelete = (promoId: string) => {
-        const promoToDelete = promotions.find(p => p.id === promoId);
-        // This would be an API call in a real app.
-        setPromotions(prev => prev.filter(p => p.id !== promoId));
-        // Also remove discount from vehicle if it was linked
-        if (promoToDelete?.vehicleId) {
-            setFleet(prevFleet => prevFleet.map(v => 
-                v.id === promoToDelete.vehicleId ? { ...v, discountPercentage: undefined } : v
-            ));
-        }
+    const handleDelete = (promo: Promotion) => {
+        startDeleteTransition(async () => {
+            const { error } = await deletePromotion(promo.id);
+            if (error) {
+                toast({ variant: 'destructive', title: 'Gagal menghapus promosi', description: error.message });
+                return;
+            }
 
-        toast({
-            title: "Promosi Dihapus",
-            description: "Promosi telah berhasil dihapus dari slider.",
+            // Also remove discount from vehicle if it was linked
+            if (promo.vehicleId) {
+                const vehicleToUpdate = vehicles.find(v => v.id === promo.vehicleId);
+                if(vehicleToUpdate) {
+                    const updatedVehicle = { ...vehicleToUpdate, discountPercentage: null };
+                    await upsertVehicle(updatedVehicle);
+                }
+            }
+
+            toast({ title: "Promosi Dihapus" });
+            fetchData();
         });
     };
     
-    const handleFormSave = (data: Promotion, discount?: number) => {
-        const saveData = { ...data };
-        if (saveData.vehicleId === 'none') {
-            saveData.vehicleId = undefined;
-        }
-
-        // Logic to clear old discount if vehicle is changed
-        const originalPromo = selectedPromo ? promotions.find(p => p.id === selectedPromo.id) : null;
-        if (originalPromo && originalPromo.vehicleId && originalPromo.vehicleId !== saveData.vehicleId) {
-             setFleet(prevFleet => prevFleet.map(v => 
-                v.id === originalPromo.vehicleId ? { ...v, discountPercentage: undefined } : v
-            ));
-        }
-
-        if (selectedPromo) {
-            // Editing existing promo
-            setPromotions(prev => prev.map(p => p.id === saveData.id ? saveData : p));
-             toast({
-                title: "Promosi Diperbarui",
-                description: `Promosi "${saveData.title}" telah diperbarui.`,
-            });
-        } else {
-            // Adding new promo
-            setPromotions(prev => [...prev, saveData]);
-             toast({
-                title: "Promosi Ditambahkan",
-                description: `Promosi "${saveData.title}" telah ditambahkan ke slider.`,
-            });
-        }
-
-        // Apply discount to the selected vehicle
-        if(saveData.vehicleId) {
-            setFleet(prevFleet => prevFleet.map(v => 
-                v.id === saveData.vehicleId ? { ...v, discountPercentage: discount } : v
-            ));
-        }
-
+    const handleFormSave = () => {
         setFormOpen(false);
         setSelectedPromo(null);
+        fetchData(); // refetch data
     };
 
     const dialogTitle = selectedPromo ? "Edit Promosi" : "Tambahkan Promosi Baru";
     const dialogDescription = selectedPromo ? "Perbarui detail promosi di bawah ini." : "Isi detail promosi untuk slider di halaman utama.";
+
+    if (isLoading) {
+        return (
+            <div className="flex justify-center items-center h-full">
+                <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+        )
+    }
 
     return (
         <div className="flex flex-col gap-8">
@@ -299,7 +334,7 @@ export default function PromosiPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                     {promotions.length > 0 ? promotions.map(promo => {
-                        const vehicle = fleet.find(v => v.id === promo.vehicleId);
+                        const vehicle = vehicles.find(v => v.id === promo.vehicleId);
                         return (
                         <div key={promo.id} className="flex items-center gap-4 border rounded-lg p-3">
                             <Image src={promo.imageUrl} alt={promo.title} width={160} height={90} className="rounded-md object-cover aspect-video bg-muted" />
@@ -319,7 +354,7 @@ export default function PromosiPage() {
                                 </Button>
                                  <AlertDialog>
                                     <AlertDialogTrigger asChild>
-                                        <Button variant="destructive" size="icon"><Trash2 className="h-4 w-4" /></Button>
+                                        <Button variant="destructive" size="icon" disabled={isDeleting}><Trash2 className="h-4 w-4" /></Button>
                                     </AlertDialogTrigger>
                                     <AlertDialogContent>
                                         <AlertDialogHeader>
@@ -330,7 +365,7 @@ export default function PromosiPage() {
                                         </AlertDialogHeader>
                                         <AlertDialogFooter>
                                             <AlertDialogCancel>Batal</AlertDialogCancel>
-                                            <AlertDialogAction onClick={() => handleDelete(promo.id)} className="bg-destructive hover:bg-destructive/90">Ya, Hapus</AlertDialogAction>
+                                            <AlertDialogAction onClick={() => handleDelete(promo)} className="bg-destructive hover:bg-destructive/90">Ya, Hapus</AlertDialogAction>
                                         </AlertDialogFooter>
                                     </AlertDialogContent>
                                 </AlertDialog>
@@ -351,6 +386,7 @@ export default function PromosiPage() {
                     </DialogHeader>
                     <PromotionForm 
                         promotion={selectedPromo}
+                        vehicles={vehicles}
                         onSave={handleFormSave}
                         onCancel={() => setFormOpen(false)}
                     />
@@ -360,7 +396,3 @@ export default function PromosiPage() {
         </div>
     );
 }
-
-    
-
-    
