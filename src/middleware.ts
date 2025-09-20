@@ -1,3 +1,4 @@
+
 import { NextResponse, type NextRequest } from 'next/server'
 import { createClient } from '@/utils/supabase/middleware'
 
@@ -15,13 +16,17 @@ export async function middleware(request: NextRequest) {
 
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
 
-  if (isProtectedRoute && !session) {
-    // Redirect to login page if trying to access a protected route without a session
-    return NextResponse.redirect(new URL('/login', request.url))
+  if (isProtectedRoute) {
+    // Our custom login page uses a simple cookie, not Supabase auth
+    const sessionCookie = request.cookies.get('session');
+    if (!sessionCookie) {
+      return NextResponse.redirect(new URL('/login', request.url))
+    }
   }
 
   // If user is logged in and tries to access login page, redirect to dashboard
-  if (session && pathname === '/login') {
+  const sessionCookie = request.cookies.get('session');
+  if (sessionCookie && pathname === '/login') {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
   
@@ -29,7 +34,7 @@ export async function middleware(request: NextRequest) {
   if (pathname === '/logout') {
       const logoutResponse = NextResponse.redirect(new URL('/login', request.url));
       // Manually clear the cookie used by our custom login logic
-      logoutResponse.cookies.delete('session', { path: '/' }); 
+      logoutResponse.cookies.delete('session'); 
       return logoutResponse;
   }
 
