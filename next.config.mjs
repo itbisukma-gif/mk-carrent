@@ -1,52 +1,33 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  /* config options here */
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
+  env: {
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
   },
   images: {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'placehold.co',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
         hostname: 'picsum.photos',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'api.qrserver.com',
-        port: '',
-        pathname: '/**',
       },
       {
         protocol: 'https',
         hostname: 'cdn.jsdelivr.net',
-        port: '',
-        pathname: '/**',
       },
       {
         protocol: 'https',
-        hostname: 'upload.wikimedia.org',
-        port: '',
-        pathname: '/**',
+        hostname: 'upload.wikimedia.org'
+      },
+      {
+        protocol: 'https',
+        hostname: 'api.qrserver.com'
+      },
+       {
+        protocol: 'https',
+        hostname: 'feyqdwjbzdsiclmzbsyv.supabase.co'
       }
     ],
-    unoptimized: true,
   },
-  experimental: {
-  },
-  allowedDevOrigins: [
-      'https://6000-firebase-studio-1757309801373.cluster-qxqlf3vb3nbf2r42l5qfoebdry.cloudworkstations.dev',
-  ],
 };
 
 export default nextConfig;
