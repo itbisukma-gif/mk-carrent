@@ -70,7 +70,7 @@ function OrderCard({ order, drivers, onDataChange }: { order: Order, drivers: Dr
     const statusInfo = getStatusInfo(order.status);
     const requiresDriver = order.service?.toLowerCase().includes("supir") || order.service?.toLowerCase().includes("all");
 
-    const orderDate = order.createdAt ? new Date(order.createdAt) : new Date();
+    const orderDate = order.created_at ? new Date(order.created_at) : new Date();
     const timeSinceCreation = isClient ? formatDistanceToNow(orderDate, { addSuffix: true, locale: id }) : '...';
     const hoursSinceCreation = differenceInHours(new Date(), orderDate);
     const needsAttention = order.status === 'pending' && hoursSinceCreation > 1;
