@@ -1,10 +1,11 @@
 
 import { NextResponse, type NextRequest } from 'next/server'
-import { updateSession } from '@/utils/supabase/middleware'
+import { createClient } from '@/utils/supabase/middleware'
 
 export async function middleware(request: NextRequest) {
   // First, run the session updater. This will refresh session cookies.
-  const sessionResponse = await updateSession(request)
+  const { supabase, response } = createClient(request)
+  await supabase.auth.getSession()
 
   const url = request.nextUrl.clone();
   const { pathname } = request.nextUrl;
@@ -16,7 +17,7 @@ export async function middleware(request: NextRequest) {
   const isLocalhost = hostname.includes('localhost');
 
   // Get session cookie from the potentially updated response
-  const sessionCookie = sessionResponse.cookies.get('session');
+  const sessionCookie = response.cookies.get('session');
 
   // --- Admin Subdomain/Path Logic ---
   const isAdminPath = (!isLocalhost && hostname === adminDomain) || (isLocalhost && (pathname.startsWith('/dashboard') || pathname.startsWith('/login')));
@@ -34,11 +35,14 @@ export async function middleware(request: NextRequest) {
 
     // Handle logout: clear cookie and redirect to login
     if (pathname === '/logout') {
-      const response = NextResponse.redirect(new URL('/login', request.url));
-      response.cookies.set('session', '', { maxAge: -1, path: '/' });
+      const logoutResponse = NextResponse.redirect(new URL('/login', request.url));
+      logoutResponse.cookies.set('session', '', { maxAge: -1, path: '/' });
+      
+      const supabaseProjectRef = process.env.NEXT_PUBLIC_SUPABASE_URL!.split('.')[0].substring(8);
       // Also clear Supabase auth cookies
-      response.cookies.delete(`sb-${process.env.NEXT_PUBLIC_SUPABASE_URL!.split('.')[0].substring(8)}-auth-token`, { path: '/' });
-      return response;
+      logoutResponse.cookies.delete({ name: `sb-${supabaseProjectRef}-auth-token`, path: '/' });
+
+      return logoutResponse;
     }
     
     // If on localhost and accessing root, decide where to go
@@ -48,7 +52,7 @@ export async function middleware(request: NextRequest) {
     }
     
     // For all other valid admin paths, return the response from updateSession
-    return sessionResponse;
+    return response;
   }
 
   // --- Main Domain Logic ---
@@ -58,7 +62,7 @@ export async function middleware(request: NextRequest) {
   }
   
   // For all public paths, return the response from updateSession
-  return sessionResponse;
+  return response;
 }
 
 // Config matcher to run on every request
