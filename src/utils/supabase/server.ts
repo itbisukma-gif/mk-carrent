@@ -55,7 +55,17 @@ export const createServiceRoleClient = () => {
 
   // Create a server-side client with the service_role key to bypass RLS
   return createServerClient(supabaseUrl, serviceRoleKey, {
-    cookies: {}, // No need for cookies when using service_role key
+    cookies: {
+        get(name: string) {
+            return undefined;
+        },
+        set(name: string, value: string, options: CookieOptions) {
+            // Do nothing
+        },
+        remove(name: string, options: CookieOptions) {
+            // Do nothing
+        },
+    },
     auth: {
       autoRefreshToken: false,
       persistSession: false,
