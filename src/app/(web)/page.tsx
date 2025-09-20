@@ -1,4 +1,5 @@
 
+
 'use client'
 
 import { useState, useMemo, useEffect, useRef } from 'react';
@@ -88,37 +89,25 @@ function HomePageContent({ fleet, promotions }: { fleet: Vehicle[], promotions: 
         if (!fleet) return [];
         const brands = new Set(
             fleet
-                .filter(v => filters.type === 'all' || v.type === filters.type)
                 .map(v => v.brand)
+                .filter(Boolean) // Filter out null, undefined, or empty strings
         );
         return ['all', ...Array.from(brands)];
-    }, [filters.type, fleet]);
+    }, [fleet]);
 
     const availableTypes = useMemo(() => {
         if (!fleet) return [];
         const types = new Set(
             fleet
-                .filter(v => filters.brand === 'all' || v.brand === filters.brand)
                 .map(v => v.type)
+                .filter(Boolean) // Filter out null, undefined, or empty strings
         );
         return ['all', ...Array.from(types)];
-    }, [filters.brand, fleet]);
-    
-    useEffect(() => {
-        if (!availableTypes.includes(filters.type!)) {
-            setFilters(f => ({ ...f, type: 'all' }));
-        }
-    }, [filters.brand, availableTypes, filters.type]);
-    
-    useEffect(() => {
-        if (!availableBrands.includes(filters.brand)) {
-            setFilters(f => ({ ...f, brand: 'all' }));
-        }
-    }, [filters.type, availableBrands, filters.brand]);
-
+    }, [fleet]);
 
     const sortedFleet = useMemo(() => {
         return [...filteredFleet].sort((a, b) => {
+            if (!a.price || !b.price) return 0;
             switch (sortBy) {
                 case 'price-asc':
                     return a.price - b.price;
