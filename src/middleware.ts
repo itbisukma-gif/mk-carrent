@@ -1,3 +1,4 @@
+
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/utils/supabase/middleware";
 
@@ -11,9 +12,8 @@ export async function middleware(request: NextRequest) {
 
   // Define protected routes that require authentication
   const protectedRoutes = ["/dashboard"];
-  const isProtectedRoute = protectedRoutes.some(route =>
-    pathname.startsWith(route)
-  );
+  // Check for an exact match on the main protected routes
+  const isProtectedRoute = protectedRoutes.includes(pathname);
   
   // If trying to access a protected route without a session, redirect to login
   if (isProtectedRoute && !session) {
