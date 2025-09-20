@@ -9,23 +9,23 @@ export type Driver = {
 }
 
 export type Vehicle = {
-  id: string
-  photo: string
-  name: string
-  brand: string
-  type: string
-  passengers: number
-  transmission: 'Manual' | 'Matic'
-  price: number
-  fuel: string
-  code: string
-  year: number
-  rating: number
-  dataAiHint: string
-  discountPercentage?: number
-  carName?: string
-  unitType?: 'biasa' | 'khusus';
-  stock?: number;
+  id: string;
+  created_at?: string;
+  name: string | null;
+  brand: string | null;
+  type: string | null;
+  passengers: number | null;
+  transmission: 'Manual' | 'Matic' | null;
+  price: number | null;
+  fuel: string | null;
+  code: string | null;
+  year: number | null;
+  rating: number | null;
+  dataAiHint: string | null;
+  discountPercentage: number | null;
+  photo: string | null;
+  unitType: 'biasa' | 'khusus' | null;
+  stock: number | null;
 }
 
 export type Testimonial = {
@@ -101,5 +101,3 @@ export type Promotion = {
     imageUrl: string;
     vehicleId?: string;
 };
-
-    
