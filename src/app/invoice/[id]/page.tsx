@@ -1,7 +1,6 @@
 'use client'
 
 import { useParams, notFound, useRouter } from 'next/navigation';
-import { orders, calculateInvoiceDetails } from '@/lib/data';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +10,10 @@ import { ArrowLeft, Download, Loader2, UserCheck, Share2, AlertTriangle } from '
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/lib/supabase';
+import type { Order } from '@/lib/types';
+import { serviceCosts } from '@/lib/data';
+
 
 // Helper to get status color
 const getStatusVariant = (status: string): "default" | "secondary" | "destructive" => {
@@ -34,6 +37,8 @@ export default function InvoicePage() {
 
     const [isDownloading, setIsDownloading] = useState(false);
     const [isAdmin, setIsAdmin] = useState(false);
+    const [order, setOrder] = useState<Order | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         // Check for session cookie on client-side to determine if user is an admin
@@ -43,11 +48,36 @@ export default function InvoicePage() {
                 setIsAdmin(true);
             }
         }
-    }, []);
+        
+        const orderId = params.id as string;
+        if (orderId) {
+            const fetchOrder = async () => {
+                const { data, error } = await supabase
+                    .from('orders')
+                    .select('*')
+                    .eq('id', orderId)
+                    .single();
+                
+                if (error || !data) {
+                    notFound();
+                } else {
+                    setOrder(data);
+                }
+                setIsLoading(false);
+            }
+            fetchOrder();
+        }
 
-    const orderId = params.id as string;
-    const order = orders.find(o => o.id === orderId);
+    }, [params.id]);
 
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+        );
+    }
+    
     if (!order) {
         notFound();
     }
@@ -75,7 +105,6 @@ export default function InvoicePage() {
         )
     }
 
-    const { total, rentalCost, mFee, dFee, fuelFee, discAmount, days } = calculateInvoiceDetails(order);
     const formatCurrency = (value: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(value);
     
     const displayStatus = order.status === 'disetujui' ? 'Lunas' : order.status;
@@ -153,7 +182,7 @@ export default function InvoicePage() {
                     </div>
                      <div className="flex justify-between">
                         <span className="text-muted-foreground">Periode</span>
-                        <span className='font-medium'>14 Agt 24 - 15 Agt 24</span> {/* Simulated date */}
+                        <span className='font-medium'>-</span> {/* TODO: Implement date calculation */}
                     </div>
                      <div className="flex justify-between">
                         <span className="text-muted-foreground">Layanan</span>
@@ -162,44 +191,21 @@ export default function InvoicePage() {
                     <Separator />
                     <h4 className='font-semibold pt-2'>Rincian Biaya</h4>
                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Sewa Mobil ({days} hari)</span>
-                        <span className='font-medium'>{formatCurrency(rentalCost)}</span>
+                        <span className="text-muted-foreground">Total Tagihan</span>
+                        <span className='font-medium'>{formatCurrency(order.total || 0)}</span>
                     </div>
-                    {dFee > 0 && (
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground">Biaya Supir</span>
-                            <span className='font-medium'>{formatCurrency(dFee)}</span>
-                        </div>
-                    )}
-                    {fuelFee > 0 && (
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground">Biaya BBM</span>
-                            <span className='font-medium'>{formatCurrency(fuelFee)}</span>
-                        </div>
-                    )}
-                    {mFee > 0 && (
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground">Biaya Matic</span>
-                            <span className='font-medium'>{formatCurrency(mFee)}</span>
-                        </div>
-                    )}
-                     {discAmount > 0 && (
-                        <div className="flex justify-between text-green-600">
-                            <span className="font-medium">Diskon</span>
-                            <span>- {formatCurrency(discAmount)}</span>
-                        </div>
-                    )}
+
                     <Separator className='my-2' />
                      <div className="flex justify-between items-baseline pt-1">
-                        <span className="text-base font-bold">Total Tagihan</span>
-                        <span className="text-xl font-bold text-primary">{formatCurrency(total)}</span>
+                        <span className="text-base font-bold">Total Lunas</span>
+                        <span className="text-xl font-bold text-primary">{formatCurrency(order.total || 0)}</span>
                     </div>
                 </div>
 
                 {isAdmin && order.status === 'disetujui' && (
                     <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground p-2 bg-blue-50 border border-blue-200 rounded-md">
                         <UserCheck className="h-4 w-4 text-blue-600" />
-                        <span>Divalidasi oleh: <strong>Admin 1</strong></span>
+                        <span>Divalidasi oleh: <strong>Admin</strong></span>
                     </div>
                 )}
 

@@ -1,7 +1,6 @@
 'use client'
 
 import { useParams, notFound, useRouter } from 'next/navigation';
-import { orders, calculateInvoiceDetails } from '@/lib/data';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
@@ -10,7 +9,9 @@ import { Button } from '@/components/ui/button';
 import { Phone, ArrowLeft, Printer, Download, Loader2, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
+import type { Order } from '@/lib/types';
 
 
 // Helper to get status color
@@ -32,16 +33,43 @@ export default function SharedInvoicePage() {
     const router = useRouter();
     const { toast } = useToast();
     const [isDownloading, setIsDownloading] = useState(false);
+    const [order, setOrder] = useState<Order | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    
+    useEffect(() => {
+        const orderId = params.id as string;
+        if (orderId) {
+            const fetchOrder = async () => {
+                const { data, error } = await supabase
+                    .from('orders')
+                    .select('*')
+                    .eq('id', orderId)
+                    .single();
+                
+                if (error || !data) {
+                    // This is intentional for public page, we just show not found
+                    setOrder(null);
+                } else {
+                    setOrder(data);
+                }
+                setIsLoading(false);
+            }
+            fetchOrder();
+        }
 
-    const orderId = params.id as string;
-    const order = orders.find(o => o.id === orderId);
+    }, [params.id]);
 
-    if (!order) {
-        notFound();
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+        );
     }
-
+    
     // Rule: Invoice is only available for approved orders
-    if (order.status !== 'disetujui') {
+    if (!order || order.status !== 'disetujui') {
         return (
              <Card className="w-full max-w-md shadow-lg text-center">
                 <CardHeader>
@@ -63,7 +91,6 @@ export default function SharedInvoicePage() {
         )
     }
 
-    const { total, rentalCost, mFee, dFee, fuelFee, discAmount, days } = calculateInvoiceDetails(order);
     const formatCurrency = (value: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(value);
     
     const displayStatus = order.status === 'disetujui' ? 'Lunas' : order.status;
@@ -146,7 +173,7 @@ export default function SharedInvoicePage() {
                     </div>
                      <div className="flex justify-between">
                         <span className="text-muted-foreground">Periode</span>
-                        <span className='font-medium'>14 Agt 24 - 15 Agt 24</span> {/* Simulated date */}
+                        <span className='font-medium'>-</span> {/* TODO: Implement date calculation */}
                     </div>
                      <div className="flex justify-between">
                         <span className="text-muted-foreground">Layanan</span>
@@ -155,37 +182,14 @@ export default function SharedInvoicePage() {
                     <Separator />
                     <h4 className='font-semibold pt-2'>Rincian Biaya</h4>
                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Sewa Mobil ({days} hari)</span>
-                        <span className='font-medium'>{formatCurrency(rentalCost)}</span>
+                        <span className="text-muted-foreground">Total Tagihan</span>
+                        <span className='font-medium'>{formatCurrency(order.total || 0)}</span>
                     </div>
-                    {dFee > 0 && (
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground">Biaya Supir</span>
-                            <span className='font-medium'>{formatCurrency(dFee)}</span>
-                        </div>
-                    )}
-                    {fuelFee > 0 && (
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground">Biaya BBM</span>
-                            <span className='font-medium'>{formatCurrency(fuelFee)}</span>
-                        </div>
-                    )}
-                    {mFee > 0 && (
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground">Biaya Matic</span>
-                            <span className='font-medium'>{formatCurrency(mFee)}</span>
-                        </div>
-                    )}
-                     {discAmount > 0 && (
-                        <div className="flex justify-between text-green-600">
-                            <span className="font-medium">Diskon</span>
-                            <span>- {formatCurrency(discAmount)}</span>
-                        </div>
-                    )}
+                    
                     <Separator className='my-2' />
                      <div className="flex justify-between items-baseline pt-1">
-                        <span className="text-base font-bold">Total Tagihan</span>
-                        <span className="text-xl font-bold text-primary">{formatCurrency(total)}</span>
+                        <span className="text-base font-bold">Total Lunas</span>
+                        <span className="text-xl font-bold text-primary">{formatCurrency(order.total || 0)}</span>
                     </div>
                 </div>
 

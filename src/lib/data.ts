@@ -12,45 +12,6 @@ export let serviceCosts = {
     fuel: 200000,
 };
 
-// New centralized calculation function
-export const calculateInvoiceDetails = (order: Order) => {
-    // This function will need to be adapted to fetch vehicle data from Supabase as well
-    // For now, we'll leave it as a placeholder.
-    const vehicle = undefined; // Placeholder for now
-    
-    // Default values in case vehicle is not found
-    if (!vehicle) {
-        return { 
-            total: order.total, 
-            rentalCost: order.total, 
-            mFee: 0, 
-            dFee: 0, 
-            fuelFee: 0,
-            discAmount: 0, 
-            days: 1 
-        };
-    }
-    
-    // Assuming duration is 1 day for simplicity in invoices for now.
-    // A more robust implementation would store the duration in the order object.
-    const days = 1;
-
-    const rentalCost = vehicle.price * days;
-    const mFee = vehicle.transmission === 'Matic' ? serviceCosts.matic * days : 0;
-    const dFee = order.service.toLowerCase().includes('supir') ? serviceCosts.driver * days : 0;
-    const fuelFee = order.service.toLowerCase().includes('all-include') ? serviceCosts.fuel * days : 0;
-
-    const subtotal = rentalCost + mFee + dFee + fuelFee;
-    
-    const discAmount = vehicle.discountPercentage 
-        ? (rentalCost * vehicle.discountPercentage) / 100
-        : 0;
-
-    const total = subtotal - discAmount;
-    return { total, rentalCost, mFee, dFee, fuelFee, discAmount, days };
-};
-
-
 // revenueData can remain as it's for a static chart example.
 export const revenueData = [
   { date: 'Mon', revenue: 2100000 },
@@ -60,114 +21,6 @@ export const revenueData = [
   { date: 'Fri', revenue: 4100000 },
   { date: 'Sat', revenue: 5300000 },
   { date: 'Sun', revenue: 4800000 },
-];
-
-// This data is now fetched from Supabase, so we can keep it empty or remove it.
-export let drivers: Driver[] = [];
-
-export let orders: Order[] = [
-    {
-        id: 'ORD-12345',
-        customerName: 'Ahmad Subarjo',
-        customerPhone: '081234567890',
-        carName: 'Toyota Avanza',
-        type: 'MPV',
-        fuel: 'Bensin',
-        transmission: 'Manual',
-        service: 'Dengan Supir',
-        driver: 'Budi Santoso',
-        driverId: 'd-001',
-        paymentProof: 'https://picsum.photos/seed/proof1/400/300',
-        status: 'disetujui',
-        paymentMethod: 'Transfer Bank',
-        total: 500000,
-        createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
-    },
-    {
-        id: 'ORD-54321',
-        customerName: 'Citra Lestari',
-        customerPhone: '089876543210',
-        carName: 'Honda Brio',
-        type: 'City Car',
-        fuel: 'Bensin',
-        transmission: 'Matic',
-        service: 'Lepas Kunci',
-        driver: null,
-        driverId: null,
-        paymentProof: 'https://picsum.photos/seed/proof2/400/300',
-        status: 'pending',
-        paymentMethod: 'QRIS',
-        total: 350000,
-        createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
-    },
-    {
-        id: 'ORD-98765',
-        customerName: 'Bambang Pamungkas',
-        customerPhone: '081122334455',
-        carName: 'Mitsubishi Xpander',
-        type: 'MPV',
-        fuel: 'Bensin',
-        transmission: 'Matic',
-        service: 'All Include',
-        driver: null,
-        driverId: null,
-        paymentProof: 'https://picsum.photos/seed/proof3/400/300',
-        status: 'pending',
-        paymentMethod: 'Transfer Bank',
-        total: 600000,
-        createdAt: new Date().toISOString(), // Now
-    },
-     {
-        id: 'ORD-11223',
-        customerName: 'Dewi Ayu',
-        customerPhone: '085566778899',
-        carName: 'Toyota Innova',
-        type: 'MPV',
-        fuel: 'Diesel',
-        transmission: 'Matic',
-        service: 'Dengan Supir',
-        driver: 'Agus Setiawan',
-        driverId: 'd-002',
-        paymentProof: 'https://picsum.photos/seed/proof4/400/300',
-        status: 'selesai',
-        paymentMethod: 'QRIS',
-        total: 700000,
-        createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
-    },
-     {
-        id: 'ORD-ABCDE',
-        customerName: 'Eko Yulianto',
-        customerPhone: '081212121212',
-        carName: 'Toyota Avanza',
-        type: 'MPV',
-        fuel: 'Bensin',
-        transmission: 'Manual',
-        service: 'Dengan Supir',
-        driver: 'Budi Santoso',
-        driverId: 'd-001',
-        paymentProof: 'https://picsum.photos/seed/proof5/400/300',
-        status: 'disetujui',
-        paymentMethod: 'QRIS',
-        total: 500000,
-        createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
-    },
-    {
-        id: 'ORD-FGHIJ',
-        customerName: 'Fajar Alfian',
-        customerPhone: '081313131313',
-        carName: 'Daihatsu Terios',
-        type: 'SUV',
-        fuel: 'Bensin',
-        transmission: 'Manual',
-        service: 'Lepas Kunci',
-        driver: null,
-        driverId: null,
-        paymentProof: 'https://picsum.photos/seed/proof6/400/300',
-        status: 'pending',
-        paymentMethod: 'Transfer Bank',
-        total: 380000,
-        createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(), // 30 minutes ago
-    },
 ];
 
 export let testimonials: Testimonial[] = [
@@ -250,5 +103,7 @@ export let promotions: Promotion[] = [
     }
 ];
 
-// Dummy data for fleet is now fetched from Supabase, so this can be removed or emptied.
+// Dummy data for fleet, orders, drivers is now fetched from Supabase, so this can be removed or emptied.
 export let fleet: Vehicle[] = [];
+export let orders: Order[] = [];
+export let drivers: Driver[] = [];

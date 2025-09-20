@@ -1,8 +1,6 @@
-
-
 'use client';
 
-import { useState, ChangeEvent } from 'react';
+import { useState, ChangeEvent, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -11,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Order, BankAccount } from "@/lib/types";
-import { Download, FileText, Trash2, University, Upload } from "lucide-react";
+import { Download, FileText, Trash2, Loader2, Upload } from "lucide-react";
 import Image from "next/image";
 import { Combobox } from '@/components/ui/combobox';
 import { bankList } from '@/lib/bank-data';
@@ -20,14 +18,16 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useToast } from "@/hooks/use-toast";
 import { cn } from '@/lib/utils';
 import type { ComboboxItem } from '@/components/ui/combobox';
-import { orders as initialOrders, bankAccounts as initialBankAccounts, serviceCosts as initialServiceCosts } from '@/lib/data';
+import { bankAccounts as initialBankAccounts, serviceCosts as initialServiceCosts } from '@/lib/data';
 import logos from '@/lib/logo-urls.json';
-import { Switch } from '@/components/ui/switch';
+import { supabase } from '@/lib/supabase';
+
 
 type BankNameKey = keyof typeof logos;
 
 export default function KeuanganPage() {
-  const [orders, setOrders] = useState<Order[]>(initialOrders);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>(initialBankAccounts);
   const [serviceCosts, setServiceCosts] = useState(initialServiceCosts);
 
@@ -43,6 +43,21 @@ export default function KeuanganPage() {
   const [selectedBank, setSelectedBank] = useState<string>("");
   const [accountNumber, setAccountNumber] = useState("");
   const [accountName, setAccountName] = useState("");
+
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+        setIsLoading(true);
+        const { data, error } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
+        if (error) {
+            toast({ variant: 'destructive', title: 'Gagal memuat data keuangan', description: error.message });
+        } else {
+            setOrders(data || []);
+        }
+        setIsLoading(false);
+    }
+    fetchOrders();
+  }, [toast]);
 
 
   const financialReport = orders.map((order, index) => ({
@@ -400,7 +415,16 @@ export default function KeuanganPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {financialReport.length > 0 ? (
+              {isLoading ? (
+                <TableRow>
+                    <TableCell colSpan={7} className="h-24 text-center">
+                       <div className="flex justify-center items-center gap-2 text-muted-foreground">
+                            <Loader2 className="h-5 w-5 animate-spin" />
+                            <span>Memuat laporan...</span>
+                        </div>
+                    </TableCell>
+                </TableRow>
+              ) : financialReport.length > 0 ? (
                 financialReport.map((item) => (
                     <TableRow key={item.no}>
                     <TableCell>{item.no}</TableCell>
@@ -408,7 +432,7 @@ export default function KeuanganPage() {
                     <TableCell>{item.unit}</TableCell>
                     <TableCell>{item.service}</TableCell>
                     <TableCell>{item.payment}</TableCell>
-                    <TableCell className="font-medium">{formatCurrency(item.total)}</TableCell>
+                    <TableCell className="font-medium">{formatCurrency(item.total || 0)}</TableCell>
                     <TableCell className="text-center">
                         <Button variant="outline" size="sm" asChild disabled={item.status !== 'disetujui'}>
                         <Link href={`/invoice/${item.orderNo}`} target="_blank">
@@ -432,9 +456,3 @@ export default function KeuanganPage() {
     </div>
   );
 }
-
-    
-
-    
-
-    
