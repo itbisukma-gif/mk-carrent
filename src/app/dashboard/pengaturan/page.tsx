@@ -57,7 +57,8 @@ export default function PengaturanPage() {
   const [socialLinks, setSocialLinks] = useState<SocialLinkItem[]>([]);
 
   useEffect(() => {
-    setSupabase(createClient());
+    const supabaseClient = createClient();
+    setSupabase(supabaseClient);
   }, []);
 
   useEffect(() => {
