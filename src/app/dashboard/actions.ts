@@ -108,6 +108,7 @@ export async function updateDriverStatus(driverId: string, status: 'Tersedia' | 
     }
     
     revalidatePath('/dashboard');
+    revalidatePath('/dashboard/orders');
 
     return { error: null };
 }

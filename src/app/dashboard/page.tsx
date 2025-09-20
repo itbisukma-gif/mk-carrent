@@ -1,5 +1,4 @@
 
-
 'use client'
 
 import * as React from 'react'
@@ -73,7 +72,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
-import { supabase } from '@/lib/supabase'
+import { getSupabase } from '@/lib/supabase'
 import { upsertDriver, deleteDriver, updateDriverStatus } from './actions'
 
 export const dynamic = 'force-dynamic';
@@ -192,6 +191,12 @@ export default function DashboardPage() {
   const { toast } = useToast();
 
    const fetchData = async () => {
+        const supabase = getSupabase();
+        if (!supabase) {
+            setIsLoading(false);
+            toast({ variant: "destructive", title: "Gagal memuat data", description: "Supabase client tidak terinisialisasi." });
+            return;
+        }
         setIsLoading(true);
         const { data: driverData, error: driverError } = await supabase.from('drivers').select('*').order('created_at', { ascending: false });
         const { data: vehicleData, error: vehicleError } = await supabase.from('vehicles').select('*');
@@ -565,5 +570,3 @@ export default function DashboardPage() {
     </div>
   )
 }
-
-    

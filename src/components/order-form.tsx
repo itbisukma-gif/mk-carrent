@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useMemo, useEffect, forwardRef } from 'react';
@@ -37,7 +36,7 @@ import { format, addDays, differenceInCalendarDays, isBefore, startOfDay } from 
 import { id } from 'date-fns/locale';
 import { useLanguage } from '@/hooks/use-language';
 import { cn } from '@/lib/utils';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 
 
 export const OrderForm = forwardRef<HTMLDivElement, { vehicle: Vehicle }>(({ vehicle }, ref) => {
@@ -57,6 +56,7 @@ export const OrderForm = forwardRef<HTMLDivElement, { vehicle: Vehicle }>(({ veh
 
 
     useEffect(() => {
+        const supabase = getSupabase();
         // Set initial dates only on the client-side to avoid hydration errors
         const today = startOfDay(new Date());
         setStartDate(today);
@@ -64,6 +64,7 @@ export const OrderForm = forwardRef<HTMLDivElement, { vehicle: Vehicle }>(({ veh
 
         // Fetch available drivers
         const fetchDrivers = async () => {
+            if (!supabase) return;
             const { data, error } = await supabase
                 .from('drivers')
                 .select('*')

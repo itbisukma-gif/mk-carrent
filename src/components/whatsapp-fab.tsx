@@ -9,16 +9,18 @@ import type { ContactInfo } from '@/lib/types';
 import { useLanguage } from '@/hooks/use-language';
 import { cn } from '@/lib/utils';
 import { WhatsAppIcon } from './icons';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 
 export function WhatsappFab() {
   const [contactInfo, setContactInfo] = useState<ContactInfo | null>(null);
   const { dictionary } = useLanguage();
 
   useEffect(() => {
+    const supabase = getSupabase();
     const fetchContactInfo = async () => {
-        const { data } = await supabase.from('contact_info').select('*').single();
-        setContactInfo(data);
+        if (!supabase) return;
+        const { data } = await supabase.from('contact_info').select('whatsapp').single();
+        setContactInfo(data as ContactInfo);
     };
     fetchContactInfo();
   }, []);
@@ -53,5 +55,3 @@ export function WhatsappFab() {
     </TooltipProvider>
   );
 }
-
-    

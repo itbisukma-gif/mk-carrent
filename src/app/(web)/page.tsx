@@ -1,5 +1,4 @@
 
-
 'use client'
 
 import { useState, useMemo, useEffect, useRef } from 'react';
@@ -43,7 +42,7 @@ import { VehicleCard } from '@/components/vehicle-card';
 import { useLanguage } from '@/hooks/use-language';
 import { LanguageProvider } from '@/app/language-provider';
 import { FeaturesSection } from '@/components/features-section';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
@@ -64,7 +63,12 @@ function HomePageContent() {
     )
     
     useEffect(() => {
+        const supabase = getSupabase();
         const fetchData = async () => {
+            if (!supabase) {
+                setIsLoading(false);
+                return;
+            }
             setIsLoading(true);
             const { data: fleetData } = await supabase.from('vehicles').select('*');
             const { data: promotionsData } = await supabase.from('promotions').select('*');

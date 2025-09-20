@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { Button } from "@/components/ui/button";
@@ -11,7 +10,7 @@ import type { ContactInfo } from "@/lib/types";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { WhatsAppIcon } from "@/components/icons";
-import { supabase } from "@/lib/supabase";
+import { getSupabase } from '@/lib/supabase';
 import { useToast } from "@/hooks/use-toast";
 
 export const dynamic = 'force-dynamic';
@@ -51,7 +50,13 @@ function KontakPageContent() {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
+        const supabase = getSupabase();
         const fetchContactInfo = async () => {
+            if (!supabase) {
+                setIsLoading(false);
+                toast({ variant: 'destructive', title: 'Gagal memuat informasi kontak.', description: 'Supabase client tidak terinisialisasi.' });
+                return;
+            }
             setIsLoading(true);
             const { data, error } = await supabase.from('contact_info').select('*').single();
             if (error || !data) {
@@ -163,5 +168,3 @@ export default function KontakPage() {
         </LanguageProvider>
     )
 }
-
-    

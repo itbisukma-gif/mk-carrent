@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useMemo, useEffect, useTransition } from 'react';
@@ -21,13 +20,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { formatDistanceToNow, differenceInHours } from 'date-fns';
 import { id } from 'date-fns/locale';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 import { updateDriverStatus } from '../actions';
 
 export const dynamic = 'force-dynamic';
 
 // Server action to update order status
 async function updateOrderStatus(orderId: string, status: OrderStatus) {
+    const supabase = getSupabase();
+    if (!supabase) return { data: null, error: { message: 'Supabase client not initialized.' } };
     const { data, error } = await supabase
         .from('orders')
         .update({ status })
@@ -37,6 +38,8 @@ async function updateOrderStatus(orderId: string, status: OrderStatus) {
 
 // Server action to update order driver
 async function updateOrderDriver(orderId: string, driverName: string, driverId: string) {
+    const supabase = getSupabase();
+    if (!supabase) return { data: null, error: { message: 'Supabase client not initialized.' } };
     const { data, error } = await supabase
         .from('orders')
         .update({ driver: driverName, driverId: driverId })
@@ -313,6 +316,12 @@ export default function OrdersPage() {
     const { toast } = useToast();
 
     const fetchOrderData = async () => {
+        const supabase = getSupabase();
+        if (!supabase) {
+            setIsLoading(false);
+            toast({ variant: 'destructive', title: 'Gagal mengambil data', description: 'Supabase client tidak terinisialisasi.' });
+            return;
+        }
         setIsLoading(true);
         const { data: orderData, error: orderError } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
         const { data: driverData, error: driverError } = await supabase.from('drivers').select('*');

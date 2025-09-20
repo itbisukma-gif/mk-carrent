@@ -10,7 +10,7 @@ import { LanguageProvider } from "@/app/language-provider";
 import { FeaturesSection } from "@/components/features-section";
 import { useState, useEffect } from "react";
 import type { Testimonial, GalleryItem } from "@/lib/types";
-import { supabase } from "@/lib/supabase";
+import { getSupabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 
 export const dynamic = 'force-dynamic';
@@ -36,7 +36,13 @@ function TestimonialsPageContent() {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
+        const supabase = getSupabase();
         const fetchData = async () => {
+            if (!supabase) {
+                setIsLoading(false);
+                toast({ variant: 'destructive', title: 'Gagal memuat data', description: 'Supabase client tidak terinisialisasi.' });
+                return;
+            }
             setIsLoading(true);
             const { data: testimonialsData, error: testimonialsError } = await supabase.from('testimonials').select('*').order('created_at', { ascending: false });
             const { data: galleryData, error: galleryError } = await supabase.from('gallery').select('*').order('created_at', { ascending: false });

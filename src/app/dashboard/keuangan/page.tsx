@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, ChangeEvent, useEffect } from 'react';
@@ -20,7 +21,7 @@ import { cn } from '@/lib/utils';
 import type { ComboboxItem } from '@/components/ui/combobox';
 import { bankAccounts as initialBankAccounts, serviceCosts as initialServiceCosts } from '@/lib/data';
 import logos from '@/lib/logo-urls.json';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
@@ -47,7 +48,13 @@ export default function KeuanganPage() {
 
 
   useEffect(() => {
+    const supabase = getSupabase();
     const fetchOrders = async () => {
+        if (!supabase) {
+            setIsLoading(false);
+            toast({ variant: 'destructive', title: 'Gagal memuat data keuangan', description: 'Supabase client tidak terinisialisasi.' });
+            return;
+        }
         setIsLoading(true);
         const { data, error } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
         if (error) {

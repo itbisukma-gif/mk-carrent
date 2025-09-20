@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import type { FeatureItem } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 import { Loader2 } from 'lucide-react';
 
 
@@ -15,7 +15,12 @@ export function FeaturesSection() {
     const [expandedId, setExpandedId] = useState<string | null>(null);
 
     useEffect(() => {
+        const supabase = getSupabase();
         const fetchFeatures = async () => {
+            if (!supabase) {
+                setIsLoading(false);
+                return;
+            }
             setIsLoading(true);
             const { data, error } = await supabase.from('features').select('*').order('created_at');
             if (data && data.length > 0) {

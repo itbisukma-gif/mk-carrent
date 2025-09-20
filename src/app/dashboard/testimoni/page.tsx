@@ -21,7 +21,7 @@ import { StarRating } from '@/components/star-rating';
 import { LanguageProvider } from '@/app/language-provider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 import { upsertTestimonial, deleteTestimonial, addGalleryItem, deleteGalleryItem, upsertFeature, deleteFeature } from './actions';
 
 export const dynamic = 'force-dynamic';
@@ -204,6 +204,12 @@ function GalleryEditor({ vehicles }: { vehicles: Vehicle[] }) {
     const [isPending, startTransition] = useTransition();
 
     const fetchGallery = async () => {
+        const supabase = getSupabase();
+        if (!supabase) {
+            setIsLoading(false);
+            toast({ variant: 'destructive', title: 'Gagal memuat galeri', description: 'Supabase client tidak terinisialisasi.' });
+            return;
+        }
         setIsLoading(true);
         const { data, error } = await supabase.from('gallery').select('*').order('created_at', { ascending: false });
         if (error) toast({ variant: 'destructive', title: 'Gagal memuat galeri', description: error.message });
@@ -380,6 +386,12 @@ function FeatureEditor() {
     const [isPending, startTransition] = useTransition();
 
     const fetchFeatures = async () => {
+        const supabase = getSupabase();
+        if (!supabase) {
+            setIsLoading(false);
+            toast({ variant: 'destructive', title: 'Gagal memuat keunggulan', description: 'Supabase client tidak terinisialisasi.' });
+            return;
+        }
         setIsLoading(true);
         const { data, error } = await supabase.from('features').select('*').order('created_at', { ascending: false });
         if (error) toast({ variant: 'destructive', title: 'Gagal memuat keunggulan', description: error.message });
@@ -503,6 +515,12 @@ export default function TestimoniPage() {
   const itemsPerPage = 5;
 
   const fetchData = async () => {
+    const supabase = getSupabase();
+    if (!supabase) {
+        setIsLoading(false);
+        toast({ variant: 'destructive', title: 'Gagal memuat data', description: 'Supabase client tidak terinisialisasi.' });
+        return;
+    }
     setIsLoading(true);
     const { data: testimonialsData, error: testimonialsError } = await supabase.from('testimonials').select('*').order('created_at', { ascending: false });
     const { data: vehiclesData, error: vehiclesError } = await supabase.from('vehicles').select('*');
@@ -745,5 +763,3 @@ export default function TestimoniPage() {
     </div>
   );
 }
-
-    

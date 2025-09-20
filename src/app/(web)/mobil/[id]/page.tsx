@@ -32,7 +32,7 @@ import { OrderForm } from '@/components/order-form';
 import { Separator } from '@/components/ui/separator';
 import { useVehicleLogo } from '@/hooks/use-vehicle-logo';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { upsertTestimonial } from '@/app/dashboard/testimoni/actions';
 
@@ -56,8 +56,9 @@ function VehicleDetail() {
   const plugin = useRef(Autoplay({ delay: 3000, stopOnInteraction: true }));
   
   useEffect(() => {
+    const supabase = getSupabase();
     const vehicleId = params.id as string;
-    if (!vehicleId) return;
+    if (!vehicleId || !supabase) return;
 
     const fetchData = async () => {
         setIsLoading(true);
@@ -111,7 +112,9 @@ function VehicleDetail() {
       } else {
           toast({ title: 'Ulasan Terkirim', description: 'Terima kasih atas masukan Anda!' });
           // Manually add the new testimonial to the local state to see it immediately
-          setTestimonials(prev => [result.data!, ...prev]);
+          if (result.data) {
+             setTestimonials(prev => [result.data!, ...prev]);
+          }
           setUserRating(0);
           setUserComment("");
       }

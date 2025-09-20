@@ -11,7 +11,7 @@ import { ArrowLeft, Download, Loader2, UserCheck, Share2, AlertTriangle } from '
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 import type { Order } from '@/lib/types';
 import { serviceCosts } from '@/lib/data';
 
@@ -52,7 +52,8 @@ export default function InvoicePage() {
         }
         
         const orderId = params.id as string;
-        if (orderId) {
+        const supabase = getSupabase();
+        if (orderId && supabase) {
             const fetchOrder = async () => {
                 const { data, error } = await supabase
                     .from('orders')
@@ -68,6 +69,8 @@ export default function InvoicePage() {
                 setIsLoading(false);
             }
             fetchOrder();
+        } else {
+            setIsLoading(false);
         }
 
     }, [params.id]);

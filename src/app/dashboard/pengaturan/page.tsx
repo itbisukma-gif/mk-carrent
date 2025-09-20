@@ -12,7 +12,7 @@ import { useState, useEffect, useTransition } from "react";
 import type { ContactInfo, TermsContent } from "@/lib/types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PlusCircle, Trash2, Loader2 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { getSupabase } from "@/lib/supabase";
 
 export const dynamic = 'force-dynamic';
 
@@ -33,11 +33,15 @@ type SocialLinkItem = {
 
 // Server Actions
 async function updateContactInfo(data: ContactInfo) {
+    const supabase = getSupabase();
+    if (!supabase) return { error: { message: "Supabase client not initialized." } };
     const { error } = await supabase.from('contact_info').update(data).eq('id', 1);
     return { error };
 }
 
 async function updateTermsContent(data: TermsContent) {
+    const supabase = getSupabase();
+    if (!supabase) return { error: { message: "Supabase client not initialized." } };
     const { error } = await supabase.from('terms_content').update(data).eq('id', 1);
     return { error };
 }
@@ -53,7 +57,13 @@ export default function PengaturanPage() {
   const [socialLinks, setSocialLinks] = useState<SocialLinkItem[]>([]);
 
   useEffect(() => {
+    const supabase = getSupabase();
     const fetchData = async () => {
+        if (!supabase) {
+            setIsLoading(false);
+            toast({ variant: 'destructive', title: 'Gagal memuat data pengaturan', description: 'Supabase client tidak terinisialisasi.' });
+            return;
+        }
         setIsLoading(true);
         const { data: contactData, error: contactError } = await supabase.from('contact_info').select('*').single();
         const { data: termsData, error: termsError } = await supabase.from('terms_content').select('*').single();
@@ -277,5 +287,3 @@ export default function PengaturanPage() {
     </div>
   );
 }
-
-    

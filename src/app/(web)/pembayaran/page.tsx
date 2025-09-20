@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { Suspense, useMemo, useState, useEffect } from 'react';
@@ -19,7 +18,7 @@ import { id } from 'date-fns/locale';
 import { useLanguage } from '@/hooks/use-language';
 import { LanguageProvider } from '@/app/language-provider';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 import type { Vehicle } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
@@ -43,10 +42,12 @@ function PembayaranComponent() {
     const [phone, setPhone] = useState('');
 
     useEffect(() => {
+        const supabase = getSupabase();
         if (!vehicleId) {
             notFound();
         }
         const fetchVehicle = async () => {
+            if (!supabase) return;
             const { data, error } = await supabase
                 .from('vehicles')
                 .select('*')
@@ -116,7 +117,7 @@ function PembayaranComponent() {
 
     const confirmationUrl = useMemo(() => {
         if (!isFormValid || !vehicle) return '#';
-        let url = `/konfirmasi?paymentMethod=${paymentMethod}&total=${totalCost}&vehicleId=${vehicle.id}&days=${days}&service=${service}&name=${encodeURIComponent(fullName)}&phone=${encodeURIComponent(phone)}`;
+        let url = `/konfirmasi?paymentMethod=${paymentMethod}&total=${totalCost}&vehicleId=${vehicle.id}&days=${calculatedDuration}&service=${service}&name=${encodeURIComponent(fullName)}&phone=${encodeURIComponent(phone)}`;
         if (startDateStr) url += `&startDate=${startDateStr}`;
         if (endDateStr) url += `&endDate=${endDateStr}`;
         if (maticFee > 0) url += `&maticFee=${maticFee}`;

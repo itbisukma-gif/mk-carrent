@@ -11,7 +11,7 @@ import { Phone, ArrowLeft, Printer, Download, Loader2, AlertTriangle } from 'luc
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 import type { Order } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
@@ -40,7 +40,8 @@ export default function SharedInvoicePage() {
     
     useEffect(() => {
         const orderId = params.id as string;
-        if (orderId) {
+        const supabase = getSupabase();
+        if (orderId && supabase) {
             const fetchOrder = async () => {
                 const { data, error } = await supabase
                     .from('orders')
@@ -57,6 +58,8 @@ export default function SharedInvoicePage() {
                 setIsLoading(false);
             }
             fetchOrder();
+        } else {
+            setIsLoading(false);
         }
 
     }, [params.id]);
@@ -231,5 +234,3 @@ export default function SharedInvoicePage() {
         </Card>
     );
 }
-
-    

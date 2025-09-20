@@ -7,7 +7,7 @@ import { useLanguage } from "@/hooks/use-language";
 import { LanguageProvider } from "@/app/language-provider";
 import { useState, useEffect } from "react";
 import type { TermsContent } from "@/lib/types";
-import { supabase } from "@/lib/supabase";
+import { getSupabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 
 export const dynamic = 'force-dynamic';
@@ -19,7 +19,13 @@ function TermsPageContent() {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
+        const supabase = getSupabase();
         const fetchTerms = async () => {
+            if (!supabase) {
+                setIsLoading(false);
+                toast({ variant: 'destructive', title: 'Gagal memuat syarat & ketentuan.', description: 'Supabase client tidak terinisialisasi.' });
+                return;
+            }
             setIsLoading(true);
             const { data, error } = await supabase.from('terms_content').select('*').single();
             if (error || !data) {
@@ -100,5 +106,3 @@ export default function TermsPage() {
         </LanguageProvider>
     )
 }
-
-    

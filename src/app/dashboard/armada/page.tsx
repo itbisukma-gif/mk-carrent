@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useTransition, useEffect } from "react";
@@ -20,7 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { useVehicleLogo } from "@/hooks/use-vehicle-logo";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { upsertVehicle, deleteVehicle } from "./actions";
-import { supabase } from "@/lib/supabase";
+import { getSupabase } from "@/lib/supabase";
 
 export const dynamic = 'force-dynamic';
 
@@ -354,6 +353,12 @@ export default function ArmadaPage() {
   const { toast } = useToast();
   
   const fetchFleet = async () => {
+    const supabase = getSupabase();
+    if (!supabase) {
+        setIsLoading(false);
+        toast({ variant: 'destructive', title: 'Gagal mengambil data', description: 'Supabase client tidak terinisialisasi.' });
+        return;
+    }
     setIsLoading(true);
     const { data, error } = await supabase
         .from('vehicles')
@@ -484,5 +489,3 @@ export default function ArmadaPage() {
     </div>
   );
 }
-
-    

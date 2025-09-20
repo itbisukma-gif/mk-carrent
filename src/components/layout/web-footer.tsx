@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 import type { ContactInfo } from '@/lib/types';
 import Image from 'next/image';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 
 function SocialLink({ platform, url }: { platform: string; url: string; }) {
   if (!url) return null;
@@ -32,7 +32,9 @@ export function WebFooter({ className }: { className?: string }) {
   const [contactInfo, setContactInfo] = useState<ContactInfo | null>(null);
 
   useEffect(() => {
+    const supabase = getSupabase();
     const fetchContactInfo = async () => {
+        if (!supabase) return;
         const { data } = await supabase.from('contact_info').select('*').single();
         setContactInfo(data);
     };
@@ -121,5 +123,3 @@ export function WebFooter({ className }: { className?: string }) {
     </div>
   );
 }
-
-    
