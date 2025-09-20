@@ -1,54 +1,49 @@
+
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/utils/supabase/client';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Logo } from '@/components/icons';
 import { useToast } from '@/hooks/use-toast';
-import type { SupabaseClient } from '@supabase/supabase-js';
 
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    setSupabase(createClient());
-  }, []);
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!supabase) return;
     setIsLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Login Gagal',
-        description: error.message || 'Email atau password yang Anda masukkan salah.',
-      });
-      setIsLoading(false);
-    } else {
+    // Simulate authentication
+    if (email === 'admin@example.com' && password === 'password') {
       toast({
         title: 'Login Berhasil',
         description: 'Anda akan diarahkan ke dashboard.',
       });
-      // The middleware will handle the redirection after the page is refreshed
-      // and the new session cookie is recognized.
-      router.refresh();
+
+      // Set a manual session cookie
+      // In a real app, this would be a secure, HTTP-only cookie set by a server
+      document.cookie = "session=true; path=/; max-age=3600"; // Expires in 1 hour
+
+      // Redirect to the dashboard. Using window.location.href to force a full page reload
+      // which ensures the middleware picks up the new cookie.
+      window.location.href = '/dashboard';
+
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'Login Gagal',
+        description: 'Email atau password yang Anda masukkan salah.',
+      });
+      setIsLoading(false);
     }
   };
 
@@ -90,7 +85,7 @@ export default function LoginPage() {
           </div>
         </CardContent>
         <CardFooter>
-          <Button type="submit" className="w-full" disabled={isLoading || !supabase}>
+          <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? 'Memproses...' : 'Login'}
           </Button>
         </CardFooter>

@@ -5,38 +5,37 @@ import { createClient } from "@/utils/supabase/middleware";
 export async function middleware(request: NextRequest) {
   const { supabase, response } = createClient(request);
 
-  // Refresh Supabase session and get the session data
-  const { data: { session } } = await supabase.auth.getSession();
+  // Instead of Supabase session, we will check for a manual session cookie
+  const sessionCookie = request.cookies.get("session");
+  const hasSession = !!sessionCookie;
 
   const { pathname } = request.nextUrl;
 
   // Define protected routes that require authentication
   const protectedRoutes = ["/dashboard"];
-  // Check for an exact match on the main protected routes
-  const isProtectedRoute = protectedRoutes.includes(pathname);
   
+  // Check if the current path is a protected route or a sub-path
+  const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route));
+
   // If trying to access a protected route without a session, redirect to login
-  if (isProtectedRoute && !session) {
+  if (isProtectedRoute && !hasSession) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
-  
+
   // If there is a session and the user tries to access the login page, redirect to dashboard
-  if (session && pathname.startsWith("/login")) {
+  if (hasSession && pathname.startsWith("/login")) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
   // Handle logout: sign out and redirect to login
   if (pathname === "/logout") {
-    // The signOut action should be handled by Supabase client library,
-    // but we ensure the user is redirected correctly.
+    // We are not using Supabase auth, so we just remove our manual cookie
     const logoutResponse = NextResponse.redirect(new URL("/login", request.url));
-    await supabase.auth.signOut();
-    // Invalidate the cookie by setting it to an empty value with an expired date
-    logoutResponse.cookies.set('sb-access-token', '', { expires: new Date(0) });
-    logoutResponse.cookies.set('sb-refresh-token', '', { expires: new Date(0) });
+    logoutResponse.cookies.set("session", "", { expires: new Date(0) });
     return logoutResponse;
   }
 
+  // Allow the request to proceed
   return response;
 }
 
