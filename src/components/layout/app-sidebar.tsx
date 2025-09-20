@@ -13,6 +13,7 @@ import {
   Wand2,
   Moon,
   Sun,
+  Loader2,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
@@ -54,8 +55,8 @@ export function AppSidebar() {
     setTheme(theme === 'dark' ? 'light' : 'dark');
   };
 
-  const ThemeIcon = theme === 'dark' ? Sun : Moon;
-  const themeTooltip = theme === 'dark' ? 'Light Mode' : 'Dark Mode';
+  const ThemeIcon = !mounted ? Loader2 : theme === 'dark' ? Sun : Moon;
+  const themeTooltip = !mounted ? 'Loading theme...' : theme === 'dark' ? 'Light Mode' : 'Dark Mode';
 
   return (
     <Sidebar
@@ -102,7 +103,7 @@ export function AppSidebar() {
               className="justify-start hover:bg-accent hover:text-accent-foreground"
               disabled={!mounted}
             >
-              {mounted ? <ThemeIcon className="h-5 w-5"/> : <div className="h-5 w-5" />}
+              <ThemeIcon className={`h-5 w-5 ${!mounted ? 'animate-spin' : ''}`}/>
               <span>{mounted ? (theme === 'dark' ? 'Light Mode' : 'Dark Mode') : 'Loading...'}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>

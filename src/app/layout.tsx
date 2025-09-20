@@ -4,7 +4,6 @@ import './globals.css';
 import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/toaster';
 import { Inter } from 'next/font/google'
-import { ThemeProvider } from 'next-themes';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
 
@@ -25,15 +24,8 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head />
       <body className={cn('min-h-screen bg-background font-sans antialiased', inter.variable)}>
-        <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-        >
-            {children}
-            <Toaster />
-        </ThemeProvider>
+        {children}
+        <Toaster />
       </body>
     </html>
   );
