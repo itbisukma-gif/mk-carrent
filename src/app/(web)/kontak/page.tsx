@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { WhatsAppIcon } from "@/components/icons";
 import { createClient } from '@/utils/supabase/client';
 import { useToast } from "@/hooks/use-toast";
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export const dynamic = 'force-dynamic';
 
@@ -46,11 +47,17 @@ function SocialButton({ platform, url }: { platform: string; url: string; }) {
 function KontakPageContent() {
     const { dictionary } = useLanguage();
     const { toast } = useToast();
-    const supabase = createClient();
+    const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
     const [contactInfo, setContactInfo] = useState<ContactInfo | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
+        setSupabase(createClient());
+    }, []);
+
+    useEffect(() => {
+        if (!supabase) return;
+        
         const fetchContactInfo = async () => {
             setIsLoading(true);
             const { data, error } = await supabase.from('contact_info').select('*').single();
@@ -163,3 +170,5 @@ export default function KontakPage() {
         </LanguageProvider>
     )
 }
+
+    

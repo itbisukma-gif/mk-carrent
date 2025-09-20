@@ -43,12 +43,13 @@ import { useLanguage } from '@/hooks/use-language';
 import { LanguageProvider } from '@/app/language-provider';
 import { FeaturesSection } from '@/components/features-section';
 import { createClient } from '@/utils/supabase/client';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export const dynamic = 'force-dynamic';
 
 function HomePageContent() {
     const { dictionary } = useLanguage();
-    const supabase = createClient();
+    const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
     const [fleet, setFleet] = useState<Vehicle[]>([]);
     const [promotions, setPromotions] = useState<Promotion[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -62,8 +63,13 @@ function HomePageContent() {
     const plugin = useRef(
       Autoplay({ delay: 5000, stopOnInteraction: true })
     )
+
+    useEffect(() => {
+        setSupabase(createClient());
+    }, []);
     
     useEffect(() => {
+        if (!supabase) return;
         const fetchData = async () => {
             setIsLoading(true);
             const { data: fleetData } = await supabase.from('vehicles').select('*');
@@ -321,3 +327,5 @@ export default function HomePage() {
     </LanguageProvider>
   )
 }
+
+    

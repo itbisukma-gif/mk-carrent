@@ -9,17 +9,24 @@ import { useState, useEffect } from "react";
 import type { TermsContent } from "@/lib/types";
 import { createClient } from '@/utils/supabase/client';
 import { useToast } from "@/hooks/use-toast";
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export const dynamic = 'force-dynamic';
 
 function TermsPageContent() {
     const { dictionary } = useLanguage();
     const { toast } = useToast();
-    const supabase = createClient();
+    const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
     const [termsContent, setTermsContent] = useState<TermsContent | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
+        setSupabase(createClient());
+    }, []);
+
+    useEffect(() => {
+        if (!supabase) return;
+
         const fetchTerms = async () => {
             setIsLoading(true);
             const { data, error } = await supabase.from('terms_content').select('*').single();
@@ -101,3 +108,5 @@ export default function TermsPage() {
         </LanguageProvider>
     )
 }
+
+    

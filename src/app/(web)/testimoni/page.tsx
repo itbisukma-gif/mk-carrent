@@ -12,6 +12,7 @@ import { useState, useEffect } from "react";
 import type { Testimonial, GalleryItem } from "@/lib/types";
 import { createClient } from '@/utils/supabase/client';
 import { useToast } from "@/hooks/use-toast";
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,12 +32,18 @@ function StarRating({ rating }: { rating: number }) {
 function TestimonialsPageContent() {
     const { dictionary } = useLanguage();
     const { toast } = useToast();
-    const supabase = createClient();
+    const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
     const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
     const [gallery, setGallery] = useState<GalleryItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
+        setSupabase(createClient());
+    }, []);
+
+    useEffect(() => {
+        if (!supabase) return;
+        
         const fetchData = async () => {
             setIsLoading(true);
             const { data: testimonialsData, error: testimonialsError } = await supabase.from('testimonials').select('*').order('created_at', { ascending: false });
@@ -144,3 +151,5 @@ export default function TestimonialsPage() {
         </LanguageProvider>
     )
 }
+
+    

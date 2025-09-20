@@ -24,6 +24,7 @@ import type { BankAccount, Order, Vehicle, Driver } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { WhatsAppIcon } from "@/components/icons";
 import { createClient } from '@/utils/supabase/client';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export const dynamic = 'force-dynamic';
 
@@ -206,7 +207,7 @@ function KonfirmasiComponent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { toast } = useToast();
-    const supabase = createClient();
+    const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
 
     const [vehicle, setVehicle] = useState<Vehicle | null>(null);
     const [driver, setDriver] = useState<Driver | null>(null);
@@ -237,10 +238,15 @@ function KonfirmasiComponent() {
 
 
     useEffect(() => {
+        setSupabase(createClient());
         // This should only run on the client-side to avoid hydration mismatch
         const randomOrderId = `ORD-${Math.floor(Math.random() * 90000) + 10000}`;
         setOrderId(randomOrderId);
+    }, []);
 
+    useEffect(() => {
+        if (!supabase) return;
+        
         const fetchVehicleAndDriver = async () => {
             if (vehicleId) {
                 const { data: vehicleData } = await supabase.from('vehicles').select('*').eq('id', vehicleId).single();
@@ -270,7 +276,7 @@ function KonfirmasiComponent() {
         return `${days} ${dictionary.confirmation.days}`;
     }, [startDateStr, endDateStr, searchParams, dictionary, language]);
 
-    if (!vehicleId || !vehicle || !total || !service || !paymentMethod || !customerName || !customerPhone) {
+    if (!vehicleId || !total || !service || !paymentMethod || !customerName || !customerPhone || !supabase) {
         return (
              <div className="container mx-auto max-w-lg py-8 md:py-12 px-4">
                  <Alert variant="destructive">
@@ -284,6 +290,14 @@ function KonfirmasiComponent() {
                     </AlertDescription>
                 </Alert>
              </div>
+        )
+    }
+    
+    if (!vehicle) {
+        return (
+            <div className="flex h-screen items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin"/>
+            </div>
         )
     }
 
@@ -557,3 +571,5 @@ export default function KonfirmasiPage() {
         </LanguageProvider>
     )
 }
+
+    

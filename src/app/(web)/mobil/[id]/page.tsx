@@ -35,6 +35,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { createClient } from '@/utils/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { upsertTestimonial } from '@/app/dashboard/testimoni/actions';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,7 +43,7 @@ function VehicleDetail() {
   const params = useParams();
   const { dictionary } = useLanguage();
   const { toast } = useToast();
-  const supabase = createClient();
+  const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
   
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
   const [otherVehicles, setOtherVehicles] = useState<Vehicle[]>([]);
@@ -57,6 +58,12 @@ function VehicleDetail() {
   const plugin = useRef(Autoplay({ delay: 3000, stopOnInteraction: true }));
   
   useEffect(() => {
+    setSupabase(createClient());
+  }, []);
+  
+  useEffect(() => {
+    if (!supabase) return;
+
     const vehicleId = params.id as string;
     if (!vehicleId) return;
 
@@ -338,3 +345,5 @@ export default function MobilDetailPage() {
         </LanguageProvider>
     );
 }
+
+    

@@ -20,6 +20,7 @@ import { LanguageProvider } from '@/app/language-provider';
 import { useToast } from '@/hooks/use-toast';
 import { createClient } from '@/utils/supabase/client';
 import type { Vehicle } from '@/lib/types';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,7 +29,7 @@ function PembayaranComponent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { toast } = useToast();
-    const supabase = createClient();
+    const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
     
     const vehicleId = searchParams.get('vehicleId');
     const daysStr = searchParams.get('days');
@@ -51,9 +52,15 @@ function PembayaranComponent() {
 
 
     useEffect(() => {
-        if (!vehicleId) {
-            notFound();
-        }
+        setSupabase(createClient());
+    }, []);
+
+    useEffect(() => {
+        if (!vehicleId || !supabase) {
+            if (!vehicleId) notFound();
+            return;
+        };
+        
         const fetchVehicle = async () => {
             const { data, error } = await supabase
                 .from('vehicles')
@@ -308,3 +315,5 @@ export default function PembayaranPage() {
         </LanguageProvider>
     )
 }
+
+    
