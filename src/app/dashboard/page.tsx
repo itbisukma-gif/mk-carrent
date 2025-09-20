@@ -76,6 +76,7 @@ import {
 import { supabase } from '@/lib/supabase'
 import { upsertDriver, deleteDriver, updateDriverStatus } from './actions'
 
+export const dynamic = 'force-dynamic';
 
 // Function to generate mock data for comparison
 const generatePreviousWeekData = (baseData: typeof initialChartData) => {
@@ -172,7 +173,7 @@ function DriverForm({ driver, onSave, onCancel }: { driver?: Driver | null; onSa
 export default function DashboardPage() {
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [fleet, setFleet] = useState<Vehicle[]>([]);
-  const [orders, setOrders] = useState<Order[]>(initialOrders);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
   const [date, setDate] = React.useState<DateRange | undefined>(undefined);
@@ -194,19 +195,21 @@ export default function DashboardPage() {
         setIsLoading(true);
         const { data: driverData, error: driverError } = await supabase.from('drivers').select('*').order('created_at', { ascending: false });
         const { data: vehicleData, error: vehicleError } = await supabase.from('vehicles').select('*');
+        const { data: orderData, error: orderError } = await supabase.from('orders').select('*');
 
-        if (driverError || vehicleError) {
-            toast({ variant: "destructive", title: "Gagal memuat data", description: driverError?.message || vehicleError?.message });
+        if (driverError || vehicleError || orderError) {
+            toast({ variant: "destructive", title: "Gagal memuat data", description: driverError?.message || vehicleError?.message || orderError?.message });
         } else {
             setDrivers(driverData || []);
             setFleet(vehicleData || []);
+            setOrders(orderData || []);
         }
         setIsLoading(false);
     };
 
     useEffect(() => {
         fetchData();
-    }, [toast]);
+    }, []);
   
   const stats = useMemo(() => {
     const pendingOrders = orders.filter(o => o.status === 'pending').length;
@@ -215,11 +218,7 @@ export default function DashboardPage() {
     const rentedCarCodes = new Set(
         orders
             .filter(o => o.status === 'disetujui')
-            .map(o => {
-                // This part needs adjustment if we want accurate rented car count
-                // For now, it's just a placeholder calculation based on static orders data
-                return o.carName;
-            })
+            .map(o => o.carName)
     );
     const availableUnits = fleet.length - rentedCarCodes.size;
     
@@ -404,7 +403,7 @@ export default function DashboardPage() {
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <p className="text-3xl font-bold text-yellow-800">{stats.pendingOrders}</p>
+                            <p className="text-3xl font-bold text-yellow-800">{isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : stats.pendingOrders}</p>
                         </CardContent>
                     </Card>
                     <Card className="bg-green-50 border-green-200">
@@ -437,7 +436,7 @@ export default function DashboardPage() {
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <p className="text-3xl font-bold text-gray-800">{stats.completedThisMonth}</p>
+                            <p className="text-3xl font-bold text-gray-800">{isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : stats.completedThisMonth}</p>
                         </CardContent>
                     </Card>
                 </CardContent>

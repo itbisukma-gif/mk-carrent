@@ -24,6 +24,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/lib/supabase';
 import { upsertTestimonial, deleteTestimonial, addGalleryItem, deleteGalleryItem, upsertFeature, deleteFeature } from './actions';
 
+export const dynamic = 'force-dynamic';
 
 function TestimonialForm({ testimonial, vehicles, onSave, onCancel }: { testimonial?: Testimonial | null, vehicles: Vehicle[], onSave: () => void, onCancel: () => void }) {
     const { toast } = useToast();

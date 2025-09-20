@@ -38,15 +38,21 @@ import { Label } from "@/components/ui/label"
 
 
 import type { Promotion, Vehicle } from '@/lib/types';
-import { Filter } from 'lucide-react';
+import { Filter, Loader2 } from 'lucide-react';
 import { VehicleCard } from '@/components/vehicle-card';
 import { useLanguage } from '@/hooks/use-language';
 import { LanguageProvider } from '@/app/language-provider';
 import { FeaturesSection } from '@/components/features-section';
 import { supabase } from '@/lib/supabase';
 
-function HomePageContent({ fleet, promotions }: { fleet: Vehicle[], promotions: Promotion[] }) {
+export const dynamic = 'force-dynamic';
+
+function HomePageContent() {
     const { dictionary } = useLanguage();
+    const [fleet, setFleet] = useState<Vehicle[]>([]);
+    const [promotions, setPromotions] = useState<Promotion[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
     const [visibleCars, setVisibleCars] = useState(6);
     const [searchQuery, setSearchQuery] = useState('');
     const [filters, setFilters] = useState({ brand: 'all', type: 'all' });
@@ -56,6 +62,18 @@ function HomePageContent({ fleet, promotions }: { fleet: Vehicle[], promotions: 
     const plugin = useRef(
       Autoplay({ delay: 5000, stopOnInteraction: true })
     )
+    
+    useEffect(() => {
+        const fetchData = async () => {
+            setIsLoading(true);
+            const { data: fleetData } = await supabase.from('vehicles').select('*');
+            const { data: promotionsData } = await supabase.from('promotions').select('*');
+            setFleet(fleetData || []);
+            setPromotions(promotionsData || []);
+            setIsLoading(false);
+        }
+        fetchData();
+    }, []);
 
     const loadMoreCars = () => {
         setVisibleCars(prev => prev + 4);
@@ -267,7 +285,12 @@ function HomePageContent({ fleet, promotions }: { fleet: Vehicle[], promotions: 
                     </div>
                 </div>
 
-                {sortedFleet.length > 0 ? (
+                {isLoading ? (
+                     <div className="text-center py-16 text-muted-foreground flex justify-center items-center gap-2">
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        Memuat data armada...
+                    </div>
+                ) : sortedFleet.length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
                       {sortedFleet.slice(0, visibleCars).map(vehicle => (
                           <VehicleCard key={vehicle.id} vehicle={vehicle} />
@@ -291,17 +314,10 @@ function HomePageContent({ fleet, promotions }: { fleet: Vehicle[], promotions: 
   );
 }
 
-export default async function HomePage() {
-  const { data: fleet, error: fleetError } = await supabase.from('vehicles').select('*');
-  const { data: promotions, error: promoError } = await supabase.from('promotions').select('*');
-
-  if (fleetError || promoError) {
-    console.error('Error fetching data:', fleetError || promoError);
-  }
-
+export default function HomePage() {
   return (
     <LanguageProvider>
-      <HomePageContent fleet={fleet || []} promotions={promotions || []} />
+      <HomePageContent />
     </LanguageProvider>
   )
 }

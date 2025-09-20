@@ -14,6 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { PlusCircle, Trash2, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
+export const dynamic = 'force-dynamic';
+
 const socialPlatforms = [
     { value: 'instagram', label: 'Instagram' },
     { value: 'facebook', label: 'Facebook' },

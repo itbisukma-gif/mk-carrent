@@ -14,6 +14,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { Order } from '@/lib/types';
 
+export const dynamic = 'force-dynamic';
 
 // Helper to get status color
 const getStatusVariant = (status: string): "default" | "secondary" | "destructive" => {
@@ -194,11 +195,9 @@ export default function SharedInvoicePage() {
                     </div>
                 </div>
 
-                 {order.status === 'disetujui' && (
-                     <p className="text-xs text-center text-muted-foreground pt-2">
-                        Pembayaran telah divalidasi. Terima kasih telah memilih layanan kami.
-                    </p>
-                )}
+                 <p className="text-xs text-center text-muted-foreground pt-2">
+                    Pembayaran telah divalidasi. Terima kasih telah memilih layanan kami.
+                </p>
 
 
             </CardContent>

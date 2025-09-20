@@ -14,6 +14,8 @@ import { WhatsAppIcon } from "@/components/icons";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 
+export const dynamic = 'force-dynamic';
+
 function SocialButton({ platform, url }: { platform: string; url: string; }) {
   if (!url) return null;
   

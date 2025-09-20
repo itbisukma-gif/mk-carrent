@@ -10,6 +10,7 @@ import type { TermsContent } from "@/lib/types";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 
+export const dynamic = 'force-dynamic';
 
 function TermsPageContent() {
     const { dictionary } = useLanguage();

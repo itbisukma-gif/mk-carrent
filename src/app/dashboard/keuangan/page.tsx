@@ -22,6 +22,7 @@ import { bankAccounts as initialBankAccounts, serviceCosts as initialServiceCost
 import logos from '@/lib/logo-urls.json';
 import { supabase } from '@/lib/supabase';
 
+export const dynamic = 'force-dynamic';
 
 type BankNameKey = keyof typeof logos;
 

@@ -21,6 +21,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/lib/supabase';
 import { upsertVehicle } from '../armada/actions';
 
+export const dynamic = 'force-dynamic';
+
 // Server actions for promotions
 async function upsertPromotion(promoData: Omit<Promotion, 'created_at'>) {
     const { data, error } = await supabase.from('promotions').upsert(promoData, { onConflict: 'id' }).select().single();

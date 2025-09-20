@@ -20,6 +20,9 @@ import { Badge } from "@/components/ui/badge";
 import { useVehicleLogo } from "@/hooks/use-vehicle-logo";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { upsertVehicle, deleteVehicle } from "./actions";
+import { supabase } from "@/lib/supabase";
+
+export const dynamic = 'force-dynamic';
 
 function VehicleCard({ vehicle, onEdit, onDelete }: { vehicle: Vehicle, onEdit: (vehicle: Vehicle) => void, onDelete: (vehicleId: string) => void }) {
     const { logoUrl } = useVehicleLogo(vehicle.brand);
@@ -352,7 +355,6 @@ export default function ArmadaPage() {
   
   const fetchFleet = async () => {
     setIsLoading(true);
-    const { supabase } = await import('@/lib/supabase');
     const { data, error } = await supabase
         .from('vehicles')
         .select('*')

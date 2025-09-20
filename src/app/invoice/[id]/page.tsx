@@ -15,6 +15,7 @@ import { supabase } from '@/lib/supabase';
 import type { Order } from '@/lib/types';
 import { serviceCosts } from '@/lib/data';
 
+export const dynamic = 'force-dynamic';
 
 // Helper to get status color
 const getStatusVariant = (status: string): "default" | "secondary" | "destructive" => {
@@ -234,5 +235,3 @@ export default function InvoicePage() {
         </Card>
     );
 }
-
-    

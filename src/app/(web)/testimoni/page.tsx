@@ -13,6 +13,7 @@ import type { Testimonial, GalleryItem } from "@/lib/types";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 
+export const dynamic = 'force-dynamic';
 
 function StarRating({ rating }: { rating: number }) {
     return (

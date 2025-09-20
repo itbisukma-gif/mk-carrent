@@ -36,6 +36,8 @@ import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { upsertTestimonial } from '@/app/dashboard/testimoni/actions';
 
+export const dynamic = 'force-dynamic';
+
 function VehicleDetail() {
   const params = useParams();
   const { dictionary } = useLanguage();
@@ -123,7 +125,9 @@ function VehicleDetail() {
   const formatCurrency = (value: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(value);
   
   const hasDiscount = vehicle.discountPercentage && vehicle.discountPercentage > 0;
-  const discountedPrice = hasDiscount && vehicle.price && vehicle.discountPercentage ? vehicle.price * (1 - vehicle.discountPercentage / 100) : vehicle.price;
+  const discountedPrice = (hasDiscount && vehicle.price && vehicle.discountPercentage)
+    ? vehicle.price * (1 - vehicle.discountPercentage / 100)
+    : vehicle.price;
 
   const vehicleDetails = [
     { label: dictionary.vehicleDetail.details.brand, value: vehicle.brand, icon: CheckCircle },

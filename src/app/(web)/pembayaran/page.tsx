@@ -22,6 +22,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
 import type { Vehicle } from '@/lib/types';
 
+export const dynamic = 'force-dynamic';
 
 function PembayaranComponent() {
     const { dictionary, language } = useLanguage();

@@ -26,6 +26,8 @@ import { useToast } from "@/hooks/use-toast";
 import { WhatsAppIcon } from "@/components/icons";
 import { supabase } from "@/lib/supabase";
 
+export const dynamic = 'force-dynamic';
+
 function BankAccountDetails({ bank }: { bank: BankAccount }) {
     const { dictionary } = useLanguage();
     const [copied, setCopied] = useState(false);

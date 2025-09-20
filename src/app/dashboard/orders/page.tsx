@@ -24,6 +24,8 @@ import { id } from 'date-fns/locale';
 import { supabase } from '@/lib/supabase';
 import { updateDriverStatus } from '../actions';
 
+export const dynamic = 'force-dynamic';
+
 // Server action to update order status
 async function updateOrderStatus(orderId: string, status: OrderStatus) {
     const { data, error } = await supabase
@@ -70,7 +72,7 @@ function OrderCard({ order, drivers, onDataChange }: { order: Order, drivers: Dr
     const statusInfo = getStatusInfo(order.status);
     const requiresDriver = order.service?.toLowerCase().includes("supir") || order.service?.toLowerCase().includes("all");
 
-    const orderDate = order.created_at ? new Date(order.created_at) : new Date();
+    const orderDate = new Date(order.created_at);
     const timeSinceCreation = isClient ? formatDistanceToNow(orderDate, { addSuffix: true, locale: id }) : '...';
     const hoursSinceCreation = differenceInHours(new Date(), orderDate);
     const needsAttention = order.status === 'pending' && hoursSinceCreation > 1;
