@@ -1,43 +1,46 @@
-
 import { NextResponse, type NextRequest } from 'next/server'
+import { createClient } from '@/utils/supabase/middleware'
 
-export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
+export async function middleware(request: NextRequest) {
+  const { supabase, response } = createClient(request);
 
-  // Ambil cookie sesi dari request
-  const sessionCookie = request.cookies.get('session');
+  // Refresh session if expired - important for Server Components
+  await supabase.auth.getSession();
 
-  // Definisikan rute yang dilindungi
+  const { pathname } = request.nextUrl;
+
+  // Get session cookie from our custom login logic
+  const sessionCookie = request.cookies.get('session')?.value;
+
+  // Define protected routes
   const protectedRoutes = ['/dashboard'];
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
 
-  // 1. Logika untuk rute yang dilindungi
-  if (isProtectedRoute) {
-    // Jika tidak ada cookie sesi dan pengguna mencoba mengakses rute yang dilindungi,
-    // alihkan ke halaman login.
-    if (!sessionCookie) {
-      return NextResponse.redirect(new URL('/login', request.url));
-    }
+  // 1. Handle protected routes
+  if (isProtectedRoute && !sessionCookie) {
+    // User is not logged in, redirect to login page
+    return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  // 2. Logika untuk halaman login
-  // Jika pengguna sudah memiliki sesi dan mencoba mengakses halaman login,
-  // alihkan mereka ke dashboard.
+  // 2. If already logged in, prevent access to /login
   if (sessionCookie && pathname === '/login') {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
-  
-  // 3. Logika untuk logout
+
+  // 3. Handle logout
   if (pathname === '/logout') {
-      // Buat respons untuk mengalihkan ke halaman login
-      const response = NextResponse.redirect(new URL('/login', request.url));
-      // Hapus cookie sesi untuk logout
-      response.cookies.delete('session');
-      return response;
+    const logoutResponse = NextResponse.redirect(new URL('/login', request.url));
+    // Manually clear the cookie used by our custom login logic
+    logoutResponse.cookies.delete('session');
+    // Also clear Supabase's auth tokens
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error('Error signing out from Supabase:', error);
+    }
+    return logoutResponse;
   }
 
-  // Jika tidak ada kondisi di atas yang terpenuhi, lanjutkan request seperti biasa.
-  return NextResponse.next();
+  return response;
 }
 
 export const config = {
