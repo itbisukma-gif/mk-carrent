@@ -1,5 +1,4 @@
 
-
 export type Driver = {
   id: string;
   created_at?: string;
@@ -31,24 +30,27 @@ export type Vehicle = {
 
 export type Testimonial = {
   id: string;
+  created_at?: string;
   customerName: string;
-  vehicleName: string;
+  vehicleName: string | null;
   rating: number;
-  comment: string;
+  comment: string | null;
 }
 
 export type GalleryItem = {
     id: string;
+    created_at?: string;
     url: string;
-    vehicleName?: string;
+    vehicleName?: string | null;
 }
 
 export type FeatureItem = {
     id: string;
+    created_at?: string;
     title: string;
-    description: string;
-    imageUrl: string;
-    dataAiHint: string;
+    description: string | null;
+    imageUrl: string | null;
+    dataAiHint: string | null;
 }
 
 export type BankAccount = {
@@ -74,7 +76,7 @@ export type Order = {
   status: OrderStatus | null;
   paymentMethod: 'QRIS' | 'Transfer Bank' | null;
   total: number | null;
-  createdAt: string; // ISO 8601 date string
+  created_at: string; // ISO 8601 date string
   driverId?: string | null;
   vehicleId?: string | null;
 };

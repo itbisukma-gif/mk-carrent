@@ -2,16 +2,44 @@
 'use client'
 
 import Image from 'next/image';
-import { features as initialFeatures } from '@/lib/data';
 import { Card, CardContent } from './ui/card';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { FeatureItem } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/lib/supabase';
+import { Loader2 } from 'lucide-react';
 
 
 export function FeaturesSection() {
-    const [features, setFeatures] = useState<FeatureItem[]>(initialFeatures);
-    const [expandedId, setExpandedId] = useState<string | null>(features[0]?.id || null);
+    const [features, setFeatures] = useState<FeatureItem[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [expandedId, setExpandedId] = useState<string | null>(null);
+
+    useEffect(() => {
+        const fetchFeatures = async () => {
+            setIsLoading(true);
+            const { data, error } = await supabase.from('features').select('*').order('created_at');
+            if (data && data.length > 0) {
+                setFeatures(data);
+                setExpandedId(data[0].id); // Expand the first item by default
+            }
+            setIsLoading(false);
+        };
+        fetchFeatures();
+    }, []);
+
+    if (isLoading) {
+        return (
+             <section className="bg-muted/50 py-12 md:py-20">
+                <div className="container text-center">
+                     <div className="flex justify-center items-center gap-2 text-muted-foreground">
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        <span>Memuat Keunggulan Layanan...</span>
+                    </div>
+                </div>
+            </section>
+        )
+    }
 
     if (features.length === 0) return null;
 
@@ -36,13 +64,15 @@ export function FeaturesSection() {
                                     isExpanded ? "flex-grow-[7]" : "flex-grow-[1]"
                                 )}
                              >
-                                <Image
-                                    src={feature.imageUrl}
-                                    alt={feature.title}
-                                    fill
-                                    className="object-cover"
-                                    data-ai-hint={feature.dataAiHint}
-                                />
+                                {feature.imageUrl && (
+                                    <Image
+                                        src={feature.imageUrl}
+                                        alt={feature.title}
+                                        fill
+                                        className="object-cover"
+                                        data-ai-hint={feature.dataAiHint || ''}
+                                    />
+                                )}
                                 <div className={cn(
                                     "absolute inset-0 bg-black/60 transition-all duration-500 flex p-4 md:p-6",
                                     isExpanded 

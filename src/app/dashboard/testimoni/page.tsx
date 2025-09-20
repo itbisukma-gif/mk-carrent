@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState, ChangeEvent, useMemo } from 'react';
+import { useState, ChangeEvent, useMemo, useEffect, useTransition } from 'react';
 import Image from 'next/image';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -10,30 +11,54 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from '@/components/ui/textarea';
-import { MoreHorizontal, PlusCircle, Star, Trash2, Upload, Edit } from "lucide-react";
-import type { Testimonial, GalleryItem, FeatureItem } from '@/lib/types';
+import { MoreHorizontal, PlusCircle, Star, Trash2, Upload, Edit, Loader2 } from "lucide-react";
+import type { Testimonial, GalleryItem, FeatureItem, Vehicle } from '@/lib/types';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from '@/lib/utils';
-import { testimonials as initialTestimonials, gallery as initialGallery, fleet, features as initialFeatures } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { StarRating } from '@/components/star-rating';
 import { LanguageProvider } from '@/app/language-provider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { supabase } from '@/lib/supabase';
+import { upsertTestimonial, deleteTestimonial, addGalleryItem, deleteGalleryItem, upsertFeature, deleteFeature } from './actions';
 
 
-function TestimonialForm({ testimonial, onSave, onCancel }: { testimonial?: Testimonial | null, onSave: () => void, onCancel: () => void }) {
+function TestimonialForm({ testimonial, vehicles, onSave, onCancel }: { testimonial?: Testimonial | null, vehicles: Vehicle[], onSave: () => void, onCancel: () => void }) {
     const { toast } = useToast();
+    const [isPending, startTransition] = useTransition();
+    
+    // Form state
+    const [customerName, setCustomerName] = useState(testimonial?.customerName || '');
+    const [vehicleName, setVehicleName] = useState(testimonial?.vehicleName || '');
     const [rating, setRating] = useState(testimonial?.rating || 0);
+    const [comment, setComment] = useState(testimonial?.comment || '');
+
 
     const handleSave = () => {
-        // API call to save testimonial
-        toast({
-            title: testimonial ? "Testimoni Diperbarui" : "Testimoni Ditambahkan",
-            description: "Testimoni telah berhasil disimpan.",
+        startTransition(async () => {
+            if (!customerName || rating === 0) {
+                toast({ variant: 'destructive', title: 'Form Tidak Lengkap', description: 'Nama pelanggan dan rating wajib diisi.' });
+                return;
+            }
+
+            const dataToSave: Omit<Testimonial, 'created_at'> = {
+                id: testimonial?.id || crypto.randomUUID(),
+                customerName,
+                vehicleName: vehicleName || null,
+                rating,
+                comment: comment || null,
+            };
+
+            const result = await upsertTestimonial(dataToSave);
+            if (result.error) {
+                toast({ variant: "destructive", title: "Gagal Menyimpan", description: result.error.message });
+            } else {
+                toast({ title: testimonial ? "Testimoni Diperbarui" : "Testimoni Ditambahkan" });
+                onSave();
+            }
         });
-        onSave();
     };
 
     return (
@@ -43,16 +68,16 @@ function TestimonialForm({ testimonial, onSave, onCancel }: { testimonial?: Test
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="customerName">Nama Pelanggan</Label>
-                            <Input id="customerName" placeholder="cth. Budi Santoso" defaultValue={testimonial?.customerName} />
+                            <Input id="customerName" placeholder="cth. Budi Santoso" value={customerName} onChange={e => setCustomerName(e.target.value)} />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="vehicleName">Mobil yang Disewa</Label>
-                             <Select defaultValue={testimonial?.vehicleName}>
+                             <Select value={vehicleName || ''} onValueChange={setVehicleName}>
                                 <SelectTrigger>
                                     <SelectValue placeholder="Pilih mobil..." />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {fleet.map((vehicle) => (
+                                    {vehicles.map((vehicle) => (
                                         <SelectItem key={vehicle.id} value={`${vehicle.brand} ${vehicle.name}`}>
                                             {vehicle.brand} {vehicle.name}
                                         </SelectItem>
@@ -72,46 +97,62 @@ function TestimonialForm({ testimonial, onSave, onCancel }: { testimonial?: Test
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="comment">Komentar</Label>
-                        <Textarea id="comment" placeholder="Tulis komentar testimoni di sini..." defaultValue={testimonial?.comment} />
+                        <Textarea id="comment" placeholder="Tulis komentar testimoni di sini..." value={comment || ''} onChange={e => setComment(e.target.value)} />
                     </div>
                 </div>
             </div>
             <DialogFooter className="pt-4 border-t px-6 pb-6 bg-background rounded-b-lg">
                  <Button variant="outline" onClick={onCancel}>Batal</Button>
-                <Button type="submit" onClick={handleSave}>{testimonial ? "Simpan Perubahan" : "Simpan Testimoni"}</Button>
+                <Button type="submit" onClick={handleSave} disabled={isPending}>
+                    {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {testimonial ? "Simpan Perubahan" : "Simpan Testimoni"}
+                </Button>
             </DialogFooter>
         </>
     )
 }
 
-function FeatureForm({ feature, onSave, onCancel }: { feature?: FeatureItem | null, onSave: (feature: FeatureItem) => void, onCancel: () => void }) {
+function FeatureForm({ feature, onSave, onCancel }: { feature?: FeatureItem | null, onSave: () => void, onCancel: () => void }) {
     const { toast } = useToast();
+    const [isPending, startTransition] = useTransition();
+
     const [title, setTitle] = useState(feature?.title || '');
     const [description, setDescription] = useState(feature?.description || '');
     const [previewUrl, setPreviewUrl] = useState<string | null>(feature?.imageUrl || null);
     
     const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
-        if (event.target.files && event.target.files[0]) {
-            const file = event.target.files[0];
-            setPreviewUrl(URL.createObjectURL(file));
+        const file = event.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => setPreviewUrl(reader.result as string);
+            reader.readAsDataURL(file);
         }
     };
 
     const handleSave = () => {
-        if (!title || !description || !previewUrl) {
-            toast({ variant: 'destructive', title: 'Formulir tidak lengkap' });
-            return;
-        }
+        startTransition(async () => {
+            if (!title || !description || !previewUrl) {
+                toast({ variant: 'destructive', title: 'Formulir tidak lengkap' });
+                return;
+            }
 
-        const newFeature: FeatureItem = {
-            id: feature?.id || `feat-${Date.now()}`,
-            title,
-            description,
-            imageUrl: previewUrl,
-            dataAiHint: feature?.dataAiHint || 'feature illustration'
-        };
+            const newFeature: Omit<FeatureItem, 'created_at'> = {
+                id: feature?.id || crypto.randomUUID(),
+                title,
+                description,
+                imageUrl: previewUrl,
+                dataAiHint: feature?.dataAiHint || 'feature illustration'
+            };
 
-        onSave(newFeature);
+            const result = await upsertFeature(newFeature);
+
+            if (result.error) {
+                 toast({ variant: "destructive", title: "Gagal Menyimpan", description: result.error.message });
+            } else {
+                 toast({ title: "Keunggulan Disimpan", description: `Keunggulan "${result.data?.title}" telah disimpan.` });
+                 onSave();
+            }
+        });
     };
     
     return (
@@ -124,7 +165,7 @@ function FeatureForm({ feature, onSave, onCancel }: { feature?: FeatureItem | nu
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="feature-description">Deskripsi Singkat</Label>
-                        <Textarea id="feature-description" placeholder="Jelaskan keunggulan layanan Anda..." value={description} onChange={e => setDescription(e.target.value)} />
+                        <Textarea id="feature-description" placeholder="Jelaskan keunggulan layanan Anda..." value={description || ''} onChange={e => setDescription(e.target.value)} />
                     </div>
                      <div className="space-y-2">
                         <Label>Foto Ilustrasi</Label>
@@ -143,55 +184,77 @@ function FeatureForm({ feature, onSave, onCancel }: { feature?: FeatureItem | nu
             </div>
              <DialogFooter className="pt-4 border-t px-6 pb-6 bg-background rounded-b-lg">
                 <Button variant="outline" onClick={onCancel}>Batal</Button>
-                <Button onClick={handleSave}>{feature ? "Simpan Perubahan" : "Simpan Keunggulan"}</Button>
+                <Button onClick={handleSave} disabled={isPending}>
+                    {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {feature ? "Simpan Perubahan" : "Simpan Keunggulan"}
+                </Button>
             </DialogFooter>
         </>
     );
 }
 
-
-function GalleryEditor() {
-    const [gallery, setGallery] = useState<GalleryItem[]>(initialGallery);
+function GalleryEditor({ vehicles }: { vehicles: Vehicle[] }) {
+    const [gallery, setGallery] = useState<GalleryItem[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
     const [isAddPhotoOpen, setAddPhotoOpen] = useState(false);
     const { toast } = useToast();
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [selectedVehicleName, setSelectedVehicleName] = useState<string | undefined>(undefined);
+    const [isPending, startTransition] = useTransition();
 
+    const fetchGallery = async () => {
+        setIsLoading(true);
+        const { data, error } = await supabase.from('gallery').select('*').order('created_at', { ascending: false });
+        if (error) toast({ variant: 'destructive', title: 'Gagal memuat galeri', description: error.message });
+        else setGallery(data || []);
+        setIsLoading(false);
+    }
+
+    useEffect(() => {
+        fetchGallery();
+    }, []);
 
     const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
-        if (event.target.files && event.target.files[0]) {
-            const file = event.target.files[0];
-            setPreviewUrl(URL.createObjectURL(file));
+        const file = event.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => setPreviewUrl(reader.result as string);
+            reader.readAsDataURL(file);
         }
     };
 
     const handleAddPhoto = () => {
-        if (!previewUrl) return;
+        startTransition(async () => {
+            if (!previewUrl) return;
 
-        const newPhoto: GalleryItem = {
-            id: `gal-${Date.now()}`,
-            url: previewUrl,
-            vehicleName: selectedVehicleName,
-        };
-        
-        setGallery(prev => [newPhoto, ...prev]);
-
-        toast({
-            title: "Foto Ditambahkan",
-            description: "Foto baru telah ditambahkan ke galeri."
+            const newPhotoData: Omit<GalleryItem, 'id' | 'created_at'> = {
+                url: previewUrl,
+                vehicleName: selectedVehicleName,
+            };
+            
+            const result = await addGalleryItem(newPhotoData);
+            if (result.error) {
+                toast({ variant: 'destructive', title: 'Gagal menambah foto', description: result.error.message });
+            } else {
+                toast({ title: "Foto Ditambahkan", description: "Foto baru telah ditambahkan ke galeri." });
+                setAddPhotoOpen(false);
+                setPreviewUrl(null);
+                setSelectedVehicleName(undefined);
+                fetchGallery(); // refetch
+            }
         });
-        setAddPhotoOpen(false);
-        setPreviewUrl(null);
-        setSelectedVehicleName(undefined);
     };
 
-    const handleDeletePhoto = (photo: GalleryItem) => {
-        setGallery(prev => prev.filter(p => p.id !== photo.id));
-        toast({
-            variant: "destructive",
-            title: "Foto Dihapus",
-            description: `Foto dengan ID ${photo.id} telah dihapus dari galeri.`
-        })
+    const handleDeletePhoto = (photoId: string) => {
+        startTransition(async () => {
+             const result = await deleteGalleryItem(photoId);
+              if (result.error) {
+                toast({ variant: 'destructive', title: 'Gagal menghapus foto', description: result.error.message });
+            } else {
+                toast({ variant: "destructive", title: "Foto Dihapus" });
+                fetchGallery(); // refetch
+            }
+        });
     };
 
     return (
@@ -220,7 +283,7 @@ function GalleryEditor() {
                                         <SelectValue placeholder="Pilih mobil..." />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {fleet.map((vehicle) => (
+                                        {vehicles.map((vehicle) => (
                                             <SelectItem key={vehicle.id} value={`${vehicle.brand} ${vehicle.name}`}>
                                                 {vehicle.brand} {vehicle.name}
                                             </SelectItem>
@@ -240,13 +303,18 @@ function GalleryEditor() {
                             <Input id="photo-upload" type="file" accept="image/*" className="hidden" onChange={handleFileChange}/>
                         </div>
                         <DialogFooter>
-                            <Button onClick={handleAddPhoto} disabled={!previewUrl}>Upload & Simpan</Button>
+                            <Button onClick={handleAddPhoto} disabled={!previewUrl || isPending}>
+                                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                Upload & Simpan
+                            </Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
             </CardHeader>
             <CardContent>
-                {gallery.length > 0 ? (
+                {isLoading ? (
+                    <div className="flex justify-center items-center h-48"><Loader2 className="h-6 w-6 animate-spin"/></div>
+                ) : gallery.length > 0 ? (
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                         {gallery.map((photo) => (
                              <div key={photo.id} className="relative group aspect-square">
@@ -266,6 +334,7 @@ function GalleryEditor() {
                                             variant="destructive"
                                             size="icon"
                                             className="absolute top-1 right-1 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                                            disabled={isPending}
                                         >
                                             <Trash2 className="h-4 w-4" />
                                             <span className="sr-only">Hapus foto</span>
@@ -280,7 +349,7 @@ function GalleryEditor() {
                                         </AlertDialogHeader>
                                         <AlertDialogFooter>
                                             <AlertDialogCancel>Batal</AlertDialogCancel>
-                                            <AlertDialogAction onClick={() => handleDeletePhoto(photo)} className="bg-destructive hover:bg-destructive/90">Ya, Hapus</AlertDialogAction>
+                                            <AlertDialogAction onClick={() => handleDeletePhoto(photo.id)} className="bg-destructive hover:bg-destructive/90">Ya, Hapus</AlertDialogAction>
                                         </AlertDialogFooter>
                                     </AlertDialogContent>
                                 </AlertDialog>
@@ -299,10 +368,25 @@ function GalleryEditor() {
 }
 
 function FeatureEditor() {
-    const [features, setFeatures] = useState<FeatureItem[]>(initialFeatures);
+    const [features, setFeatures] = useState<FeatureItem[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [selectedFeature, setSelectedFeature] = useState<FeatureItem | null>(null);
     const { toast } = useToast();
+    const [isPending, startTransition] = useTransition();
+
+    const fetchFeatures = async () => {
+        setIsLoading(true);
+        const { data, error } = await supabase.from('features').select('*').order('created_at', { ascending: false });
+        if (error) toast({ variant: 'destructive', title: 'Gagal memuat keunggulan', description: error.message });
+        else setFeatures(data || []);
+        setIsLoading(false);
+    }
+
+    useEffect(() => {
+        fetchFeatures();
+    }, []);
+
 
     const handleAddClick = () => {
         setSelectedFeature(null);
@@ -314,20 +398,22 @@ function FeatureEditor() {
         setIsFormOpen(true);
     };
 
-    const handleFormSave = (featureData: FeatureItem) => {
-        if (selectedFeature) {
-            setFeatures(prev => prev.map(f => f.id === featureData.id ? featureData : f));
-        } else {
-            setFeatures(prev => [...prev, featureData]);
-        }
+    const handleFormSave = () => {
         setIsFormOpen(false);
         setSelectedFeature(null);
-        toast({ title: "Keunggulan Disimpan", description: `Keunggulan "${featureData.title}" telah disimpan.` });
+        fetchFeatures(); // refetch
     };
 
-    const handleDelete = (feature: FeatureItem) => {
-        setFeatures(prev => prev.filter(f => f.id !== feature.id));
-        toast({ variant: "destructive", title: "Keunggulan Dihapus" });
+    const handleDelete = (featureId: string) => {
+        startTransition(async () => {
+            const result = await deleteFeature(featureId);
+            if (result.error) {
+                 toast({ variant: "destructive", title: "Gagal Menghapus", description: result.error.message });
+            } else {
+                toast({ variant: "destructive", title: "Keunggulan Dihapus" });
+                fetchFeatures(); // refetch
+            }
+        });
     };
 
     return (
@@ -343,9 +429,11 @@ function FeatureEditor() {
                 </Button>
             </CardHeader>
             <CardContent className="space-y-4">
-                {features.length > 0 ? features.map(feature => (
+                {isLoading ? (
+                     <div className="flex justify-center items-center h-48"><Loader2 className="h-6 w-6 animate-spin"/></div>
+                ) : features.length > 0 ? features.map(feature => (
                     <div key={feature.id} className="flex items-center gap-4 border rounded-lg p-3">
-                        <Image src={feature.imageUrl} alt={feature.title} width={120} height={80} className="rounded-md object-cover aspect-video bg-muted" />
+                        <Image src={feature.imageUrl!} alt={feature.title} width={120} height={80} className="rounded-md object-cover aspect-video bg-muted" />
                         <div className="flex-grow">
                             <h4 className="font-bold">{feature.title}</h4>
                             <p className="text-sm text-muted-foreground">{feature.description}</p>
@@ -356,7 +444,7 @@ function FeatureEditor() {
                             </Button>
                             <AlertDialog>
                                 <AlertDialogTrigger asChild>
-                                    <Button variant="destructive" size="icon"><Trash2 className="h-4 w-4" /></Button>
+                                    <Button variant="destructive" size="icon" disabled={isPending}><Trash2 className="h-4 w-4" /></Button>
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
                                     <AlertDialogHeader>
@@ -367,7 +455,7 @@ function FeatureEditor() {
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
                                         <AlertDialogCancel>Batal</AlertDialogCancel>
-                                        <AlertDialogAction onClick={() => handleDelete(feature)} className="bg-destructive hover:bg-destructive/90">Ya, Hapus</AlertDialogAction>
+                                        <AlertDialogAction onClick={() => handleDelete(feature.id)} className="bg-destructive hover:bg-destructive/90">Ya, Hapus</AlertDialogAction>
                                     </AlertDialogFooter>
                                 </AlertDialogContent>
                             </AlertDialog>
@@ -398,7 +486,9 @@ function FeatureEditor() {
 }
 
 export default function TestimoniPage() {
-  const [testimonials, setTestimonials] = useState<Testimonial[]>(initialTestimonials);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isFormOpen, setFormOpen] = useState(false);
   const [selectedTestimonial, setSelectedTestimonial] = useState<Testimonial | null>(null);
   const { toast } = useToast();
@@ -406,6 +496,24 @@ export default function TestimoniPage() {
   const [filter, setFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
+
+  const fetchData = async () => {
+    setIsLoading(true);
+    const { data: testimonialsData, error: testimonialsError } = await supabase.from('testimonials').select('*').order('created_at', { ascending: false });
+    const { data: vehiclesData, error: vehiclesError } = await supabase.from('vehicles').select('id, name, brand');
+    
+    if (testimonialsError) toast({ variant: 'destructive', title: 'Gagal memuat testimoni', description: testimonialsError.message });
+    else setTestimonials(testimonialsData || []);
+    
+    if (vehiclesError) toast({ variant: 'destructive', title: 'Gagal memuat kendaraan', description: vehiclesError.message });
+    else setVehicles(vehiclesData || []);
+    
+    setIsLoading(false);
+  }
+
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   const filteredTestimonials = useMemo(() => {
     if (filter === 'all') {
@@ -433,7 +541,6 @@ export default function TestimoniPage() {
     setCurrentPage(prev => Math.max(prev - 1, 1));
   };
 
-
   const handleEditClick = (testimonial: Testimonial) => {
     setSelectedTestimonial(testimonial);
     setFormOpen(true);
@@ -444,24 +551,20 @@ export default function TestimoniPage() {
     setFormOpen(true);
   };
 
-  const handleDelete = (testimonial: Testimonial) => {
-    setTestimonials(prev => prev.filter(t => t.id !== testimonial.id));
-    toast({
-        variant: "destructive",
-        title: "Testimoni Dihapus",
-        description: `Testimoni dari ${testimonial.customerName} telah dihapus.`
-    })
+  const handleDelete = async (testimonial: Testimonial) => {
+    const result = await deleteTestimonial(testimonial.id);
+    if (result.error) {
+         toast({ variant: "destructive", title: "Gagal menghapus", description: result.error.message });
+    } else {
+        toast({ variant: "destructive", title: "Testimoni Dihapus" });
+        fetchData();
+    }
   };
   
   const handleFormSave = () => {
-    // Here you would refetch the data from your API to update the list
     setFormOpen(false);
     setSelectedTestimonial(null);
-  };
-
-  const handleFormCancel = () => {
-    setFormOpen(false);
-    setSelectedTestimonial(null);
+    fetchData(); // refetch
   };
 
   const dialogTitle = selectedTestimonial ? "Edit Testimoni" : "Tambahkan Testimoni Baru";
@@ -497,7 +600,7 @@ export default function TestimoniPage() {
                               </SelectTrigger>
                               <SelectContent>
                                   <SelectItem value="all">Tampilkan Semua Mobil</SelectItem>
-                                  {fleet.map((vehicle) => (
+                                  {vehicles.map((vehicle) => (
                                       <SelectItem key={vehicle.id} value={`${vehicle.brand} ${vehicle.name}`}>
                                           {vehicle.brand} {vehicle.name}
                                       </SelectItem>
@@ -509,6 +612,9 @@ export default function TestimoniPage() {
                               Tambah Testimoni
                           </Button>
                       </div>
+                      {isLoading ? (
+                        <div className="flex justify-center items-center h-48"><Loader2 className="h-6 w-6 animate-spin"/></div>
+                      ) : (
                       <Table>
                         <TableHeader>
                           <TableRow>
@@ -574,6 +680,7 @@ export default function TestimoniPage() {
                           )}
                         </TableBody>
                       </Table>
+                      )}
                     </CardContent>
                      <CardFooter className="flex items-center justify-end space-x-4 py-4">
                         <span className="text-sm text-muted-foreground">
@@ -602,7 +709,7 @@ export default function TestimoniPage() {
             </TabsContent>
 
              <TabsContent value="gallery" className="mt-6">
-                <GalleryEditor />
+                <GalleryEditor vehicles={vehicles} />
             </TabsContent>
 
              <TabsContent value="features" className="mt-6">
@@ -619,8 +726,9 @@ export default function TestimoniPage() {
             </DialogHeader>
             <TestimonialForm 
                 testimonial={selectedTestimonial}
+                vehicles={vehicles}
                 onSave={handleFormSave}
-                onCancel={handleFormCancel}
+                onCancel={() => setFormOpen(false)}
             />
         </DialogContent>
        </Dialog>

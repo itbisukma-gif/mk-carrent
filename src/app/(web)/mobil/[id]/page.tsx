@@ -1,15 +1,14 @@
 
 'use client'
 
-import { notFound } from 'next/navigation';
+import { notFound, useParams } from 'next/navigation';
 import Image from 'next/image';
-import { testimonials, gallery } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { UserCircle, Tag, Cog, Users, Fuel, Calendar, CheckCircle, Image as ImageIcon } from 'lucide-react';
-import type { Vehicle } from '@/lib/types';
+import { UserCircle, Tag, Cog, Users, Fuel, Calendar, CheckCircle, Image as ImageIcon, Loader2 } from 'lucide-react';
+import type { Vehicle, Testimonial, GalleryItem } from '@/lib/types';
 import {
   Carousel,
   CarouselContent,
@@ -34,20 +33,96 @@ import { Separator } from '@/components/ui/separator';
 import { useVehicleLogo } from '@/hooks/use-vehicle-logo';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/lib/supabase';
+import { useToast } from '@/hooks/use-toast';
+import { upsertTestimonial } from '@/app/dashboard/testimoni/actions';
 
-
-function VehicleDetail({ vehicle, otherVehicles }: { vehicle: Vehicle, otherVehicles: Vehicle[] }) {
+function VehicleDetail() {
+  const params = useParams();
   const { dictionary } = useLanguage();
-  const plugin = useRef(
-      Autoplay({ delay: 3000, stopOnInteraction: true })
-  )
-  const formatCurrency = (value: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(value);
-  const vehicleTestimonials = testimonials.filter(t => t.vehicleName.includes(vehicle.name));
-  const vehicleGallery = gallery.filter(g => g.vehicleName === `${vehicle.brand} ${vehicle.name}`);
-  const [userRating, setUserRating] = useState(0);
+  const { toast } = useToast();
+  
+  const [vehicle, setVehicle] = useState<Vehicle | null>(null);
+  const [otherVehicles, setOtherVehicles] = useState<Vehicle[]>([]);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [gallery, setGallery] = useState<GalleryItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
+  const [userRating, setUserRating] = useState(0);
+  const [userComment, setUserComment] = useState("");
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+
+  const plugin = useRef(Autoplay({ delay: 3000, stopOnInteraction: true }));
+  
+  useEffect(() => {
+    const vehicleId = params.id as string;
+    if (!vehicleId) return;
+
+    const fetchData = async () => {
+        setIsLoading(true);
+        
+        // Fetch vehicle
+        const { data: vehicleData, error: vehicleError } = await supabase.from('vehicles').select('*').eq('id', vehicleId).single();
+        if (vehicleError || !vehicleData) {
+            console.error('Error fetching vehicle', vehicleError);
+            notFound();
+            return;
+        }
+        setVehicle(vehicleData);
+
+        // Fetch other vehicles
+        const { data: otherVehiclesData } = await supabase.from('vehicles').select('*').neq('id', vehicleId).limit(6);
+        setOtherVehicles(otherVehiclesData || []);
+
+        const vehicleFullName = `${vehicleData.brand} ${vehicleData.name}`;
+
+        // Fetch testimonials for this vehicle
+        const { data: testimonialsData } = await supabase.from('testimonials').select('*').eq('vehicleName', vehicleFullName);
+        setTestimonials(testimonialsData || []);
+
+        // Fetch gallery for this vehicle
+        const { data: galleryData } = await supabase.from('gallery').select('*').eq('vehicleName', vehicleFullName);
+        setGallery(galleryData || []);
+
+        setIsLoading(false);
+    };
+
+    fetchData();
+  }, [params.id]);
+
+
+  const handleSubmitReview = async () => {
+      if (userRating === 0 || !userComment.trim() || !vehicle) {
+          toast({ variant: 'destructive', title: 'Form Tidak Lengkap', description: 'Mohon berikan rating dan komentar.' });
+          return;
+      }
+      setIsSubmittingReview(true);
+      const newTestimonial: Omit<Testimonial, 'created_at'> = {
+          id: crypto.randomUUID(),
+          customerName: "Pelanggan Anonim", // or get from logged in user
+          vehicleName: `${vehicle.brand} ${vehicle.name}`,
+          rating: userRating,
+          comment: userComment,
+      };
+      const result = await upsertTestimonial(newTestimonial);
+      if (result.error) {
+          toast({ variant: 'destructive', title: 'Gagal Mengirim Ulasan', description: result.error.message });
+      } else {
+          toast({ title: 'Ulasan Terkirim', description: 'Terima kasih atas masukan Anda!' });
+          setTestimonials(prev => [result.data!, ...prev]);
+          setUserRating(0);
+          setUserComment("");
+      }
+      setIsSubmittingReview(false);
+  }
+
+  if (isLoading || !vehicle) {
+      return <div className="flex h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin"/></div>
+  }
+
+  const formatCurrency = (value: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(value);
+  
   const hasDiscount = vehicle.discountPercentage && vehicle.discountPercentage > 0;
-  const discountedPrice = hasDiscount ? vehicle.price * (1 - vehicle.discountPercentage! / 100) : vehicle.price;
+  const discountedPrice = hasDiscount ? vehicle.price! * (1 - vehicle.discountPercentage! / 100) : vehicle.price!;
 
   const vehicleDetails = [
     { label: dictionary.vehicleDetail.details.brand, value: vehicle.brand, icon: CheckCircle },
@@ -58,22 +133,19 @@ function VehicleDetail({ vehicle, otherVehicles }: { vehicle: Vehicle, otherVehi
     { label: dictionary.vehicleDetail.details.year, value: vehicle.year, icon: Calendar },
   ];
 
-  const { logoUrl } = useVehicleLogo(vehicle.brand);
+  const { logoUrl } = useVehicleLogo(vehicle.brand!);
 
   return (
     <div className="container py-6 md:py-10">
-      {/* Mobile-first: single column layout */}
       <div className="flex flex-col gap-6 lg:gap-8">
-        
-        {/* Image Gallery */}
         <div className="relative">
            <div className="relative aspect-video w-full overflow-hidden rounded-lg shadow-md">
             <Image 
-                src={vehicle.photo} 
+                src={vehicle.photo!} 
                 alt={`${vehicle.brand} ${vehicle.name}`} 
                 fill 
                 className="object-cover" 
-                data-ai-hint={vehicle.dataAiHint}
+                data-ai-hint={vehicle.dataAiHint || ''}
             />
              {logoUrl && (
                 <div className="absolute top-3 left-3 bg-white/70 backdrop-blur-sm p-1.5 rounded-md shadow-sm">
@@ -96,11 +168,10 @@ function VehicleDetail({ vehicle, otherVehicles }: { vehicle: Vehicle, otherVehi
           )}
         </div>
 
-        {/* Details and Booking */}
         <div className="flex flex-col gap-4">
           <div className="space-y-1.5">
             <h1 className="text-2xl font-bold tracking-tight">{vehicle.brand} {vehicle.name}</h1>
-            <StarRating rating={vehicle.rating} totalReviews={vehicleTestimonials.length} />
+            <StarRating rating={vehicle.rating!} totalReviews={testimonials.length} />
           </div>
           
           <Card>
@@ -126,11 +197,11 @@ function VehicleDetail({ vehicle, otherVehicles }: { vehicle: Vehicle, otherVehi
                   <span className="text-sm text-muted-foreground">Harga per hari</span>
                    {hasDiscount ? (
                       <div className='text-right'>
-                          <p className="text-sm line-through text-muted-foreground">{formatCurrency(vehicle.price)}</p>
+                          <p className="text-sm line-through text-muted-foreground">{formatCurrency(vehicle.price!)}</p>
                           <p className="text-xl font-bold text-primary">{formatCurrency(discountedPrice)}</p>
                       </div>
                     ) : (
-                      <p className="text-xl font-bold text-primary">{formatCurrency(vehicle.price)}</p>
+                      <p className="text-xl font-bold text-primary">{formatCurrency(vehicle.price!)}</p>
                   )}
                </div>
                <Separator />
@@ -147,7 +218,6 @@ function VehicleDetail({ vehicle, otherVehicles }: { vehicle: Vehicle, otherVehi
         </div>
       </div>
       
-      {/* Reviews & Other Cars Section */}
       <div className="mt-12 pt-8 border-t">
          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
              <div className="md:col-span-2">
@@ -162,7 +232,7 @@ function VehicleDetail({ vehicle, otherVehicles }: { vehicle: Vehicle, otherVehi
                             <CardContent className="p-0">
                                 <ScrollArea className="h-80 w-full">
                                    <div className="p-4 space-y-5">
-                                     {vehicleTestimonials.length > 0 ? vehicleTestimonials.map(t => (
+                                     {testimonials.length > 0 ? testimonials.map(t => (
                                        <div key={t.id} className="flex gap-3">
                                            <UserCircle className="h-10 w-10 text-muted-foreground flex-shrink-0 mt-1"/>
                                            <div>
@@ -183,9 +253,9 @@ function VehicleDetail({ vehicle, otherVehicles }: { vehicle: Vehicle, otherVehi
                          <Card className="shadow-sm">
                             <CardContent className="p-0">
                                 <ScrollArea className="h-80 w-full">
-                                    {vehicleGallery.length > 0 ? (
+                                    {gallery.length > 0 ? (
                                         <div className="p-4 grid grid-cols-2 sm:grid-cols-3 gap-4">
-                                            {vehicleGallery.map(photo => (
+                                            {gallery.map(photo => (
                                                  <div key={photo.id} className="relative group aspect-square">
                                                     <Image
                                                         src={photo.url}
@@ -215,25 +285,24 @@ function VehicleDetail({ vehicle, otherVehicles }: { vehicle: Vehicle, otherVehi
                     <CardDescription className="text-sm">{dictionary.vehicleDetail.reviews.formDescription}</CardDescription>
                 </CardHeader>
                     <CardContent className="space-y-4 p-4 pt-0">
-                    <Textarea placeholder={dictionary.vehicleDetail.reviews.commentPlaceholder} rows={4} />
+                    <Textarea placeholder={dictionary.vehicleDetail.reviews.commentPlaceholder} rows={4} value={userComment} onChange={e => setUserComment(e.target.value)} />
                     <div className="flex justify-between items-center bg-muted/50 p-2 rounded-md">
                         <p className="font-medium text-sm">{dictionary.vehicleDetail.reviews.yourRating}</p>
                             <StarRating rating={userRating} onRatingChange={setUserRating} />
                     </div>
-                    <Button className="w-full transition-all duration-200 ease-in-out hover:scale-105 hover:shadow-md active:scale-100">{dictionary.vehicleDetail.reviews.submitReview}</Button>
+                    <Button onClick={handleSubmitReview} disabled={isSubmittingReview} className="w-full transition-all duration-200 ease-in-out hover:scale-105 hover:shadow-md active:scale-100">
+                        {isSubmittingReview && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        {dictionary.vehicleDetail.reviews.submitReview}
+                    </Button>
                 </CardContent>
             </Card>
          </div>
       </div>
 
-       {/* Other Cars Section */}
        <div className="mt-12 pt-8 border-t">
           <h2 className="text-xl font-bold tracking-tight text-center mb-6">{dictionary.vehicleDetail.otherRecommendations}</h2>
            <Carousel 
-              opts={{
-                align: "start",
-                loop: true,
-              }}
+              opts={{ align: "start", loop: true, }}
               plugins={[plugin.current]}
               onMouseEnter={plugin.current.stop}
               onMouseLeave={plugin.current.reset}
@@ -256,26 +325,10 @@ function VehicleDetail({ vehicle, otherVehicles }: { vehicle: Vehicle, otherVehi
   )
 }
 
-export default async function MobilDetailPage({ params }: { params: { id: string } }) {
-  const { data: vehicle, error: vehicleError } = await supabase
-    .from('vehicles')
-    .select('*')
-    .eq('id', params.id)
-    .single();
-
-  if (vehicleError || !vehicle) {
-    notFound();
-  }
-
-  const { data: otherVehicles, error: otherVehiclesError } = await supabase
-    .from('vehicles')
-    .select('*')
-    .neq('id', params.id)
-    .limit(6);
-
-  return (
-    <LanguageProvider>
-        <VehicleDetail vehicle={vehicle} otherVehicles={otherVehicles || []} />
-    </LanguageProvider>
-  );
+export default function MobilDetailPage() {
+    return (
+        <LanguageProvider>
+            <VehicleDetail />
+        </LanguageProvider>
+    );
 }
