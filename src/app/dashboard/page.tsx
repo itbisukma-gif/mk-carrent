@@ -193,7 +193,7 @@ export default function DashboardPage() {
    const fetchData = async () => {
         setIsLoading(true);
         const { data: driverData, error: driverError } = await supabase.from('drivers').select('*').order('created_at', { ascending: false });
-        const { data: vehicleData, error: vehicleError } = await supabase.from('vehicles').select('id'); // Only fetch what's needed for stats
+        const { data: vehicleData, error: vehicleError } = await supabase.from('vehicles').select('*');
 
         if (driverError || vehicleError) {
             toast({ variant: "destructive", title: "Gagal memuat data", description: driverError?.message || vehicleError?.message });
@@ -566,3 +566,5 @@ export default function DashboardPage() {
     </div>
   )
 }
+
+    
