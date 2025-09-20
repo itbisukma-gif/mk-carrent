@@ -1,4 +1,3 @@
-
 'use client'
 
 import { useParams, notFound, useRouter } from 'next/navigation';
@@ -41,7 +40,8 @@ export default function SharedInvoicePage() {
     const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
     
     useEffect(() => {
-        setSupabase(createClient());
+        const supabaseClient = createClient();
+        setSupabase(supabaseClient);
     }, []);
 
     useEffect(() => {

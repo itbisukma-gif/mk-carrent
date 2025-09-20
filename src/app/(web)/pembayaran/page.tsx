@@ -1,17 +1,16 @@
-
 'use client';
 
 import { Suspense, useMemo, useState, useEffect } from 'react';
 import { useSearchParams, notFound, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { serviceCosts } from '@/lib/data';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Banknote, QrCode, ArrowLeft, Loader2 } from 'lucide-react';
 import { format, parseISO, differenceInCalendarDays } from 'date-fns';
 import { id } from 'date-fns/locale';
@@ -52,7 +51,8 @@ function PembayaranComponent() {
 
 
     useEffect(() => {
-        setSupabase(createClient());
+        const supabaseClient = createClient();
+        setSupabase(supabaseClient);
     }, []);
 
     useEffect(() => {

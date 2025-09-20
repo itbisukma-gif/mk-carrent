@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo, useEffect, forwardRef } from 'react';
@@ -58,7 +57,8 @@ export const OrderForm = forwardRef<HTMLDivElement, { vehicle: Vehicle }>(({ veh
 
 
     useEffect(() => {
-        setSupabase(createClient());
+        const supabaseClient = createClient();
+        setSupabase(supabaseClient);
         // Set initial dates only on the client-side to avoid hydration errors
         const today = startOfDay(new Date());
         setStartDate(today);

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 import { Button } from "@/components/ui/button";
@@ -9,18 +9,24 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Logo } from '@/components/icons';
 import { useToast } from '@/hooks/use-toast';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const supabase = createClient();
+  const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  useEffect(() => {
+    setSupabase(createClient());
+  }, []);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!supabase) return;
     setIsLoading(true);
 
     const { error } = await supabase.auth.signInWithPassword({
@@ -84,7 +90,7 @@ export default function LoginPage() {
           </div>
         </CardContent>
         <CardFooter>
-          <Button type="submit" className="w-full" disabled={isLoading}>
+          <Button type="submit" className="w-full" disabled={isLoading || !supabase}>
             {isLoading ? 'Memproses...' : 'Login'}
           </Button>
         </CardFooter>

@@ -1,4 +1,3 @@
-
 'use client'
 
 import Link from 'next/link';
@@ -34,7 +33,8 @@ export function WebFooter({ className }: { className?: string }) {
   const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
 
   useEffect(() => {
-    setSupabase(createClient());
+    const supabaseClient = createClient();
+    setSupabase(supabaseClient);
   }, []);
 
   useEffect(() => {

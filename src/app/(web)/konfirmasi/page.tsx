@@ -1,4 +1,3 @@
-
 'use client'
 
 import { Suspense, useEffect, useState, ChangeEvent, useMemo, SVGProps } from "react";
@@ -14,7 +13,7 @@ import { CheckCircle, Loader2, ClipboardCopy, Upload, AlertCircle, ArrowLeft, Pa
 import { bankAccounts } from "@/lib/data";
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/componentsui/input";
 import { format, parseISO } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { useLanguage } from "@/hooks/use-language";
@@ -68,8 +67,7 @@ function BankAccountDetails({ bank }: { bank: BankAccount }) {
 
 // In a real app, this would be an API call to a serverless function
 // that uploads the file to Firebase Storage. We'll simulate it for now.
-async function uploadFile(file: File, orderId: string): Promise<string> {
-    const supabase = createClient();
+async function uploadFile(supabase: SupabaseClient, file: File, orderId: string): Promise<string> {
     if (!file) throw new Error("No file provided for upload.");
 
     const fileExtension = file.name.split('.').pop();
@@ -108,7 +106,11 @@ function UploadProof({ onUpload, orderId }: { onUpload: (proofUrl: string) => vo
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [uploadState, setUploadState] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
     const [errorMessage, setErrorMessage] = useState('');
+    const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
 
+    useEffect(() => {
+        setSupabase(createClient());
+    }, []);
 
     const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
         if (event.target.files && event.target.files[0]) {
@@ -121,13 +123,13 @@ function UploadProof({ onUpload, orderId }: { onUpload: (proofUrl: string) => vo
     };
 
     const handleUpload = async () => {
-        if (!selectedFile) return;
+        if (!selectedFile || !supabase) return;
         
         setUploadState('uploading');
         setErrorMessage('');
 
         try {
-            const uploadedUrl = await uploadFile(selectedFile, orderId);
+            const uploadedUrl = await uploadFile(supabase, selectedFile, orderId);
             setUploadState('success');
             onUpload(uploadedUrl); 
 
@@ -443,7 +445,7 @@ function KonfirmasiComponent() {
                         <div className="text-left bg-muted/30 rounded-lg p-4 mt-6 space-y-2">
                             <div className="flex justify-between">
                                 <span className="text-sm text-muted-foreground">{dictionary.confirmation.orderNumber}:</span>
-                                <span className="font-mono text-sm font-semibold">{orderId || '...' }</span>
+                                <span className="font-mono text-sm font-semibold">{orderId || '...'}</span>
                             </div>
                              <div className="flex justify-between">
                                 <span className="text-sm text-muted-foreground">{dictionary.confirmation.status}:</span>

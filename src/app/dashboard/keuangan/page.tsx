@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, ChangeEvent, useEffect } from 'react';
@@ -49,7 +48,8 @@ export default function KeuanganPage() {
   const [accountName, setAccountName] = useState("");
 
   useEffect(() => {
-    setSupabase(createClient());
+    const supabaseClient = createClient();
+    setSupabase(supabaseClient);
   }, []);
 
   useEffect(() => {

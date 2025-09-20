@@ -1,14 +1,13 @@
-
 'use client'
 
 import { notFound, useParams } from 'next/navigation';
 import Image from 'next/image';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { UserCircle, Tag, Cog, Users, Fuel, Calendar, CheckCircle, Image as ImageIcon, Loader2 } from 'lucide-react';
-import type { Vehicle, Testimonial, GalleryItem } from '@/lib/types';
+import type { Vehicle, Testimonial, GalleryItem } from "@/lib/types";
 import {
   Carousel,
   CarouselContent,
@@ -58,7 +57,8 @@ function VehicleDetail() {
   const plugin = useRef(Autoplay({ delay: 3000, stopOnInteraction: true }));
   
   useEffect(() => {
-    setSupabase(createClient());
+    const supabaseClient = createClient();
+    setSupabase(supabaseClient);
   }, []);
   
   useEffect(() => {

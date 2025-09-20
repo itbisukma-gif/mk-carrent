@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,7 +20,8 @@ function TermsPageContent() {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        setSupabase(createClient());
+        const supabaseClient = createClient();
+        setSupabase(supabaseClient);
     }, []);
 
     useEffect(() => {

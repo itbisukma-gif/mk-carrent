@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, ChangeEvent, useRef, useEffect, useTransition } from 'react';
@@ -195,10 +194,6 @@ export default function PromosiPage() {
     const [isDeleting, startDeleteTransition] = useTransition();
     const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
 
-    useEffect(() => {
-        setSupabase(createClient());
-    }, []);
-
     const fetchData = async () => {
         if (!supabase) return;
         setIsLoading(true);
@@ -215,7 +210,14 @@ export default function PromosiPage() {
     }
 
     useEffect(() => {
-        fetchData();
+        const supabaseClient = createClient();
+        setSupabase(supabaseClient);
+    }, []);
+
+    useEffect(() => {
+        if (supabase) {
+            fetchData();
+        }
     }, [supabase]);
 
     const handleAddClick = () => {

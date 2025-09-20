@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo, useEffect, useTransition } from 'react';
@@ -317,10 +316,6 @@ export default function OrdersPage() {
     const { toast } = useToast();
     const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
 
-    useEffect(() => {
-        setSupabase(createClient());
-    }, []);
-
     const fetchOrderData = async () => {
         if (!supabase) return;
         setIsLoading(true);
@@ -343,7 +338,14 @@ export default function OrdersPage() {
     }
     
     useEffect(() => {
-        fetchOrderData();
+        const supabaseClient = createClient();
+        setSupabase(supabaseClient);
+    }, []);
+
+    useEffect(() => {
+        if (supabase) {
+            fetchOrderData();
+        }
     }, [supabase]);
 
     const { pendingOrders, approvedOrders, completedOrders } = useMemo(() => {

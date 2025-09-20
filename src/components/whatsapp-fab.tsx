@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -18,7 +17,8 @@ export function WhatsappFab() {
   const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
 
   useEffect(() => {
-    setSupabase(createClient());
+    const supabaseClient = createClient();
+    setSupabase(supabaseClient);
   }, []);
 
   useEffect(() => {

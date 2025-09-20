@@ -1,4 +1,3 @@
-
 'use client'
 
 import Image from 'next/image';
@@ -17,7 +16,8 @@ export function FeaturesSection() {
     const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
 
     useEffect(() => {
-        setSupabase(createClient());
+        const supabaseClient = createClient();
+        setSupabase(supabaseClient);
     }, []);
 
     useEffect(() => {

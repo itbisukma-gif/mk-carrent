@@ -1,4 +1,3 @@
-
 'use client'
 
 import * as React from 'react'
@@ -179,15 +178,6 @@ export default function DashboardPage() {
   
   const [date, setDate] = React.useState<DateRange | undefined>(undefined);
 
-  useEffect(() => {
-    setSupabase(createClient());
-    // Set initial date range only on the client-side to avoid hydration errors
-    setDate({
-      from: new Date(),
-      to: addDays(new Date(), 6),
-    });
-  }, []);
-
   const [isAddDialogOpen, setAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
@@ -211,7 +201,18 @@ export default function DashboardPage() {
     };
 
     useEffect(() => {
-        fetchData();
+      const supabaseClient = createClient();
+      setSupabase(supabaseClient);
+      setDate({
+        from: new Date(),
+        to: addDays(new Date(), 6),
+      });
+    }, []);
+  
+    useEffect(() => {
+        if(supabase) {
+            fetchData();
+        }
     }, [supabase]);
   
   const stats = useMemo(() => {

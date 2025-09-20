@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, ChangeEvent, useMemo, useEffect, useTransition } from 'react';
@@ -20,7 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { StarRating } from '@/components/star-rating';
 import { LanguageProvider } from '@/app/language-provider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/componentsui/badge';
 import { createClient } from '@/utils/supabase/client';
 import { upsertTestimonial, deleteTestimonial, addGalleryItem, deleteGalleryItem, upsertFeature, deleteFeature } from './actions';
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -205,10 +204,6 @@ function GalleryEditor({ vehicles }: { vehicles: Vehicle[] }) {
     const [isPending, startTransition] = useTransition();
     const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
 
-    useEffect(() => {
-        setSupabase(createClient());
-    }, []);
-
     const fetchGallery = async () => {
         if (!supabase) return;
         setIsLoading(true);
@@ -219,7 +214,14 @@ function GalleryEditor({ vehicles }: { vehicles: Vehicle[] }) {
     }
 
     useEffect(() => {
-        fetchGallery();
+        const supabaseClient = createClient();
+        setSupabase(supabaseClient);
+    }, []);
+
+    useEffect(() => {
+        if (supabase) {
+            fetchGallery();
+        }
     }, [supabase]);
 
     const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -387,10 +389,6 @@ function FeatureEditor() {
     const [isPending, startTransition] = useTransition();
     const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
 
-    useEffect(() => {
-        setSupabase(createClient());
-    }, []);
-
     const fetchFeatures = async () => {
         if (!supabase) return;
         setIsLoading(true);
@@ -401,7 +399,14 @@ function FeatureEditor() {
     }
 
     useEffect(() => {
-        fetchFeatures();
+        const supabaseClient = createClient();
+        setSupabase(supabaseClient);
+    }, []);
+
+    useEffect(() => {
+        if (supabase) {
+            fetchFeatures();
+        }
     }, [supabase]);
 
 
@@ -516,10 +521,6 @@ export default function TestimoniPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-  useEffect(() => {
-    setSupabase(createClient());
-  }, []);
-
   const fetchData = async () => {
     if (!supabase) return;
     setIsLoading(true);
@@ -536,7 +537,14 @@ export default function TestimoniPage() {
   }
 
   useEffect(() => {
-    fetchData();
+    const supabaseClient = createClient();
+    setSupabase(supabaseClient);
+  }, []);
+
+  useEffect(() => {
+    if (supabase) {
+        fetchData();
+    }
   }, [supabase]);
 
   const filteredTestimonials = useMemo(() => {

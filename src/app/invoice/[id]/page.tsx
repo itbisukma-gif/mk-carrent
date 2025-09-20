@@ -1,4 +1,3 @@
-
 'use client'
 
 import { useParams, notFound, useRouter } from 'next/navigation';
@@ -44,7 +43,8 @@ export default function InvoicePage() {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        setSupabase(createClient());
+        const supabaseClient = createClient();
+        setSupabase(supabaseClient);
         // Check for session cookie on client-side to determine if user is an admin
         if (typeof window !== 'undefined') {
             const sessionCookie = document.cookie.split('; ').find(row => row.startsWith('session='));

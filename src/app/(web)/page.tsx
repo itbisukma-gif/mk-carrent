@@ -1,4 +1,3 @@
-
 'use client'
 
 import { useState, useMemo, useEffect, useRef } from 'react';
@@ -65,7 +64,8 @@ function HomePageContent() {
     )
 
     useEffect(() => {
-        setSupabase(createClient());
+        const supabaseClient = createClient();
+        setSupabase(supabaseClient);
     }, []);
     
     useEffect(() => {

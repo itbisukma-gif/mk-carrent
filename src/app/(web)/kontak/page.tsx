@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Button } from "@/components/ui/button";
@@ -52,7 +51,8 @@ function KontakPageContent() {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        setSupabase(createClient());
+        const supabaseClient = createClient();
+        setSupabase(supabaseClient);
     }, []);
 
     useEffect(() => {

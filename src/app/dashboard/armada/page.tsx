@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useTransition, useEffect } from "react";
@@ -354,10 +353,6 @@ export default function ArmadaPage() {
   const { toast } = useToast();
   const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
   
-  useEffect(() => {
-    setSupabase(createClient());
-  }, []);
-
   const fetchFleet = async () => {
     if (!supabase) return;
     setIsLoading(true);
@@ -375,7 +370,14 @@ export default function ArmadaPage() {
   }
 
   useEffect(() => {
-    fetchFleet();
+    const supabaseClient = createClient();
+    setSupabase(supabaseClient);
+  }, []);
+
+  useEffect(() => {
+    if (supabase) {
+        fetchFleet();
+    }
   }, [supabase]);
 
   const handleAddClick = () => {
