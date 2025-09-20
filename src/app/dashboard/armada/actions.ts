@@ -1,12 +1,12 @@
 
 'use server';
 
-import { createClient, uploadImageFromDataUri } from '@/utils/supabase/server';
+import { createServiceRoleClient, uploadImageFromDataUri } from '@/utils/supabase/server';
 import type { Vehicle } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
 
 export async function upsertVehicle(vehicleData: Vehicle) {
-    const supabase = createClient();
+    const supabase = createServiceRoleClient();
 
     try {
         if (vehicleData.photo && vehicleData.photo.startsWith('data:image')) {
@@ -35,7 +35,7 @@ export async function upsertVehicle(vehicleData: Vehicle) {
 }
 
 export async function deleteVehicle(vehicleId: string) {
-    const supabase = createClient();
+    const supabase = createServiceRoleClient();
     
     const { data: itemData, error: fetchError } = await supabase.from('vehicles').select('photo').eq('id', vehicleId).single();
     if (fetchError) {

@@ -1,12 +1,12 @@
 
 'use server';
 
-import { createClient, uploadImageFromDataUri } from '@/utils/supabase/server';
+import { createServiceRoleClient, uploadImageFromDataUri } from '@/utils/supabase/server';
 import type { Promotion } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
 
 export async function upsertPromotion(promoData: Omit<Promotion, 'created_at'>) {
-    const supabase = createClient();
+    const supabase = createServiceRoleClient();
     
     try {
         if (promoData.imageUrl && promoData.imageUrl.startsWith('data:image')) {
@@ -28,7 +28,7 @@ export async function upsertPromotion(promoData: Omit<Promotion, 'created_at'>) 
 }
 
 export async function deletePromotion(promoId: string) {
-    const supabase = createClient();
+    const supabase = createServiceRoleClient();
 
     const { data: itemData, error: fetchError } = await supabase.from('promotions').select('imageUrl').eq('id', promoId).single();
     if (fetchError) {

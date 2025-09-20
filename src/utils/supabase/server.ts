@@ -1,3 +1,4 @@
+
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { Buffer } from 'buffer';
@@ -44,8 +45,28 @@ export const createClient = () => {
   );
 };
 
+export const createServiceRoleClient = () => {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error("Supabase URL and Service Role Key are required for admin operations.");
+  }
+
+  // Create a server-side client with the service_role key to bypass RLS
+  return createServerClient(supabaseUrl, serviceRoleKey, {
+    cookies: {}, // No need for cookies when using service_role key
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    }
+  });
+};
+
+
 export const uploadImageFromDataUri = async (dataUri: string, folder: string, fileNamePrefix: string) => {
-    const supabase = createClient();
+    // Use the service role client for all storage operations from the server
+    const supabase = createServiceRoleClient();
     const matches = dataUri.match(/^data:(image\/(?:png|jpeg|jpg));base64,(.*)$/);
     
     if (!matches || matches.length !== 3) {

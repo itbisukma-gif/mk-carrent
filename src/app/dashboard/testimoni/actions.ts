@@ -1,14 +1,14 @@
 
 'use server';
 
-import { createClient, uploadImageFromDataUri } from '@/utils/supabase/server';
+import { createServiceRoleClient, uploadImageFromDataUri } from '@/utils/supabase/server';
 import type { Testimonial, GalleryItem, FeatureItem } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
 
 // --- Testimonial Actions ---
 
 export async function upsertTestimonial(testimonialData: Omit<Testimonial, 'created_at'>) {
-    const supabase = createClient();
+    const supabase = createServiceRoleClient();
     const { data, error } = await supabase.from('testimonials').upsert(testimonialData, { onConflict: 'id' }).select().single();
     if (error) {
         console.error('Error upserting testimonial:', error);
@@ -24,7 +24,7 @@ export async function upsertTestimonial(testimonialData: Omit<Testimonial, 'crea
 
 
 export async function deleteTestimonial(id: string) {
-    const supabase = createClient();
+    const supabase = createServiceRoleClient();
     const { error } = await supabase.from('testimonials').delete().eq('id', id);
     if (error) return { error };
     revalidatePath('/dashboard/testimoni');
@@ -36,7 +36,7 @@ export async function deleteTestimonial(id: string) {
 // --- Gallery Actions ---
 
 export async function addGalleryItem(galleryData: Omit<GalleryItem, 'id' | 'created_at'>) {
-    const supabase = createClient();
+    const supabase = createServiceRoleClient();
 
     try {
         if (galleryData.url && galleryData.url.startsWith('data:image')) {
@@ -59,7 +59,7 @@ export async function addGalleryItem(galleryData: Omit<GalleryItem, 'id' | 'crea
 }
 
 export async function deleteGalleryItem(id: string) {
-    const supabase = createClient();
+    const supabase = createServiceRoleClient();
     // First, get the path of the object to delete from storage
     const { data: itemData, error: fetchError } = await supabase.from('gallery').select('url').eq('id', id).single();
     
@@ -96,7 +96,7 @@ export async function deleteGalleryItem(id: string) {
 // --- Feature Actions ---
 
 export async function upsertFeature(featureData: Omit<FeatureItem, 'created_at'>) {
-    const supabase = createClient();
+    const supabase = createServiceRoleClient();
 
     try {
         if (featureData.imageUrl && featureData.imageUrl.startsWith('data:image')) {
@@ -118,7 +118,7 @@ export async function upsertFeature(featureData: Omit<FeatureItem, 'created_at'>
 }
 
 export async function deleteFeature(id: string) {
-    const supabase = createClient();
+    const supabase = createServiceRoleClient();
 
     const { data: itemData, error: fetchError } = await supabase.from('features').select('imageUrl').eq('id', id).single();
     if (fetchError) {
