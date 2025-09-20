@@ -1,3 +1,4 @@
+
 'use client'
 
 import { useParams, notFound, useRouter } from 'next/navigation';
@@ -202,7 +203,7 @@ export default function InvoicePage() {
                     </div>
                 </div>
 
-                {isAdmin && order.status === 'disetujui' && (
+                {isAdmin && (
                     <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground p-2 bg-blue-50 border border-blue-200 rounded-md">
                         <UserCheck className="h-4 w-4 text-blue-600" />
                         <span>Divalidasi oleh: <strong>Admin</strong></span>
@@ -233,3 +234,5 @@ export default function InvoicePage() {
         </Card>
     );
 }
+
+    

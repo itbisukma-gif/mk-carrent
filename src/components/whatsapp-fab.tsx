@@ -17,7 +17,7 @@ export function WhatsappFab() {
 
   useEffect(() => {
     const fetchContactInfo = async () => {
-        const { data } = await supabase.from('contact_info').select('whatsapp').single();
+        const { data } = await supabase.from('contact_info').select('*').single();
         setContactInfo(data);
     };
     fetchContactInfo();

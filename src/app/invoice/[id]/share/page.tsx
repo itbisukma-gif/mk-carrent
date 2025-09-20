@@ -1,3 +1,4 @@
+
 'use client'
 
 import { useParams, notFound, useRouter } from 'next/navigation';
@@ -193,11 +194,6 @@ export default function SharedInvoicePage() {
                     </div>
                 </div>
 
-                 {order.status === 'pending' && (
-                    <p className="text-xs text-center text-muted-foreground pt-2">
-                        Silakan selesaikan pembayaran dan lakukan konfirmasi ke admin.
-                    </p>
-                )}
                  {order.status === 'disetujui' && (
                      <p className="text-xs text-center text-muted-foreground pt-2">
                         Pembayaran telah divalidasi. Terima kasih telah memilih layanan kami.
@@ -236,3 +232,5 @@ export default function SharedInvoicePage() {
         </Card>
     );
 }
+
+    

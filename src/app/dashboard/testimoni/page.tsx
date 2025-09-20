@@ -504,7 +504,7 @@ export default function TestimoniPage() {
   const fetchData = async () => {
     setIsLoading(true);
     const { data: testimonialsData, error: testimonialsError } = await supabase.from('testimonials').select('*').order('created_at', { ascending: false });
-    const { data: vehiclesData, error: vehiclesError } = await supabase.from('vehicles').select('id, name, brand');
+    const { data: vehiclesData, error: vehiclesError } = await supabase.from('vehicles').select('*');
     
     if (testimonialsError) toast({ variant: 'destructive', title: 'Gagal memuat testimoni', description: testimonialsError.message });
     else setTestimonials(testimonialsData || []);
@@ -744,3 +744,5 @@ export default function TestimoniPage() {
     </div>
   );
 }
+
+    
