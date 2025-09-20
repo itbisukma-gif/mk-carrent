@@ -5,34 +5,30 @@ export async function middleware(request: NextRequest) {
   const { supabase, response } = createClient(request);
 
   // Refresh Supabase session
-  await supabase.auth.getSession();
+  const { data: { session } } = await supabase.auth.getSession();
 
   const { pathname } = request.nextUrl;
-  const sessionCookie = request.cookies.get("session")?.value;
 
   const protectedRoutes = ["/dashboard"];
   const isProtectedRoute = protectedRoutes.some(route =>
     pathname.startsWith(route)
   );
-
-  // This is a custom auth implementation, separate from Supabase's own session management.
-  // It relies on a simple cookie set during manual login.
-  if (isProtectedRoute && !sessionCookie) {
+  
+  if (isProtectedRoute && !session) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
-
-  if (sessionCookie && pathname === "/login") {
+  
+  if (session && pathname === "/login") {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
   if (pathname === "/logout") {
-    const logoutResponse = NextResponse.redirect(
-      new URL("/login", request.url)
-    );
-    // Manually clear the cookie used by our custom login logic
-    logoutResponse.cookies.delete("session");
-    // Also sign out from Supabase to be safe
+    const logoutResponse = NextResponse.redirect(new URL("/login", request.url));
     await supabase.auth.signOut();
+    // Manually clear the custom session cookie if it exists from old logic
+    if (request.cookies.has("session")) {
+        logoutResponse.cookies.delete("session");
+    }
     return logoutResponse;
   }
 
