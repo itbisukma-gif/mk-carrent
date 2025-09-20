@@ -8,6 +8,14 @@ import { revalidatePath } from 'next/cache';
 // This is a helper function to create a Supabase client that can be used in Server Components and Server Actions.
 const createClient = () => {
   const cookieStore = cookies()
+
+  // Guard clause to prevent error during build process
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    // In a server action, we can't return null, so we throw a clear error.
+    // This part of the code should ideally not be reached during a production request.
+    throw new Error('Supabase URL or Anon Key is missing in environment variables.');
+  }
+
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,

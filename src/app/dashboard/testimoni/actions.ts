@@ -8,6 +8,12 @@ import { revalidatePath } from 'next/cache';
 
 const createClient = () => {
   const cookieStore = cookies()
+  
+  // Guard clause to prevent error during build process
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    throw new Error('Supabase URL or Anon Key is missing in environment variables.');
+  }
+
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,

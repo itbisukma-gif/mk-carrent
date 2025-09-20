@@ -5,71 +5,66 @@ import type { NextRequest } from 'next/server'
 export function middleware(request: NextRequest) {
   const url = request.nextUrl.clone();
   const { pathname } = request.nextUrl;
-  const hostname = request.headers.get('host');
+  const hostname = request.headers.get('host') || 'localhost';
 
-  // Asumsikan nama domain utama dan domain admin
-  const mainDomain = 'mudakaryacarrent.com'; // Ganti dengan domain utama Anda
+  // Define domains. For local development, we might use localhost.
+  const mainDomain = process.env.NEXT_PUBLIC_APP_URL || 'mudakaryacarrent.com';
   const adminDomain = `admin.${mainDomain}`;
+  const isLocalhost = hostname.includes('localhost');
 
-  // Dapatkan session cookie
+  // Get session cookie
   const sessionCookie = request.cookies.get('session');
 
-  // Logika untuk Subdomain Admin
-  if (hostname === adminDomain) {
-    
-    // Jika sudah login dan mengakses halaman login, redirect ke dashboard
+  // --- Admin Subdomain/Path Logic ---
+  // This logic applies if we are on the admin subdomain OR on localhost and the path starts with /dashboard
+  const isAdminPath = (!isLocalhost && hostname === adminDomain) || (isLocalhost && (pathname.startsWith('/dashboard') || pathname.startsWith('/login')));
+
+  if (isAdminPath) {
+    // If logged in and trying to access login, redirect to dashboard
     if (sessionCookie && pathname === '/login') {
-      url.pathname = '/dashboard';
-      return NextResponse.redirect(url);
+      return NextResponse.redirect(new URL('/dashboard', request.url));
     }
     
-    // Jika belum login dan mencoba mengakses selain halaman login, redirect ke login
+    // If not logged in and trying to access anything other than login, redirect to login
     if (!sessionCookie && pathname !== '/login') {
-      url.pathname = '/login';
-      return NextResponse.redirect(url);
+      return NextResponse.redirect(new URL('/login', request.url));
     }
 
-    // Jika mencoba logout dari domain admin, hapus cookie dan redirect ke login
+    // Handle logout: clear cookie and redirect to login
     if (pathname === '/logout') {
       const response = NextResponse.redirect(new URL('/login', request.url));
-      response.cookies.set('session', '', { maxAge: -1 }); // Hapus cookie
+      response.cookies.set('session', '', { maxAge: -1, path: '/' });
       return response;
     }
-
-    // Izinkan akses ke file-file publik di _next
-    if (pathname.startsWith('/_next')) {
-      return NextResponse.next();
-    }
-
-    // Jika mengakses root ('/'), rewrite ke halaman login atau dashboard
-    if (pathname === '/') {
-        const targetPath = sessionCookie ? '/dashboard' : '/login';
-        url.pathname = targetPath;
+    
+    // If on localhost and accessing root, decide where to go
+    if (isLocalhost && pathname === '/') {
+        url.pathname = sessionCookie ? '/dashboard' : '/login';
         return NextResponse.rewrite(url);
     }
     
     return NextResponse.next();
   }
 
-  // Logika untuk Domain Utama (Website Publik)
-  // Pastikan halaman dashboard dan login tidak bisa diakses dari domain utama
-  if (hostname === mainDomain && (pathname.startsWith('/dashboard') || pathname.startsWith('/login'))) {
-    url.pathname = '/';
-    return NextResponse.redirect(url);
+  // --- Main Domain Logic ---
+  // If we are on the main domain, prevent access to dashboard/login pages.
+  if ((!isLocalhost && hostname === mainDomain) && (pathname.startsWith('/dashboard') || pathname.startsWith('/login'))) {
+    return NextResponse.redirect(new URL('/', request.url));
   }
   
   return NextResponse.next();
 }
 
-// Konfigurasi matcher yang lebih luas untuk menangkap semua request
+// Config matcher to run on every request
 export const config = {
   matcher: [
     /*
-     * Cocokkan semua path request kecuali untuk:
-     * - path yang dimulai dengan `api/` (rute API)
-     * - path yang dimulai dengan `_next/static` (file statis)
-     * - path yang dimulai dengan `_next/image` (optimasi gambar)
-     * - path yang berisi `favicon.ico` (file favicon)
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - logo-icon.png (logo file)
      */
     '/((?!api|_next/static|_next/image|favicon.ico|logo-icon.png).*)',
   ],
