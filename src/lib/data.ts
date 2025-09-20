@@ -45,6 +45,8 @@ export let promotions: Promotion[] = [
 
 // Most static data has been migrated to Supabase.
 // These can be removed if they are no longer needed for any fallback.
+export let orders = [];
+export let fleet = [];
 export let testimonials = [];
 export let gallery = [];
 export let features = [];

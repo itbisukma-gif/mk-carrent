@@ -225,7 +225,10 @@ function GalleryEditor({ vehicles }: { vehicles: Vehicle[] }) {
 
     const handleAddPhoto = () => {
         startTransition(async () => {
-            if (!previewUrl) return;
+            if (!previewUrl) {
+                toast({ variant: 'destructive', title: 'Tidak ada foto dipilih' });
+                return;
+            }
 
             const newPhotoData: Omit<GalleryItem, 'id' | 'created_at'> = {
                 url: previewUrl,
@@ -492,6 +495,7 @@ export default function TestimoniPage() {
   const [isFormOpen, setFormOpen] = useState(false);
   const [selectedTestimonial, setSelectedTestimonial] = useState<Testimonial | null>(null);
   const { toast } = useToast();
+  const [isDeleting, startDeleteTransition] = useTransition();
 
   const [filter, setFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
@@ -551,14 +555,16 @@ export default function TestimoniPage() {
     setFormOpen(true);
   };
 
-  const handleDelete = async (testimonial: Testimonial) => {
-    const result = await deleteTestimonial(testimonial.id);
-    if (result.error) {
-         toast({ variant: "destructive", title: "Gagal menghapus", description: result.error.message });
-    } else {
-        toast({ variant: "destructive", title: "Testimoni Dihapus" });
-        fetchData();
-    }
+  const handleDelete = (testimonial: Testimonial) => {
+    startDeleteTransition(async () => {
+        const result = await deleteTestimonial(testimonial.id);
+        if (result.error) {
+            toast({ variant: "destructive", title: "Gagal menghapus", description: result.error.message });
+        } else {
+            toast({ variant: "destructive", title: "Testimoni Dihapus" });
+            fetchData();
+        }
+    });
   };
   
   const handleFormSave = () => {
@@ -662,7 +668,10 @@ export default function TestimoniPage() {
                                                 </AlertDialogHeader>
                                                 <AlertDialogFooter>
                                                     <AlertDialogCancel>Batal</AlertDialogCancel>
-                                                    <AlertDialogAction onClick={() => handleDelete(item)} className="bg-destructive hover:bg-destructive/90">Ya, Hapus</AlertDialogAction>
+                                                    <AlertDialogAction onClick={() => handleDelete(item)} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90">
+                                                        {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                                                        Ya, Hapus
+                                                    </AlertDialogAction>
                                                 </AlertDialogFooter>
                                             </AlertDialogContent>
                                         </AlertDialog>

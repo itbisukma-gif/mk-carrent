@@ -11,19 +11,19 @@ export type Driver = {
 export type Vehicle = {
   id: string;
   created_at?: string;
-  name: string | null;
-  brand: string | null;
+  name: string;
+  brand: string;
   type: string | null;
   passengers: number | null;
-  transmission: 'Manual' | 'Matic' | null;
-  price: number | null;
+  transmission: 'Manual' | 'Matic';
+  price: number;
   fuel: string | null;
   code: string | null;
   year: number | null;
   rating: number | null;
   dataAiHint: string | null;
   discountPercentage: number | null;
-  photo: string | null;
+  photo: string;
   unitType: 'biasa' | 'khusus' | null;
   stock: number | null;
 }

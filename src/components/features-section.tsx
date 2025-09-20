@@ -2,7 +2,6 @@
 'use client'
 
 import Image from 'next/image';
-import { Card, CardContent } from './ui/card';
 import { useState, useEffect } from 'react';
 import type { FeatureItem } from '@/lib/types';
 import { cn } from '@/lib/utils';

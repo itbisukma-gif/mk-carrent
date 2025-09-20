@@ -108,6 +108,7 @@ function VehicleDetail() {
           toast({ variant: 'destructive', title: 'Gagal Mengirim Ulasan', description: result.error.message });
       } else {
           toast({ title: 'Ulasan Terkirim', description: 'Terima kasih atas masukan Anda!' });
+          // Manually add the new testimonial to the local state to see it immediately
           setTestimonials(prev => [result.data!, ...prev]);
           setUserRating(0);
           setUserComment("");
@@ -137,7 +138,7 @@ function VehicleDetail() {
 
   return (
     <div className="container py-6 md:py-10">
-      <div className="flex flex-col gap-6 lg:gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
         <div className="relative">
            <div className="relative aspect-video w-full overflow-hidden rounded-lg shadow-md">
             <Image 
@@ -219,84 +220,82 @@ function VehicleDetail() {
       </div>
       
       <div className="mt-12 pt-8 border-t">
-         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-             <div className="md:col-span-2">
-                 <h2 className="text-xl font-bold mb-4">{dictionary.vehicleDetail.reviews.customerReviews}</h2>
-                <Tabs defaultValue="reviews">
-                    <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="reviews">{dictionary.vehicleDetail.reviews.customerReviews}</TabsTrigger>
-                        <TabsTrigger value="gallery">{dictionary.vehicleDetail.reviews.galleryTab}</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="reviews" className="mt-4">
-                        <Card className="shadow-sm">
-                            <CardContent className="p-0">
-                                <ScrollArea className="h-80 w-full">
-                                   <div className="p-4 space-y-5">
-                                     {testimonials.length > 0 ? testimonials.map(t => (
-                                       <div key={t.id} className="flex gap-3">
-                                           <UserCircle className="h-10 w-10 text-muted-foreground flex-shrink-0 mt-1"/>
-                                           <div>
-                                               <div className="flex items-center justify-between mb-1">
-                                                    <p className="font-semibold">{t.customerName}</p>
-                                                    <StarRating rating={t.rating} />
-                                               </div>
-                                               <p className="text-sm text-muted-foreground italic">"{t.comment}"</p>
+        <h2 className="text-xl font-bold mb-4 text-center">{dictionary.vehicleDetail.reviews.customerReviews}</h2>
+        <Tabs defaultValue="reviews" className="max-w-4xl mx-auto">
+            <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="reviews">{dictionary.vehicleDetail.reviews.customerReviews}</TabsTrigger>
+                <TabsTrigger value="gallery">{dictionary.vehicleDetail.reviews.galleryTab}</TabsTrigger>
+            </TabsList>
+            <TabsContent value="reviews" className="mt-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <Card className="md:col-span-2">
+                        <CardContent className="p-0">
+                            <ScrollArea className="h-80 w-full">
+                               <div className="p-4 space-y-5">
+                                 {testimonials.length > 0 ? testimonials.map(t => (
+                                   <div key={t.id} className="flex gap-3">
+                                       <UserCircle className="h-10 w-10 text-muted-foreground flex-shrink-0 mt-1"/>
+                                       <div>
+                                           <div className="flex items-center justify-between mb-1">
+                                                <p className="font-semibold">{t.customerName}</p>
+                                                <StarRating rating={t.rating} />
                                            </div>
+                                           <p className="text-sm text-muted-foreground italic">"{t.comment}"</p>
                                        </div>
-                                     )) : <p className="text-muted-foreground text-center py-8 text-sm">{dictionary.vehicleDetail.reviews.noReviews}</p>}
                                    </div>
-                                </ScrollArea>
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
-                    <TabsContent value="gallery" className="mt-4">
-                         <Card className="shadow-sm">
-                            <CardContent className="p-0">
-                                <ScrollArea className="h-80 w-full">
-                                    {gallery.length > 0 ? (
-                                        <div className="p-4 grid grid-cols-2 sm:grid-cols-3 gap-4">
-                                            {gallery.map(photo => (
-                                                 <div key={photo.id} className="relative group aspect-square">
-                                                    <Image
-                                                        src={photo.url}
-                                                        alt={`${dictionary.testimonials.galleryAlt} - ${vehicle.name}`}
-                                                        fill
-                                                        className="object-cover rounded-lg shadow-md transition-transform group-hover:scale-105"
-                                                        data-ai-hint="customer photo"
-                                                    />
-                                                </div>
-                                            ))}
+                                 )) : <p className="text-muted-foreground text-center py-8 text-sm">{dictionary.vehicleDetail.reviews.noReviews}</p>}
+                               </div>
+                            </ScrollArea>
+                        </CardContent>
+                    </Card>
+                     <Card className="md:col-span-2">
+                        <CardHeader className='p-4'>
+                            <CardTitle className="text-base">{dictionary.vehicleDetail.reviews.shareExperience}</CardTitle>
+                            <CardDescription className="text-sm">{dictionary.vehicleDetail.reviews.formDescription}</CardDescription>
+                        </CardHeader>
+                            <CardContent className="space-y-4 p-4 pt-0">
+                            <Textarea placeholder={dictionary.vehicleDetail.reviews.commentPlaceholder} rows={4} value={userComment} onChange={e => setUserComment(e.target.value)} />
+                            <div className="flex justify-between items-center bg-muted/50 p-2 rounded-md">
+                                <p className="font-medium text-sm">{dictionary.vehicleDetail.reviews.yourRating}</p>
+                                    <StarRating rating={userRating} onRatingChange={setUserRating} />
+                            </div>
+                            <Button onClick={handleSubmitReview} disabled={isSubmittingReview} className="w-full transition-all duration-200 ease-in-out hover:scale-105 hover:shadow-md active:scale-100">
+                                {isSubmittingReview && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                {dictionary.vehicleDetail.reviews.submitReview}
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </div>
+            </TabsContent>
+            <TabsContent value="gallery" className="mt-4">
+                 <Card className="shadow-sm">
+                    <CardContent className="p-0">
+                        <ScrollArea className="h-[500px] w-full">
+                            {gallery.length > 0 ? (
+                                <div className="p-4 grid grid-cols-2 sm:grid-cols-3 gap-4">
+                                    {gallery.map(photo => (
+                                         <div key={photo.id} className="relative group aspect-square">
+                                            <Image
+                                                src={photo.url}
+                                                alt={`${dictionary.testimonials.galleryAlt} - ${vehicle.name}`}
+                                                fill
+                                                className="object-cover rounded-lg shadow-md transition-transform group-hover:scale-105"
+                                                data-ai-hint="customer photo"
+                                            />
                                         </div>
-                                    ) : (
-                                        <div className="flex flex-col items-center justify-center h-80 text-muted-foreground text-center">
-                                            <ImageIcon className="h-12 w-12 mb-4" />
-                                            <p className="text-sm font-medium">{dictionary.vehicleDetail.reviews.noPhotos}</p>
-                                        </div>
-                                    )}
-                                </ScrollArea>
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
-                </Tabs>
-            </div>
-             <Card className="md:col-span-2">
-                <CardHeader className='p-4'>
-                    <CardTitle className="text-base">{dictionary.vehicleDetail.reviews.shareExperience}</CardTitle>
-                    <CardDescription className="text-sm">{dictionary.vehicleDetail.reviews.formDescription}</CardDescription>
-                </CardHeader>
-                    <CardContent className="space-y-4 p-4 pt-0">
-                    <Textarea placeholder={dictionary.vehicleDetail.reviews.commentPlaceholder} rows={4} value={userComment} onChange={e => setUserComment(e.target.value)} />
-                    <div className="flex justify-between items-center bg-muted/50 p-2 rounded-md">
-                        <p className="font-medium text-sm">{dictionary.vehicleDetail.reviews.yourRating}</p>
-                            <StarRating rating={userRating} onRatingChange={setUserRating} />
-                    </div>
-                    <Button onClick={handleSubmitReview} disabled={isSubmittingReview} className="w-full transition-all duration-200 ease-in-out hover:scale-105 hover:shadow-md active:scale-100">
-                        {isSubmittingReview && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        {dictionary.vehicleDetail.reviews.submitReview}
-                    </Button>
-                </CardContent>
-            </Card>
-         </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="flex flex-col items-center justify-center h-80 text-muted-foreground text-center">
+                                    <ImageIcon className="h-12 w-12 mb-4" />
+                                    <p className="text-sm font-medium">{dictionary.vehicleDetail.reviews.noPhotos}</p>
+                                </div>
+                            )}
+                        </ScrollArea>
+                    </CardContent>
+                </Card>
+            </TabsContent>
+        </Tabs>
       </div>
 
        <div className="mt-12 pt-8 border-t">

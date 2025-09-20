@@ -78,7 +78,9 @@ function TestimonialsPageContent() {
                                                     <div className="flex items-center justify-between">
                                                         <div>
                                                             <h3 className="font-semibold text-lg">{item.customerName}</h3>
-                                                            <p className="text-sm text-muted-foreground">{dictionary.testimonials.rented} {item.vehicleName}</p>
+                                                            {item.vehicleName && (
+                                                                <p className="text-sm text-muted-foreground">{dictionary.testimonials.rented} {item.vehicleName}</p>
+                                                            )}
                                                         </div>
                                                         <StarRating rating={item.rating} />
                                                     </div>
@@ -86,7 +88,7 @@ function TestimonialsPageContent() {
                                             </div>
                                         </CardHeader>
                                         <CardContent>
-                                            <p className="text-muted-foreground pl-16">"{item.comment}"</p>
+                                            <p className="text-muted-foreground pl-16 italic">"{item.comment}"</p>
                                         </CardContent>
                                     </Card>
                                 ))}
