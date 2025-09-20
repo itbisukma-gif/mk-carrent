@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useTransition, useEffect } from "react";
@@ -25,7 +24,9 @@ function VehicleCard({ vehicle, onEdit, onDelete }: { vehicle: Vehicle, onEdit: 
     const { logoUrl } = useVehicleLogo(vehicle.brand);
 
     const hasDiscount = vehicle.discountPercentage && vehicle.discountPercentage > 0;
-    const discountedPrice = hasDiscount && vehicle.price ? vehicle.price * (1 - vehicle.discountPercentage / 100) : vehicle.price;
+    const discountedPrice = (hasDiscount && vehicle.price && vehicle.discountPercentage)
+        ? vehicle.price * (1 - vehicle.discountPercentage / 100)
+        : vehicle.price;
     const isSpecialUnit = vehicle.unitType === 'khusus';
 
     return (
