@@ -1,12 +1,37 @@
-import { type NextRequest } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server'
 import { createClient } from '@/utils/supabase/middleware'
 
 export async function middleware(request: NextRequest) {
   const { supabase, response } = createClient(request)
 
   // Refresh session if expired - required for Server Components
-  // https://supabase.com/docs/guides/auth/auth-helpers/nextjs#managing-session-with-middleware
-  await supabase.auth.getSession()
+  const { data: { session } } = await supabase.auth.getSession()
+
+  const { pathname } = request.nextUrl
+
+  // Define protected routes
+  const protectedRoutes = ['/dashboard']
+
+  const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
+
+  if (isProtectedRoute && !session) {
+    // Redirect to login page if trying to access a protected route without a session
+    return NextResponse.redirect(new URL('/login', request.url))
+  }
+
+  // If user is logged in and tries to access login page, redirect to dashboard
+  if (session && pathname === '/login') {
+    return NextResponse.redirect(new URL('/dashboard', request.url))
+  }
+  
+  // If user requests to log out, clear the session cookie
+  if (pathname === '/logout') {
+      const logoutResponse = NextResponse.redirect(new URL('/login', request.url));
+      // Manually clear the cookie used by Supabase
+      logoutResponse.cookies.delete('session'); // The custom cookie from login page
+      return logoutResponse;
+  }
+
 
   return response
 }
