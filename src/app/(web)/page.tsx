@@ -36,15 +36,16 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 
 
-import { fleet, promotions as initialPromotions } from '@/lib/data';
-import type { Promotion } from '@/lib/types';
+import { promotions as initialPromotions } from '@/lib/data';
+import type { Promotion, Vehicle } from '@/lib/types';
 import { Filter } from 'lucide-react';
 import { VehicleCard } from '@/components/vehicle-card';
 import { useLanguage } from '@/hooks/use-language';
 import { LanguageProvider } from '@/app/language-provider';
 import { FeaturesSection } from '@/components/features-section';
+import { supabase } from '@/lib/supabase';
 
-function HomePageContent() {
+function HomePageContent({ fleet }: { fleet: Vehicle[] }) {
     const { dictionary } = useLanguage();
     const [visibleCars, setVisibleCars] = useState(6);
     const [searchQuery, setSearchQuery] = useState('');
@@ -77,31 +78,34 @@ function HomePageContent() {
     };
     
     const filteredFleet = useMemo(() => {
+        if (!fleet) return [];
         return fleet.filter(vehicle => {
             const searchMatch = vehicle.name.toLowerCase().includes(searchQuery.toLowerCase()) || vehicle.brand.toLowerCase().includes(searchQuery.toLowerCase());
             const brandMatch = filters.brand === 'all' || vehicle.brand === filters.brand;
             const typeMatch = filters.type === 'all' || vehicle.type === filters.type;
             return searchMatch && brandMatch && typeMatch;
         });
-    }, [searchQuery, filters]);
+    }, [searchQuery, filters, fleet]);
 
     const availableBrands = useMemo(() => {
+        if (!fleet) return [];
         const brands = new Set(
             fleet
                 .filter(v => filters.type === 'all' || v.type === filters.type)
                 .map(v => v.brand)
         );
         return ['all', ...Array.from(brands)];
-    }, [filters.type]);
+    }, [filters.type, fleet]);
 
     const availableTypes = useMemo(() => {
+        if (!fleet) return [];
         const types = new Set(
             fleet
                 .filter(v => filters.brand === 'all' || v.brand === filters.brand)
                 .map(v => v.type)
         );
         return ['all', ...Array.from(types)];
-    }, [filters.brand]);
+    }, [filters.brand, fleet]);
     
     useEffect(() => {
         if (!availableTypes.includes(filters.type)) {
@@ -300,10 +304,16 @@ function HomePageContent() {
   );
 }
 
-export default function HomePage() {
+export default async function HomePage() {
+  const { data: fleet, error } = await supabase.from('vehicles').select('*');
+
+  if (error) {
+    console.error('Error fetching fleet:', error);
+    // Optionally, render an error state
+  }
   return (
     <LanguageProvider>
-      <HomePageContent />
+      <HomePageContent fleet={fleet || []} />
     </LanguageProvider>
   )
 }

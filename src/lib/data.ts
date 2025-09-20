@@ -14,7 +14,9 @@ export let serviceCosts = {
 
 // New centralized calculation function
 export const calculateInvoiceDetails = (order: Order) => {
-    const vehicle = fleet.find(v => v.carName === order.carName || `${v.brand} ${v.name}` === order.carName);
+    // This function will need to be adapted to fetch vehicle data from Supabase as well
+    // For now, we'll leave it as a placeholder.
+    const vehicle = undefined; // Placeholder for now
     
     // Default values in case vehicle is not found
     if (!vehicle) {
@@ -75,111 +77,6 @@ export let drivers: Driver[] = [
       phone: "082198765432",
       status: 'Tersedia'
     },
-];
-
-export let fleet: Vehicle[] = [
-    {
-      id: "v-001",
-      photo: "https://picsum.photos/seed/car1/600/400",
-      name: "Avanza",
-      brand: "Toyota",
-      type: "MPV",
-      passengers: 7,
-      transmission: "Manual",
-      price: 350000,
-      fuel: "Bensin",
-      code: "AVZ-001",
-      year: 2022,
-      rating: 4.8,
-      dataAiHint: "toyota avanza",
-      discountPercentage: undefined,
-      unitType: 'biasa',
-    },
-    {
-      id: "v-002",
-      photo: "https://picsum.photos/seed/car2/600/400",
-      name: "Brio",
-      brand: "Honda",
-      type: "City Car",
-      passengers: 5,
-      transmission: "Matic",
-      price: 300000,
-      fuel: "Bensin",
-      code: "BRI-002",
-      year: 2023,
-      rating: 4.7,
-      dataAiHint: "honda brio",
-      unitType: 'biasa',
-    },
-    {
-      id: "v-003",
-      photo: "https://picsum.photos/seed/car3/600/400",
-      name: "Xpander",
-      brand: "Mitsubishi",
-      type: "MPV",
-      passengers: 7,
-      transmission: "Matic",
-      price: 400000,
-      fuel: "Bensin",
-      code: "XPD-003",
-      year: 2022,
-      rating: 4.9,
-      dataAiHint: "mitsubishi xpander",
-      discountPercentage: 20,
-      unitType: 'khusus',
-      stock: 2,
-    },
-    {
-      id: "v-004",
-      photo: "https://picsum.photos/seed/car4/600/400",
-      name: "Innova Reborn",
-      brand: "Toyota",
-      type: "MPV",
-      passengers: 7,
-      transmission: "Matic",
-      price: 550000,
-      fuel: "Diesel",
-      code: "INV-004",
-      year: 2021,
-      rating: 4.9,
-      dataAiHint: "toyota innova",
-      unitType: 'khusus',
-      stock: 0,
-    },
-    {
-      id: "v-005",
-      photo: "https://picsum.photos/seed/car5/600/400",
-      name: "Terios",
-      brand: "Daihatsu",
-      type: "SUV",
-      passengers: 7,
-      transmission: "Manual",
-      price: 380000,
-      fuel: "Bensin",
-      code: "TRS-005",
-      year: 2022,
-      rating: 4.6,
-      dataAiHint: "daihatsu terios",
-      unitType: 'biasa',
-    },
-    {
-      id: "v-006",
-      photo: "https://picsum.photos/seed/car6/600/400",
-      name: "HR-V",
-      brand: "Honda",
-      type: "SUV",
-      passengers: 5,
-      transmission: "Matic",
-      price: 450000,
-      fuel: "Bensin",
-      code: "HRV-006",
-      year: 2023,
-      rating: 4.8,
-      dataAiHint: "honda hrv",
-      discountPercentage: undefined,
-      unitType: 'khusus',
-      stock: 1,
-    }
 ];
 
 export let orders: Order[] = [

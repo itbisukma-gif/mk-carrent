@@ -3,7 +3,7 @@
 
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
-import { fleet, testimonials, gallery } from '@/lib/data';
+import { testimonials, gallery } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { VehicleCard } from '@/components/vehicle-card';
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import Autoplay from 'embla-carousel-autoplay';
 import { StarRating } from '@/components/star-rating';
 import { useLanguage } from '@/hooks/use-language';
@@ -33,9 +33,10 @@ import { OrderForm } from '@/components/order-form';
 import { Separator } from '@/components/ui/separator';
 import { useVehicleLogo } from '@/hooks/use-vehicle-logo';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { supabase } from '@/lib/supabase';
 
 
-function VehicleDetail({ vehicle }: { vehicle: Vehicle }) {
+function VehicleDetail({ vehicle, otherVehicles }: { vehicle: Vehicle, otherVehicles: Vehicle[] }) {
   const { dictionary } = useLanguage();
   const plugin = useRef(
       Autoplay({ delay: 3000, stopOnInteraction: true })
@@ -43,7 +44,6 @@ function VehicleDetail({ vehicle }: { vehicle: Vehicle }) {
   const formatCurrency = (value: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(value);
   const vehicleTestimonials = testimonials.filter(t => t.vehicleName.includes(vehicle.name));
   const vehicleGallery = gallery.filter(g => g.vehicleName === `${vehicle.brand} ${vehicle.name}`);
-  const otherVehicles = fleet.filter(f => f.id !== vehicle.id).slice(0, 6);
   const [userRating, setUserRating] = useState(0);
 
   const hasDiscount = vehicle.discountPercentage && vehicle.discountPercentage > 0;
@@ -256,18 +256,26 @@ function VehicleDetail({ vehicle }: { vehicle: Vehicle }) {
   )
 }
 
-export default function MobilDetailPage({ params }: { params: { id: string } }) {
-  const vehicle = fleet.find((car) => car.id === params.id);
+export default async function MobilDetailPage({ params }: { params: { id: string } }) {
+  const { data: vehicle, error: vehicleError } = await supabase
+    .from('vehicles')
+    .select('*')
+    .eq('id', params.id)
+    .single();
 
-  if (!vehicle) {
+  if (vehicleError || !vehicle) {
     notFound();
   }
 
+  const { data: otherVehicles, error: otherVehiclesError } = await supabase
+    .from('vehicles')
+    .select('*')
+    .neq('id', params.id)
+    .limit(6);
+
   return (
     <LanguageProvider>
-        <VehicleDetail vehicle={vehicle} />
+        <VehicleDetail vehicle={vehicle} otherVehicles={otherVehicles || []} />
     </LanguageProvider>
   );
 }
-
-
