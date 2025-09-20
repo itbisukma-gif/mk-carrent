@@ -30,10 +30,9 @@ export default function LoginPage() {
         title: 'Login Berhasil',
         description: 'Anda akan diarahkan ke dashboard.',
       });
-      // Force a refresh to ensure the middleware can re-evaluate the session
-      // before pushing to the new route.
-      router.refresh();
-      router.push('/dashboard');
+      // Force a full page reload to ensure the middleware can re-evaluate the session
+      // before redirecting to the new route. This is more robust than router.push().
+      window.location.href = '/dashboard';
     } else {
       toast({
         variant: 'destructive',
