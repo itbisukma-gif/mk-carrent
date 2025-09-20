@@ -13,7 +13,7 @@ import { CheckCircle, Loader2, ClipboardCopy, Upload, AlertCircle, ArrowLeft, Pa
 import { bankAccounts } from "@/lib/data";
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/componentsui/input";
+import { Input } from "@/components/ui/input";
 import { format, parseISO } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { useLanguage } from "@/hooks/use-language";
