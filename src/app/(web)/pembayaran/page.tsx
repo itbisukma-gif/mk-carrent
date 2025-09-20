@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Banknote, QrCode, ArrowLeft } from 'lucide-react';
+import { Banknote, QrCode, ArrowLeft, Loader2 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { useLanguage } from '@/hooks/use-language';
@@ -63,25 +63,28 @@ function PembayaranComponent() {
         fetchVehicle();
     }, [vehicleId]);
 
-    if (!vehicle) {
-        return <div>{dictionary.loading}...</div>;
-    }
-
 
     const { rentalPeriod, baseRentalCost, maticFee, driverFee, fuelFee, discountAmount, totalCost } = useMemo(() => {
+        if (!vehicle) {
+            return { rentalPeriod: '', baseRentalCost: 0, maticFee: 0, driverFee: 0, fuelFee: 0, discountAmount: 0, totalCost: 0 };
+        }
+        
         let period = `${days} ${dictionary.payment.days}`;
         if (startDateStr && endDateStr) {
-            const start = parseISO(startDateStr);
-            const end = parseISO(endDateStr);
-            const locale = language === 'id' ? id : undefined;
-            period = `${format(start, 'd LLL yy', { locale })} - ${format(end, 'd LLL yy', { locale })}`;
+            try {
+                const start = parseISO(startDateStr);
+                const end = parseISO(endDateStr);
+                const locale = language === 'id' ? id : undefined;
+                period = `${format(start, 'd LLL yy', { locale })} - ${format(end, 'd LLL yy', { locale })}`;
+            } catch (error) {
+                console.error("Error parsing date strings:", error);
+            }
         }
         
         const rentalCost = (vehicle.price || 0) * days;
         const mFee = vehicle.transmission === 'Matic' ? serviceCosts.matic * days : 0;
         const dFee = (service === 'dengan-supir' || service === 'all-include') ? serviceCosts.driver * days : 0;
         
-        // Include fuel fee only if the service is 'all-include'
         const fFee = (service === 'all-include') ? serviceCosts.fuel * days : 0;
 
         const subtotal = rentalCost + mFee + dFee + fFee;
@@ -111,8 +114,8 @@ function PembayaranComponent() {
     }, [fullName, phone]);
 
     const confirmationUrl = useMemo(() => {
-        if (!isFormValid) return '#';
-        let url = `/konfirmasi?paymentMethod=${paymentMethod}&total=${totalCost}&vehicleId=${vehicleId}&days=${days}&service=${service}&name=${encodeURIComponent(fullName)}&phone=${encodeURIComponent(phone)}`;
+        if (!isFormValid || !vehicle) return '#';
+        let url = `/konfirmasi?paymentMethod=${paymentMethod}&total=${totalCost}&vehicleId=${vehicle.id}&days=${days}&service=${service}&name=${encodeURIComponent(fullName)}&phone=${encodeURIComponent(phone)}`;
         if (startDateStr) url += `&startDate=${startDateStr}`;
         if (endDateStr) url += `&endDate=${endDateStr}`;
         if (maticFee > 0) url += `&maticFee=${maticFee}`;
@@ -120,7 +123,7 @@ function PembayaranComponent() {
         if (driverId) url += `&driverId=${driverId}`;
 
         return url;
-    }, [isFormValid, paymentMethod, totalCost, vehicleId, days, service, startDateStr, endDateStr, maticFee, discountAmount, fullName, phone, driverId]);
+    }, [isFormValid, paymentMethod, totalCost, vehicle, days, service, startDateStr, endDateStr, maticFee, discountAmount, fullName, phone, driverId]);
 
     const handleConfirmAndPay = () => {
         if (isFormValid) {
@@ -132,6 +135,10 @@ function PembayaranComponent() {
                 description: dictionary.payment.validation.description,
             });
         }
+    }
+    
+    if (!vehicle) {
+        return <div className="flex h-screen items-center justify-center gap-2"><Loader2 className="h-5 w-5 animate-spin" />{dictionary.loading}...</div>;
     }
 
     return (
@@ -286,7 +293,7 @@ export default function PembayaranPage() {
     const { dictionary } = useLanguage();
     return (
         <LanguageProvider>
-            <Suspense fallback={<div>{dictionary.loading}...</div>}>
+            <Suspense fallback={<div className="flex h-screen items-center justify-center">{dictionary.loading}...</div>}>
                 <PembayaranComponent />
             </Suspense>
         </LanguageProvider>

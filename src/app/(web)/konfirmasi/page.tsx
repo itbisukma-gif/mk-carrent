@@ -12,7 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { CheckCircle, Loader2, ClipboardCopy, Upload, AlertCircle, ArrowLeft, Paperclip, Phone, FileCheck, Download } from "lucide-react";
-import { bankAccounts, fleet, drivers } from "@/lib/data";
+import { bankAccounts } from "@/lib/data";
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -21,7 +21,7 @@ import { id } from 'date-fns/locale';
 import { useLanguage } from "@/hooks/use-language";
 import { LanguageProvider } from "@/app/language-provider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { BankAccount, Order, Vehicle } from "@/lib/types";
+import type { BankAccount, Order, Vehicle, Driver } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { WhatsAppIcon } from "@/components/icons";
 import { supabase } from "@/lib/supabase";
@@ -206,7 +206,7 @@ function KonfirmasiComponent() {
     const { toast } = useToast();
 
     const [vehicle, setVehicle] = useState<Vehicle | null>(null);
-    const [driver, setDriver] = useState<any>(null);
+    const [driver, setDriver] = useState<Driver | null>(null);
     const [uploadSuccess, setUploadSuccess] = useState(false);
     
     // Get all params from URL
@@ -287,7 +287,7 @@ function KonfirmasiComponent() {
     const formatCurrency = (value: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(value);
     
     const handleUploadSuccess = async (proofUrl: string) => {
-        const newOrder: Omit<Order, 'createdAt'> = {
+        const newOrder: Omit<Order, 'created_at'> = {
             id: orderId,
             customerName: customerName,
             customerPhone: customerPhone,
@@ -317,7 +317,7 @@ function KonfirmasiComponent() {
     };
 
     if (uploadSuccess) {
-        const driverWhatsappUrl = driver ? `https://wa.me/${driver.phone.replace(/\D/g, '')}` : "#";
+        const driverWhatsappUrl = driver?.phone ? `https://wa.me/${driver.phone.replace(/\D/g, '')}` : "#";
 
         return (
             <div className="container mx-auto max-w-lg py-8 md:py-12 px-4">

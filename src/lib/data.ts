@@ -62,22 +62,8 @@ export const revenueData = [
   { date: 'Sun', revenue: 4800000 },
 ];
 
-export let drivers: Driver[] = [
-    {
-      id: "d-001",
-      name: "Budi Santoso",
-      address: "Jl. Merdeka No. 10, Jakarta",
-      phone: "081234567890",
-      status: 'Tersedia'
-    },
-    {
-      id: "d-002",
-      name: "Agus Setiawan",
-      address: "Jl. Mawar No. 5, Bandung",
-      phone: "082198765432",
-      status: 'Tersedia'
-    },
-];
+// This data is now fetched from Supabase, so we can keep it empty or remove it.
+export let drivers: Driver[] = [];
 
 export let orders: Order[] = [
     {
@@ -263,3 +249,6 @@ export let promotions: Promotion[] = [
       imageUrl: 'https://picsum.photos/seed/promo2/1280/720',
     }
 ];
+
+// Dummy data for fleet is now fetched from Supabase, so this can be removed or emptied.
+export let fleet: Vehicle[] = [];
