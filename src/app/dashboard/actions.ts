@@ -44,6 +44,9 @@ const createClient = () => {
 }
 
 export async function upsertDriver(driverData: Omit<Driver, 'created_at'>) {
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+        return { data: null, error: { message: 'Supabase credentials are not configured.' } };
+    }
     const supabase = createClient();
 
     const { data, error } = await supabase
@@ -64,6 +67,9 @@ export async function upsertDriver(driverData: Omit<Driver, 'created_at'>) {
 
 
 export async function deleteDriver(driverId: string) {
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+        return { error: { message: 'Supabase credentials are not configured.' } };
+    }
     const supabase = createClient();
     
     const { error } = await supabase
@@ -82,6 +88,9 @@ export async function deleteDriver(driverId: string) {
 }
 
 export async function updateDriverStatus(driverId: string, status: 'Tersedia' | 'Bertugas') {
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+        return { error: { message: 'Supabase credentials are not configured.' } };
+    }
     const supabase = createClient();
 
     const { error } = await supabase
