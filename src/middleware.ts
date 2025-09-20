@@ -3,8 +3,9 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { createClient } from '@/utils/supabase/middleware'
 
 export async function middleware(request: NextRequest) {
-  // First, run the session updater. This will refresh session cookies.
   const { supabase, response } = createClient(request)
+
+  // Refresh session so it doesn't expire unexpectedly
   await supabase.auth.getSession()
 
   const url = request.nextUrl.clone();
@@ -38,9 +39,8 @@ export async function middleware(request: NextRequest) {
       const logoutResponse = NextResponse.redirect(new URL('/login', request.url));
       logoutResponse.cookies.set('session', '', { maxAge: -1, path: '/' });
       
-      const supabaseProjectRef = process.env.NEXT_PUBLIC_SUPABASE_URL!.split('.')[0].substring(8);
       // Also clear Supabase auth cookies
-      logoutResponse.cookies.delete({ name: `sb-${supabaseProjectRef}-auth-token`, path: '/' });
+      logoutResponse.cookies.delete({ name: `sb-pzvyecepcdjsovrxnlit-auth-token`, path: '/' });
 
       return logoutResponse;
     }
@@ -51,7 +51,7 @@ export async function middleware(request: NextRequest) {
         return NextResponse.rewrite(url);
     }
     
-    // For all other valid admin paths, return the response from updateSession
+    // For all other valid admin paths, return the response from createClient
     return response;
   }
 
@@ -61,7 +61,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/', request.url));
   }
   
-  // For all public paths, return the response from updateSession
+  // For all public paths, return the response from createClient
   return response;
 }
 

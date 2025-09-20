@@ -1,8 +1,9 @@
 
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
-import { NextResponse, type NextRequest } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 
-export async function updateSession(request: NextRequest) {
+export const createClient = (request: NextRequest) => {
+  // Create an unmodified response
   let response = NextResponse.next({
     request: {
       headers: request.headers,
@@ -18,6 +19,7 @@ export async function updateSession(request: NextRequest) {
           return request.cookies.get(name)?.value
         },
         set(name: string, value: string, options: CookieOptions) {
+          // If the cookie is updated, update the request cookies and re-create the response
           request.cookies.set({
             name,
             value,
@@ -35,6 +37,7 @@ export async function updateSession(request: NextRequest) {
           })
         },
         remove(name: string, options: CookieOptions) {
+          // If the cookie is removed, update the request cookies and re-create the response
           request.cookies.set({
             name,
             value: '',
@@ -55,8 +58,5 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  // refreshing the session cookie
-  await supabase.auth.getUser()
-
-  return response
+  return { supabase, response }
 }
