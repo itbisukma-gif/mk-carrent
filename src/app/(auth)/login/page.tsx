@@ -40,8 +40,8 @@ export default function LoginPage() {
         title: 'Login Berhasil',
         description: 'Anda akan diarahkan ke dashboard.',
       });
-      // Redirect to dashboard. The middleware will handle session checks.
-      // Using router.refresh() to ensure the server-side state (including cookies) is updated.
+      // The middleware will handle the redirection after the page is refreshed
+      // and the new session cookie is recognized.
       router.refresh();
     }
   };
