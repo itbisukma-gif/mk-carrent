@@ -113,7 +113,7 @@ export const OrderForm = forwardRef<HTMLDivElement, { vehicle: Vehicle }>(({ veh
 
         const subtotal = rental + mFee + dFee + fFee;
 
-        const discAmount = vehicle.discountPercentage 
+        const discAmount = vehicle.discountPercentage && vehicle.price
             ? (rental * vehicle.discountPercentage) / 100 
             : 0;
         
@@ -179,7 +179,7 @@ export const OrderForm = forwardRef<HTMLDivElement, { vehicle: Vehicle }>(({ veh
         
         <div className="p-6 border-b flex-shrink-0">
             <div className="flex items-center gap-4">
-                <Image src={vehicle.photo || ''} alt={vehicle.name || ''} width={120} height={80} className="rounded-lg object-cover" data-ai-hint={vehicle.dataAiHint || ''} />
+                <Image src={vehicle.photo || ''} alt={vehicle.name} width={120} height={80} className="rounded-lg object-cover" data-ai-hint={vehicle.dataAiHint || ''} />
                 <div>
                     <h3 className="font-bold text-lg">{vehicle.brand} {vehicle.name}</h3>
                     <p className="text-sm text-muted-foreground">{vehicle.type}</p>

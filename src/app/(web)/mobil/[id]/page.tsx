@@ -123,7 +123,7 @@ function VehicleDetail() {
   const formatCurrency = (value: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(value);
   
   const hasDiscount = vehicle.discountPercentage && vehicle.discountPercentage > 0;
-  const discountedPrice = hasDiscount ? vehicle.price! * (1 - vehicle.discountPercentage! / 100) : vehicle.price!;
+  const discountedPrice = hasDiscount && vehicle.price ? vehicle.price * (1 - vehicle.discountPercentage / 100) : vehicle.price;
 
   const vehicleDetails = [
     { label: dictionary.vehicleDetail.details.brand, value: vehicle.brand, icon: CheckCircle },
@@ -134,7 +134,7 @@ function VehicleDetail() {
     { label: dictionary.vehicleDetail.details.year, value: vehicle.year, icon: Calendar },
   ];
 
-  const { logoUrl } = useVehicleLogo(vehicle.brand!);
+  const { logoUrl } = useVehicleLogo(vehicle.brand);
 
   return (
     <div className="container py-6 md:py-10">
@@ -172,7 +172,7 @@ function VehicleDetail() {
         <div className="flex flex-col gap-4">
           <div className="space-y-1.5">
             <h1 className="text-2xl font-bold tracking-tight">{vehicle.brand} {vehicle.name}</h1>
-            <StarRating rating={vehicle.rating!} totalReviews={testimonials.length} />
+            <StarRating rating={vehicle.rating || 0} totalReviews={testimonials.length} />
           </div>
           
           <Card>
@@ -185,7 +185,7 @@ function VehicleDetail() {
                         <li key={detail.label} className="flex items-center gap-3">
                             <detail.icon className="h-4 w-4 text-primary" />
                             <span className="text-muted-foreground">{detail.label}:</span>
-                            <span className="font-medium ml-auto">{detail.value}</span>
+                            <span className="font-medium ml-auto">{detail.value || '-'}</span>
                         </li>
                     ))}
                 </ul>
@@ -196,13 +196,13 @@ function VehicleDetail() {
             <CardContent className="p-4 space-y-4">
                <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Harga per hari</span>
-                   {hasDiscount ? (
+                   {hasDiscount && discountedPrice ? (
                       <div className='text-right'>
-                          <p className="text-sm line-through text-muted-foreground">{formatCurrency(vehicle.price!)}</p>
+                          <p className="text-sm line-through text-muted-foreground">{formatCurrency(vehicle.price || 0)}</p>
                           <p className="text-xl font-bold text-primary">{formatCurrency(discountedPrice)}</p>
                       </div>
                     ) : (
-                      <p className="text-xl font-bold text-primary">{formatCurrency(vehicle.price!)}</p>
+                      <p className="text-xl font-bold text-primary">{formatCurrency(vehicle.price || 0)}</p>
                   )}
                </div>
                <Separator />

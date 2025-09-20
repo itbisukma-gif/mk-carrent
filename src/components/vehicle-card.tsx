@@ -24,7 +24,7 @@ export function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
   const formatCurrency = (value: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(value);
   
   const hasDiscount = vehicle.discountPercentage && vehicle.discountPercentage > 0;
-  const discountedPrice = hasDiscount ? vehicle.price * (1 - vehicle.discountPercentage! / 100) : vehicle.price;
+  const discountedPrice = hasDiscount && vehicle.price ? vehicle.price * (1 - vehicle.discountPercentage / 100) : vehicle.price;
 
   const { logoUrl } = useVehicleLogo(vehicle.brand);
 
@@ -42,7 +42,7 @@ export function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
                         alt={vehicle.name}
                         fill
                         className="object-cover group-hover:scale-105 transition-transform"
-                        data-ai-hint={vehicle.dataAiHint}
+                        data-ai-hint={vehicle.dataAiHint || ''}
                       />
                       {logoUrl && (
                         <div className="absolute top-3 left-3 bg-white/70 backdrop-blur-sm p-1.5 rounded-md shadow-sm">
@@ -90,15 +90,15 @@ export function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
             </div>
             <div className="mt-4 pt-4 border-t flex items-end justify-between">
               <div className="flex-shrink-0">
-                  {hasDiscount && !isOutOfStock ? (
+                  {hasDiscount && discountedPrice ? (
                   <>
-                      <p className="text-xs text-muted-foreground line-through">{formatCurrency(vehicle.price)}</p>
+                      <p className="text-xs text-muted-foreground line-through">{formatCurrency(vehicle.price || 0)}</p>
                       <p className="text-base font-bold text-primary leading-tight">{formatCurrency(discountedPrice)}<span className="text-xs font-normal">/{dictionary.vehicleCard.day}</span></p>
                   </>
                   ) : (
                   <>
                       <p className="text-xs text-muted-foreground">{dictionary.vehicleCard.priceStartFrom}</p>
-                      <p className="text-base font-bold text-primary leading-tight">{formatCurrency(vehicle.price)}<span className="text-xs font-normal">/{dictionary.vehicleCard.day}</span></p>
+                      <p className="text-base font-bold text-primary leading-tight">{formatCurrency(vehicle.price || 0)}<span className="text-xs font-normal">/{dictionary.vehicleCard.day}</span></p>
                   </>
                   )}
               </div>
@@ -119,5 +119,3 @@ export function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
       </Card>
   );
 }
-
-

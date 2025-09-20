@@ -1,3 +1,4 @@
+
 'use client'
 
 import * as React from 'react'
@@ -204,7 +205,7 @@ export default function DashboardPage() {
 
     useEffect(() => {
         fetchData();
-    }, []);
+    }, [toast]);
   
   const stats = useMemo(() => {
     const pendingOrders = orders.filter(o => o.status === 'pending').length;
@@ -226,7 +227,8 @@ export default function DashboardPage() {
     const currentYear = now.getFullYear();
 
     const completedThisMonth = orders.filter(o => {
-        const orderDate = new Date(o.createdAt);
+        if (!o.created_at) return false;
+        const orderDate = new Date(o.created_at);
         return o.status === 'selesai' && orderDate.getMonth() === currentMonth && orderDate.getFullYear() === currentYear;
     }).length;
 
@@ -282,6 +284,9 @@ export default function DashboardPage() {
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
+        const weeklyRev = payload.find((p: any) => p.dataKey === 'Pendapatan Minggu Ini');
+        const lastWeekRev = payload.find((p: any) => p.dataKey === 'Pendapatan Minggu Lalu');
+
         return (
         <div className="rounded-lg border bg-background p-2 shadow-sm">
             <div className="grid grid-cols-2 gap-2">
@@ -290,7 +295,7 @@ export default function DashboardPage() {
                 Minggu Ini
                 </span>
                 <span className="font-bold text-blue-600">
-                 {formatCurrency(payload.find((p: any) => p.dataKey === 'Pendapatan Minggu Ini').value)}
+                 {weeklyRev ? formatCurrency(weeklyRev.value) : 'N/A'}
                 </span>
             </div>
             <div className="flex flex-col space-y-1">
@@ -298,7 +303,7 @@ export default function DashboardPage() {
                 Minggu Lalu
                 </span>
                 <span className="font-bold text-gray-500">
-                {formatCurrency(payload.find((p: any) => p.dataKey === 'Pendapatan Minggu Lalu').value)}
+                {lastWeekRev ? formatCurrency(lastWeekRev.value) : 'N/A'}
                 </span>
             </div>
             </div>

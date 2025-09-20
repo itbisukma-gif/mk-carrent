@@ -22,10 +22,10 @@ import { useForm, SubmitHandler } from "react-hook-form";
 import { upsertVehicle, deleteVehicle } from "./actions";
 
 function VehicleCard({ vehicle, onEdit, onDelete }: { vehicle: Vehicle, onEdit: (vehicle: Vehicle) => void, onDelete: (vehicleId: string) => void }) {
-    const { logoUrl } = useVehicleLogo(vehicle.brand || '');
+    const { logoUrl } = useVehicleLogo(vehicle.brand);
 
     const hasDiscount = vehicle.discountPercentage && vehicle.discountPercentage > 0;
-    const discountedPrice = hasDiscount ? (vehicle.price || 0) * (1 - vehicle.discountPercentage! / 100) : (vehicle.price || 0);
+    const discountedPrice = hasDiscount && vehicle.price ? vehicle.price * (1 - vehicle.discountPercentage / 100) : vehicle.price;
     const isSpecialUnit = vehicle.unitType === 'khusus';
 
     return (
@@ -34,7 +34,7 @@ function VehicleCard({ vehicle, onEdit, onDelete }: { vehicle: Vehicle, onEdit: 
                  {vehicle.photo ? (
                     <Image
                         src={vehicle.photo}
-                        alt={vehicle.name || 'Vehicle image'}
+                        alt={vehicle.name}
                         width={600}
                         height={400}
                         className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
@@ -111,7 +111,7 @@ function VehicleCard({ vehicle, onEdit, onDelete }: { vehicle: Vehicle, onEdit: 
             <CardFooter className="p-4 mt-auto bg-muted/50">
                 <div className="w-full flex justify-between items-center">
                     <p className="text-sm text-muted-foreground">Harga / hari</p>
-                    {hasDiscount ? (
+                    {hasDiscount && discountedPrice ? (
                         <div className="text-right">
                             <p className="text-sm text-muted-foreground line-through">{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(vehicle.price || 0)}</p>
                             <p className="text-lg font-bold text-primary">{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(discountedPrice)}</p>
@@ -138,7 +138,7 @@ function VehicleForm({ vehicle, onSave, onCancel }: { vehicle?: Vehicle | null; 
     
     const brand = watch('brand');
     const unitType = watch('unitType');
-    const { logoUrl } = useVehicleLogo(brand || '');
+    const { logoUrl } = useVehicleLogo(brand);
 
     useEffect(() => {
         // This is to handle editing, setting the initial preview URL.
@@ -359,7 +359,7 @@ export default function ArmadaPage() {
 
   useEffect(() => {
     fetchFleet();
-  }, []);
+  }, [toast]);
 
   const handleAddClick = () => {
     setSelectedVehicle(null);

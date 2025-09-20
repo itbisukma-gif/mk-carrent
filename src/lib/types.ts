@@ -1,4 +1,5 @@
 
+
 export type Driver = {
   id: string;
   created_at?: string;
@@ -16,7 +17,7 @@ export type Vehicle = {
   type: string | null;
   passengers: number | null;
   transmission: 'Manual' | 'Matic';
-  price: number;
+  price: number | null;
   fuel: string | null;
   code: string | null;
   year: number | null;
@@ -87,11 +88,11 @@ export type ContactInfo = {
     email: string;
     whatsapp: string;
     maps: string;
-    instagram?: string;
-    facebook?: string;
-    twitter?: string;
-    tiktok?: string;
-    telegram?: string;
+    instagram?: string | null;
+    facebook?: string | null;
+    twitter?: string | null;
+    tiktok?: string | null;
+    telegram?: string | null;
 }
 
 export type TermsContent = {
@@ -102,10 +103,9 @@ export type TermsContent = {
 
 export type Promotion = {
     id: string;
+    created_at?: string;
     title: string;
     description: string;
     imageUrl: string;
-    vehicleId?: string;
+    vehicleId?: string | null;
 };
-
-    
