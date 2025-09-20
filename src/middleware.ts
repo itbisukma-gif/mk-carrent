@@ -1,42 +1,36 @@
 
 import { NextResponse, type NextRequest } from "next/server";
-import { createClient } from "@/utils/supabase/middleware";
 
 export async function middleware(request: NextRequest) {
-  const { supabase, response } = createClient(request);
+  const { pathname } = request.nextUrl;
 
-  // Instead of Supabase session, we will check for a manual session cookie
+  // 1. Get session from the manual cookie
   const sessionCookie = request.cookies.get("session");
   const hasSession = !!sessionCookie;
 
-  const { pathname } = request.nextUrl;
-
-  // Define protected routes that require authentication
+  // 2. Define protected routes
   const protectedRoutes = ["/dashboard"];
-  
-  // Check if the current path is a protected route or a sub-path
   const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route));
 
-  // If trying to access a protected route without a session, redirect to login
+  // 3. Redirect to login if trying to access protected route without session
   if (isProtectedRoute && !hasSession) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // If there is a session and the user tries to access the login page, redirect to dashboard
+  // 4. Redirect to dashboard if logged in and trying to access login page
   if (hasSession && pathname.startsWith("/login")) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
-  // Handle logout: sign out and redirect to login
+  // 5. Handle logout: delete cookie and redirect to login
   if (pathname === "/logout") {
-    // We are not using Supabase auth, so we just remove our manual cookie
-    const logoutResponse = NextResponse.redirect(new URL("/login", request.url));
-    logoutResponse.cookies.set("session", "", { expires: new Date(0) });
-    return logoutResponse;
+    const response = NextResponse.redirect(new URL("/login", request.url));
+    response.cookies.set("session", "", { expires: new Date(0), path: '/' });
+    return response;
   }
 
-  // Allow the request to proceed
-  return response;
+  // 6. If none of the above, allow the request to proceed
+  return NextResponse.next();
 }
 
 export const config = {
