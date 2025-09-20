@@ -192,10 +192,16 @@ export default function PengaturanPage() {
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="maps">Embed URL Google Maps</Label>
-                        <Textarea id="maps" rows={4} value={contactInfo.maps} onChange={(e) => handleContactChange('maps', e.target.value)} />
-                         <p className="text-xs text-muted-foreground">Salin URL dari opsi "Embed a map" di Google Maps.</p>
+                        <Textarea 
+                            id="maps" 
+                            rows={4} 
+                            value={contactInfo.maps} 
+                            onChange={(e) => handleContactChange('maps', e.target.value)}
+                            placeholder="Contoh: https://www.google.com/maps/embed?pb=..."
+                        />
+                         <p className="text-xs text-muted-foreground">Buka Google Maps > Cari lokasi > Share > Pilih tab 'Embed a map' > Salin HANYA URL (src) dari dalam kode iframe.</p>
                     </div>
-                     {contactInfo.maps && (
+                     {contactInfo.maps && contactInfo.maps.startsWith('https://') && (
                         <div className="space-y-2">
                             <Label>Pratinjau Peta</Label>
                             <div className="aspect-video w-full overflow-hidden rounded-lg border">
