@@ -131,7 +131,7 @@ function VehicleForm({ vehicle, onSave, onCancel }: { vehicle?: Vehicle | null; 
     const { toast } = useToast();
     const [isPending, startTransition] = useTransition();
     const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<Vehicle>({
-        defaultValues: vehicle || { unitType: 'biasa', stock: 0 }
+        defaultValues: vehicle || { id: crypto.randomUUID(), unitType: 'biasa', stock: 0 }
     });
     
     const [previewUrl, setPreviewUrl] = useState<string | null>(vehicle?.photo || null);
@@ -144,16 +144,18 @@ function VehicleForm({ vehicle, onSave, onCancel }: { vehicle?: Vehicle | null; 
         // This is to handle editing, setting the initial preview URL.
         if (vehicle?.photo) {
             setPreviewUrl(vehicle.photo);
+            setValue('photo', vehicle.photo);
         }
-    }, [vehicle]);
+    }, [vehicle, setValue]);
     
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
             const reader = new FileReader();
             reader.onloadend = () => {
-                setPreviewUrl(reader.result as string);
-                setValue('photo', reader.result as string);
+                const result = reader.result as string;
+                setPreviewUrl(result);
+                setValue('photo', result, { shouldValidate: true });
             };
             reader.readAsDataURL(file);
         }
@@ -161,13 +163,18 @@ function VehicleForm({ vehicle, onSave, onCancel }: { vehicle?: Vehicle | null; 
     
     const onSubmit: SubmitHandler<Vehicle> = (data) => {
         startTransition(async () => {
-            // Ensure numeric fields are numbers, not strings from the input
+            if (!data.photo) {
+                 toast({ variant: "destructive", title: "Foto wajib diisi" });
+                 return;
+            }
+
             const vehicleData = {
                 ...data,
                 price: Number(data.price),
-                year: Number(data.year),
-                passengers: Number(data.passengers),
+                year: data.year ? Number(data.year) : null,
+                passengers: data.passengers ? Number(data.passengers) : null,
                 stock: data.unitType === 'khusus' ? Number(data.stock) : null,
+                rating: data.rating || 5,
             };
 
             const result = await upsertVehicle(vehicleData);
@@ -227,7 +234,7 @@ function VehicleForm({ vehicle, onSave, onCancel }: { vehicle?: Vehicle | null; 
                                 Pilih File Foto...
                             </Label>
                             <Input id="photo-upload" type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
-                            <input type="hidden" {...register('photo')} />
+                            {errors.photo && <p className="text-sm text-destructive">{errors.photo.message}</p>}
                         </div>
                     </div>
 
@@ -236,7 +243,7 @@ function VehicleForm({ vehicle, onSave, onCancel }: { vehicle?: Vehicle | null; 
                          <div className="md:col-span-2 grid grid-cols-2 gap-4">
                              <div className="space-y-2">
                                 <Label htmlFor="unitType">Tipe Unit</Label>
-                                <Select value={unitType} onValueChange={(value) => setValue('unitType', value as 'biasa' | 'khusus')}>
+                                <Select value={unitType || 'biasa'} onValueChange={(value) => setValue('unitType', value as 'biasa' | 'khusus')}>
                                     <SelectTrigger>
                                         <SelectValue placeholder="Pilih Tipe Unit" />
                                     </SelectTrigger>
@@ -255,15 +262,17 @@ function VehicleForm({ vehicle, onSave, onCancel }: { vehicle?: Vehicle | null; 
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="name">Nama Mobil</Label>
-                            <Input id="name" placeholder="cth. Avanza" {...register('name', { required: true })} />
+                            <Input id="name" placeholder="cth. Avanza" {...register('name', { required: "Nama mobil wajib diisi" })} />
+                             {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="brand">Brand Mobil</Label>
                             <Input 
                                 id="brand" 
                                 placeholder="cth. Toyota"
-                                {...register('brand', { required: true })} 
+                                {...register('brand', { required: "Brand wajib diisi" })} 
                             />
+                            {errors.brand && <p className="text-sm text-destructive">{errors.brand.message}</p>}
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="type">Tipe Mobil</Label>
@@ -291,7 +300,7 @@ function VehicleForm({ vehicle, onSave, onCancel }: { vehicle?: Vehicle | null; 
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="fuel">Jenis Bahan Bakar</Label>
-                            <Select onValueChange={(value) => setValue('fuel', value)} defaultValue={vehicle?.fuel}>
+                            <Select onValueChange={(value) => setValue('fuel', value)} defaultValue={vehicle?.fuel || undefined}>
                                 <SelectTrigger>
                                     <SelectValue placeholder="Pilih Jenis Bahan Bakar" />
                                 </SelectTrigger>
@@ -309,7 +318,8 @@ function VehicleForm({ vehicle, onSave, onCancel }: { vehicle?: Vehicle | null; 
                         </div>
                         <div className="space-y-2 md:col-span-2">
                             <Label htmlFor="price">Harga Sewa / Hari</Label>
-                            <Input id="price" type="number" placeholder="cth. 350000" {...register('price', { required: true })} />
+                            <Input id="price" type="number" placeholder="cth. 350000" {...register('price', { required: "Harga wajib diisi", min: { value: 1, message: "Harga tidak valid" }})} />
+                            {errors.price && <p className="text-sm text-destructive">{errors.price.message}</p>}
                         </div>
                     </div>
                 </div>
@@ -334,8 +344,6 @@ export default function ArmadaPage() {
   
   const fetchFleet = async () => {
     setIsLoading(true);
-    // In a real app, you'd fetch from an API route that uses Supabase.
-    // For simplicity here, we call Supabase client directly.
     const { data, error } = await import('@/lib/supabase').then(m => m.supabase)
         .from('vehicles')
         .select('*')
