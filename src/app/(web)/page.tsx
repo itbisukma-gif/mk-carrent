@@ -105,7 +105,7 @@ function HomePageContent({ fleet, promotions }: { fleet: Vehicle[], promotions: 
     }, [filters.brand, fleet]);
     
     useEffect(() => {
-        if (!availableTypes.includes(filters.type)) {
+        if (!availableTypes.includes(filters.type!)) {
             setFilters(f => ({ ...f, type: 'all' }));
         }
     }, [filters.brand, availableTypes, filters.type]);
@@ -125,7 +125,7 @@ function HomePageContent({ fleet, promotions }: { fleet: Vehicle[], promotions: 
                 case 'price-desc':
                     return b.price - a.price;
                 case 'rating-desc':
-                    return b.rating - a.rating;
+                    return (b.rating || 0) - (a.rating || 0);
                 default:
                     return 0;
             }
@@ -315,3 +315,5 @@ export default async function HomePage() {
     </LanguageProvider>
   )
 }
+
+    
