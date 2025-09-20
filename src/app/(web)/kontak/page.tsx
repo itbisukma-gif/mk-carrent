@@ -1,8 +1,9 @@
 
+
 'use client';
 
 import { Button } from "@/components/ui/button";
-import { Mail, Phone, Pin, Navigation } from "lucide-react";
+import { Mail, Phone, Pin, Navigation, Loader2 } from "lucide-react";
 import { useLanguage } from "@/hooks/use-language";
 import { LanguageProvider } from "@/app/language-provider";
 import { useState, useEffect } from "react";
@@ -10,6 +11,8 @@ import type { ContactInfo } from "@/lib/types";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { WhatsAppIcon } from "@/components/icons";
+import { supabase } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
 
 function SocialButton({ platform, url }: { platform: string; url: string; }) {
   if (!url) return null;
@@ -41,28 +44,35 @@ function SocialButton({ platform, url }: { platform: string; url: string; }) {
 
 function KontakPageContent() {
     const { dictionary } = useLanguage();
-    // In a real app, this would be fetched from a database.
-    // For now, we simulate fetching it and storing it in state.
+    const { toast } = useToast();
     const [contactInfo, setContactInfo] = useState<ContactInfo | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        // Simulating fetch from a config source (which would be updated by the admin)
-        const fetchedContactInfo: ContactInfo = {
-            address: "Jl. Raya Kuta No. 123, Badung, Bali",
-            email: "contact@mudakaryacarrent.com",
-            whatsapp: "+62 812 3456 7890",
-            maps: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d31552.316868673754!2d115.15024474999999!3d-8.723613499999999!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2dd246bc2a594833%3A0x24443a99872e4242!2sKuta%2C%20Badung%20Regency%2C%20Bali%2C%20Indonesia!5e0!3m2!1sen!2sus!4v1722421343751!5m2!1sen!2sus",
-            facebook: "https://facebook.com/mudakarya",
-            instagram: "https://instagram.com/mudakarya",
-            twitter: "https://twitter.com/mudakarya",
-            tiktok: "", // Empty means it won't show
-            telegram: ""
+        const fetchContactInfo = async () => {
+            setIsLoading(true);
+            const { data, error } = await supabase.from('contact_info').select('*').single();
+            if (error || !data) {
+                toast({ variant: 'destructive', title: 'Gagal memuat informasi kontak.', description: error?.message });
+            } else {
+                setContactInfo(data);
+            }
+            setIsLoading(false);
         };
-        setContactInfo(fetchedContactInfo);
-    }, []);
+        fetchContactInfo();
+    }, [toast]);
+
+    if (isLoading) {
+        return (
+            <div className="container py-16 text-center flex justify-center items-center gap-2">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                {dictionary.loading}...
+            </div>
+        )
+    }
 
     if (!contactInfo) {
-        return <div className="container py-16 text-center">{dictionary.loading}...</div>
+        return <div className="container py-16 text-center">Gagal memuat informasi kontak.</div>
     }
 
     const hasSocialMedia = contactInfo.instagram || contactInfo.facebook || contactInfo.twitter || contactInfo.tiktok || contactInfo.telegram;
@@ -151,3 +161,5 @@ export default function KontakPage() {
         </LanguageProvider>
     )
 }
+
+    

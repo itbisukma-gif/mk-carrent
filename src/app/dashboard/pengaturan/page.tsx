@@ -8,11 +8,11 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
-import type { ContactInfo } from "@/lib/types";
+import { useState, useEffect, useTransition } from "react";
+import type { ContactInfo, TermsContent } from "@/lib/types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PlusCircle, Trash2 } from "lucide-react";
-
+import { PlusCircle, Trash2, Loader2 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 const socialPlatforms = [
     { value: 'instagram', label: 'Instagram' },
@@ -29,45 +29,57 @@ type SocialLinkItem = {
     url: string;
 }
 
+// Server Actions
+async function updateContactInfo(data: ContactInfo) {
+    const { error } = await supabase.from('contact_info').update(data).eq('id', 1);
+    return { error };
+}
+
+async function updateTermsContent(data: TermsContent) {
+    const { error } = await supabase.from('terms_content').update(data).eq('id', 1);
+    return { error };
+}
+
+
 export default function PengaturanPage() {
   const { toast } = useToast();
-  const [contactInfo, setContactInfo] = useState<ContactInfo>({
-      address: "Jl. Raya Kuta No. 123, Badung, Bali",
-      email: "contact@mudakaryacarrent.com",
-      whatsapp: "+62 812 3456 7890",
-      maps: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d31552.316868673754!2d115.15024474999999!3d-8.723613499999999!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2dd246bc2a594833%3A0x24443a99872e4242!2sKuta%2C%20Badung%20Regency%2C%20Bali%2C%20Indonesia!5e0!3m2!1sen!2sus!4v1722421343751!5m2!1sen!2sus",
-      instagram: "https://instagram.com/mudakarya",
-      facebook: "https://facebook.com/mudakarya",
-      twitter: "https://twitter.com/mudakarya",
-      tiktok: "",
-      telegram: ""
-  });
-  
-  // Convert the flat contactInfo social links into a list of objects for easier management
-  const [socialLinks, setSocialLinks] = useState<SocialLinkItem[]>(() => 
-    socialPlatforms
-        .map(p => ({ platform: p.value, url: contactInfo[p.value] || '' }))
-        .filter(item => item.url)
-  );
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, startSavingTransition] = useTransition();
 
-   const [terms, setTerms] = useState({
-      general: `Penyewa wajib memiliki dan menunjukkan SIM A yang masih berlaku.
-Kerusakan yang disebabkan oleh kelalaian atau kesengajaan penyewa menjadi tanggung jawab penuh penyewa.
-Dilarang keras menggunakan kendaraan untuk aktivitas ilegal, balapan, atau tindakan melanggar hukum lainnya.
-Penggunaan kendaraan hanya diizinkan di wilayah yang telah disepakati dalam kontrak.
-Keterlambatan pengembalian kendaraan akan dikenakan denda sesuai dengan ketentuan yang berlaku.
-Penyewa bertanggung jawab atas semua biaya bahan bakar, tol, dan parkir selama masa sewa.`,
-      payment: `Transfer Bank (BCA, Mandiri, BNI)
-QRIS
-Pembayaran tunai di kantor (dengan konfirmasi)`
-   });
+  const [contactInfo, setContactInfo] = useState<ContactInfo | null>(null);
+  const [terms, setTerms] = useState<TermsContent | null>(null);
+  const [socialLinks, setSocialLinks] = useState<SocialLinkItem[]>([]);
 
+  useEffect(() => {
+    const fetchData = async () => {
+        setIsLoading(true);
+        const { data: contactData, error: contactError } = await supabase.from('contact_info').select('*').single();
+        const { data: termsData, error: termsError } = await supabase.from('terms_content').select('*').single();
+
+        if (contactError || termsError) {
+            toast({ variant: 'destructive', title: 'Gagal memuat data pengaturan', description: contactError?.message || termsError?.message });
+        } else {
+            setContactInfo(contactData);
+            setTerms(termsData);
+            if (contactData) {
+                setSocialLinks(
+                    socialPlatforms
+                        .map(p => ({ platform: p.value, url: contactData[p.value] || '' }))
+                        .filter(item => item.url)
+                );
+            }
+        }
+        setIsLoading(false);
+    }
+    fetchData();
+  }, [toast]);
+   
    const handleContactChange = (field: keyof Omit<ContactInfo, SocialPlatformKey>, value: string) => {
-    setContactInfo(prev => ({ ...prev, [field]: value }));
+    setContactInfo(prev => prev ? ({ ...prev, [field]: value }) : null);
    }
    
-    const handleTermsChange = (field: keyof typeof terms, value: string) => {
-    setTerms(prev => ({ ...prev, [field]: value }));
+    const handleTermsChange = (field: keyof TermsContent, value: string) => {
+    setTerms(prev => prev ? ({ ...prev, [field]: value }) : null);
    }
    
    const handleSocialLinkChange = (index: number, field: 'platform' | 'url', value: string) => {
@@ -85,28 +97,51 @@ Pembayaran tunai di kantor (dengan konfirmasi)`
        setSocialLinks(socialLinks.filter((_, i) => i !== index));
    }
 
-
   const handleSaveChanges = (type: 'Kontak' | 'S&K') => {
-    // When saving, convert the socialLinks array back to the flat contactInfo structure
-    if (type === 'Kontak') {
-        const newContactInfo = { ...contactInfo };
-        // Reset all social fields first
-        socialPlatforms.forEach(p => newContactInfo[p.value] = '');
-        // Then populate from the socialLinks array
-        socialLinks.forEach(link => {
-            if (link.platform && link.url) {
-                newContactInfo[link.platform] = link.url;
+    startSavingTransition(async () => {
+        if (type === 'Kontak' && contactInfo) {
+            const newContactInfo: Partial<ContactInfo> = { ...contactInfo };
+            // Reset all social fields first
+            socialPlatforms.forEach(p => newContactInfo[p.value] = undefined);
+            // Then populate from the socialLinks array
+            socialLinks.forEach(link => {
+                if (link.platform && link.url) {
+                    newContactInfo[link.platform] = link.url;
+                }
+            });
+            
+            const { error } = await updateContactInfo(newContactInfo as ContactInfo);
+            if (error) {
+                toast({ variant: 'destructive', title: 'Gagal Menyimpan', description: error.message });
+                return;
             }
+        } else if (type === 'S&K' && terms) {
+             const { error } = await updateTermsContent(terms);
+            if (error) {
+                toast({ variant: 'destructive', title: 'Gagal Menyimpan', description: error.message });
+                return;
+            }
+        }
+        
+        toast({
+            title: "Perubahan Disimpan",
+            description: `Informasi ${type} telah berhasil diperbarui.`
         });
-        setContactInfo(newContactInfo);
-        // Here you would send newContactInfo to your backend
-    }
-    
-    // In a real app, you would send this data to your backend API
-    toast({
-        title: "Perubahan Disimpan",
-        description: `Informasi ${type} telah berhasil diperbarui.`
-    })
+    });
+  }
+
+  if (isLoading || !contactInfo || !terms) {
+      return (
+        <div className="flex flex-col gap-8">
+             <div>
+                <h1 className="text-3xl font-bold tracking-tight">Pengaturan</h1>
+                <p className="text-muted-foreground">Kelola informasi website dan akun Anda.</p>
+            </div>
+            <div className="flex justify-center items-center h-64">
+                <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+        </div>
+      )
   }
 
   return (
@@ -206,7 +241,10 @@ Pembayaran tunai di kantor (dengan konfirmasi)`
                     </Button>
                 </CardContent>
             </Card>
-            <Button onClick={() => handleSaveChanges('Kontak')} className="mt-6">Simpan Perubahan Kontak & Medsos</Button>
+            <Button onClick={() => handleSaveChanges('Kontak')} className="mt-6" disabled={isSaving}>
+                 {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Simpan Perubahan Kontak & Medsos
+            </Button>
         </TabsContent>
         <TabsContent value="sk" className="mt-6">
             <Card>
@@ -225,7 +263,10 @@ Pembayaran tunai di kantor (dengan konfirmasi)`
                          <Textarea rows={4} value={terms.payment} onChange={(e) => handleTermsChange('payment', e.target.value)} />
                         <p className="text-xs text-muted-foreground">Setiap baris akan menjadi satu poin metode pembayaran.</p>
                     </div>
-                    <Button onClick={() => handleSaveChanges('S&K')}>Simpan Perubahan S&K</Button>
+                    <Button onClick={() => handleSaveChanges('S&K')} disabled={isSaving}>
+                        {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Simpan Perubahan S&K
+                    </Button>
                 </CardContent>
             </Card>
         </TabsContent>
@@ -234,3 +275,5 @@ Pembayaran tunai di kantor (dengan konfirmasi)`
     </div>
   );
 }
+
+    

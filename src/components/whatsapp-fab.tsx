@@ -9,26 +9,18 @@ import type { ContactInfo } from '@/lib/types';
 import { useLanguage } from '@/hooks/use-language';
 import { cn } from '@/lib/utils';
 import { WhatsAppIcon } from './icons';
+import { supabase } from '@/lib/supabase';
 
 export function WhatsappFab() {
   const [contactInfo, setContactInfo] = useState<ContactInfo | null>(null);
   const { dictionary } = useLanguage();
 
   useEffect(() => {
-    // This simulates fetching the contact info from a shared source
-    // In a real app, this would come from a global state/context or an API call
-    const fetchedContactInfo: ContactInfo = {
-        address: "Jl. Raya Kuta No. 123, Badung, Bali",
-        email: "contact@mudakaryacarrent.com",
-        whatsapp: "+62 812 3456 7890",
-        maps: "https://www.google.com/maps/embed?pb=...",
-        facebook: "https://facebook.com/mudakarya",
-        instagram: "https://instagram.com/mudakarya",
-        twitter: "https://twitter.com/mudakarya",
-        tiktok: "",
-        telegram: ""
+    const fetchContactInfo = async () => {
+        const { data } = await supabase.from('contact_info').select('whatsapp').single();
+        setContactInfo(data);
     };
-    setContactInfo(fetchedContactInfo);
+    fetchContactInfo();
   }, []);
 
   if (!contactInfo || !contactInfo.whatsapp) {
@@ -61,3 +53,5 @@ export function WhatsappFab() {
     </TooltipProvider>
   );
 }
+
+    

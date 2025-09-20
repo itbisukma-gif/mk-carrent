@@ -2,40 +2,50 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Loader2 } from "lucide-react";
 import { useLanguage } from "@/hooks/use-language";
 import { LanguageProvider } from "@/app/language-provider";
 import { useState, useEffect } from "react";
 import type { TermsContent } from "@/lib/types";
+import { supabase } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
 
 
 function TermsPageContent() {
     const { dictionary } = useLanguage();
-    // In a real app, this would be fetched from a database/CMS.
-    // For now, we simulate fetching it and storing it in state.
+    const { toast } = useToast();
     const [termsContent, setTermsContent] = useState<TermsContent | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        const fetchedTerms = {
-            general: `Penyewa wajib memiliki dan menunjukkan SIM A yang masih berlaku.
-Kerusakan yang disebabkan oleh kelalaian atau kesengajaan penyewa menjadi tanggung jawab penuh penyewa.
-Dilarang keras menggunakan kendaraan untuk aktivitas ilegal, balapan, atau tindakan melanggar hukum lainnya.
-Penggunaan kendaraan hanya diizinkan di wilayah yang telah disepakati dalam kontrak.
-Keterlambatan pengembalian kendaraan akan dikenakan denda sesuai dengan ketentuan yang berlaku.
-Penyewa bertanggung jawab atas semua biaya bahan bakar, tol, dan parkir selama masa sewa.`,
-            payment: `Transfer Bank (BCA, Mandiri, BNI)
-QRIS
-Pembayaran tunai di kantor (dengan konfirmasi)`
+        const fetchTerms = async () => {
+            setIsLoading(true);
+            const { data, error } = await supabase.from('terms_content').select('*').single();
+            if (error || !data) {
+                toast({ variant: 'destructive', title: 'Gagal memuat syarat & ketentuan.', description: error?.message });
+            } else {
+                setTermsContent(data);
+            }
+            setIsLoading(false);
         };
-        setTermsContent(fetchedTerms);
-    }, []);
+        fetchTerms();
+    }, [toast]);
 
-    if (!termsContent) {
-        return <div className="container py-16 text-center">{dictionary.loading}...</div>
+    if (isLoading) {
+        return (
+             <div className="container py-16 text-center flex justify-center items-center gap-2">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                {dictionary.loading}...
+            </div>
+        )
     }
 
-    const generalTermsList = termsContent.general.split('\n').filter(line => line.trim() !== '');
-    const paymentMethodsList = termsContent.payment.split('\n').filter(line => line.trim() !== '');
+    if (!termsContent) {
+        return <div className="container py-16 text-center">Gagal memuat syarat & ketentuan.</div>
+    }
+
+    const generalTermsList = termsContent.general?.split('\n').filter(line => line.trim() !== '') || [];
+    const paymentMethodsList = termsContent.payment?.split('\n').filter(line => line.trim() !== '') || [];
 
     return (
             <div className="bg-muted/30">
@@ -89,3 +99,5 @@ export default function TermsPage() {
         </LanguageProvider>
     )
 }
+
+    

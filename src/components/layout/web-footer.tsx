@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 import type { ContactInfo } from '@/lib/types';
 import Image from 'next/image';
+import { supabase } from '@/lib/supabase';
 
 function SocialLink({ platform, url }: { platform: string; url: string; }) {
   if (!url) return null;
@@ -31,20 +32,11 @@ export function WebFooter({ className }: { className?: string }) {
   const [contactInfo, setContactInfo] = useState<ContactInfo | null>(null);
 
   useEffect(() => {
-    // This simulates fetching the contact info from a shared source
-    // In a real app, this would come from a global state/context or an API call
-    const fetchedContactInfo: ContactInfo = {
-        address: "Jl. Raya Kuta No. 123, Badung, Bali",
-        email: "contact@mudakaryacarrent.com",
-        whatsapp: "+62 812 3456 7890",
-        maps: "https://www.google.com/maps/embed?pb=...",
-        facebook: "https://facebook.com/mudakarya",
-        instagram: "https://instagram.com/mudakarya",
-        twitter: "https://twitter.com/mudakarya",
-        tiktok: "",
-        telegram: ""
+    const fetchContactInfo = async () => {
+        const { data } = await supabase.from('contact_info').select('*').single();
+        setContactInfo(data);
     };
-    setContactInfo(fetchedContactInfo);
+    fetchContactInfo();
   }, []);
 
   const hasSocialMedia = contactInfo && (contactInfo.instagram || contactInfo.facebook || contactInfo.twitter || contactInfo.tiktok || contactInfo.telegram);
@@ -110,14 +102,14 @@ export function WebFooter({ className }: { className?: string }) {
               )}
             </div>
           </div>
-           {hasSocialMedia && (
+           {hasSocialMedia && contactInfo && (
             <div className="mt-8 border-t pt-6">
                 <div className="flex justify-center items-center gap-5">
-                    <SocialLink platform="instagram" url={contactInfo!.instagram!} />
-                    <SocialLink platform="facebook" url={contactInfo!.facebook!} />
-                    <SocialLink platform="twitter" url={contactInfo!.twitter!} />
-                    <SocialLink platform="tiktok" url={contactInfo!.tiktok!} />
-                    <SocialLink platform="telegram" url={contactInfo!.telegram!} />
+                    <SocialLink platform="instagram" url={contactInfo.instagram!} />
+                    <SocialLink platform="facebook" url={contactInfo.facebook!} />
+                    <SocialLink platform="twitter" url={contactInfo.twitter!} />
+                    <SocialLink platform="tiktok" url={contactInfo.tiktok!} />
+                    <SocialLink platform="telegram" url={contactInfo.telegram!} />
                 </div>
             </div>
           )}
@@ -129,3 +121,5 @@ export function WebFooter({ className }: { className?: string }) {
     </div>
   );
 }
+
+    

@@ -82,6 +82,7 @@ export type Order = {
 };
     
 export type ContactInfo = {
+    id?: number;
     address: string;
     email: string;
     whatsapp: string;
@@ -94,6 +95,7 @@ export type ContactInfo = {
 }
 
 export type TermsContent = {
+    id?: number;
     general: string;
     payment: string;
 }
@@ -105,3 +107,5 @@ export type Promotion = {
     imageUrl: string;
     vehicleId?: string;
 };
+
+    
