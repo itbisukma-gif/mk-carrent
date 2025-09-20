@@ -1,11 +1,12 @@
 
 
 export type Driver = {
-  id: string
-  name: string
-  address: string
-  phone: string
-  status: 'Tersedia' | 'Bertugas'
+  id: string;
+  created_at?: string;
+  name: string;
+  address: string | null;
+  phone: string | null;
+  status: 'Tersedia' | 'Bertugas';
 }
 
 export type Vehicle = {

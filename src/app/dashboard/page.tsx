@@ -1,8 +1,7 @@
-
 'use client'
 
 import * as React from 'react'
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useTransition } from 'react'
 import {
   LineChart,
   Line,
@@ -39,6 +38,7 @@ import {
   UserCheck,
   PlusCircle,
   Calendar as CalendarIcon,
+  Loader2
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -58,7 +58,7 @@ import {
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { drivers as initialDrivers, fleet as initialFleet, orders as initialOrders } from '@/lib/data' // Keep dummy chart data
+import { orders as initialOrders } from '@/lib/data' // Keep dummy chart data
 import type { Driver, Vehicle, Order } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { useToast } from '@/hooks/use-toast'
@@ -71,6 +71,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
+import { supabase } from '@/lib/supabase'
+import { upsertDriver, deleteDriver, updateDriverStatus } from './actions'
 
 
 // Function to generate mock data for comparison
@@ -100,28 +102,39 @@ const combinedChartData = initialChartData.map((current, index) => ({
 }));
 
 
-function DriverForm({ driver, onSave, onCancel }: { driver?: Driver | null; onSave: (driver: Driver) => void; onCancel: () => void; }) {
+function DriverForm({ driver, onSave, onCancel }: { driver?: Driver | null; onSave: () => void; onCancel: () => void; }) {
     const { toast } = useToast();
+    const [isPending, startTransition] = useTransition();
     const [name, setName] = useState(driver?.name || '');
     const [address, setAddress] = useState(driver?.address || '');
     const [phone, setPhone] = useState(driver?.phone || '');
 
     const handleSave = () => {
-        // API call to save driver data would go here
-        toast({
-            title: driver ? "Driver Diperbarui" : "Driver Ditambahkan",
-            description: `Data driver telah berhasil ${driver ? 'diperbarui' : 'disimpan'}.`,
-        });
-        
-        const newDriverData: Driver = {
-            id: driver?.id || `d-${Date.now()}`,
-            name,
-            address,
-            phone,
-            status: driver?.status || 'Tersedia',
-        }
+        startTransition(async () => {
+            const driverData: Omit<Driver, 'created_at'> = {
+                id: driver?.id || crypto.randomUUID(), // Use existing ID or generate a new one for insert
+                name,
+                address,
+                phone,
+                status: driver?.status || 'Tersedia',
+            };
+    
+            const result = await upsertDriver(driverData);
 
-        onSave(newDriverData);
+            if (result.error) {
+                 toast({
+                    variant: "destructive",
+                    title: "Gagal Menyimpan",
+                    description: result.error.message,
+                });
+            } else {
+                 toast({
+                    title: driver ? "Driver Diperbarui" : "Driver Ditambahkan",
+                    description: `Data untuk ${result.data?.name} telah disimpan.`,
+                });
+                onSave();
+            }
+        });
     };
 
     return (
@@ -130,21 +143,24 @@ function DriverForm({ driver, onSave, onCancel }: { driver?: Driver | null; onSa
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4 px-6">
                     <div className="space-y-2 col-span-1 md:col-span-2">
                         <Label htmlFor="name">Nama Driver</Label>
-                        <Input id="name" placeholder="cth. Budi Santoso" value={name} onChange={(e) => setName(e.target.value)} />
+                        <Input id="name" placeholder="cth. Budi Santoso" value={name} onChange={(e) => setName(e.target.value)} disabled={isPending} />
                     </div>
                     <div className="space-y-2 col-span-1 md:col-span-2">
                         <Label htmlFor="address">Alamat</Label>
-                        <Input id="address" placeholder="cth. Jl. Merdeka No. 10, Jakarta" value={address} onChange={(e) => setAddress(e.target.value)} />
+                        <Input id="address" placeholder="cth. Jl. Merdeka No. 10, Jakarta" value={address || ''} onChange={(e) => setAddress(e.target.value)} disabled={isPending}/>
                     </div>
                     <div className="space-y-2 col-span-1 md:col-span-2">
                         <Label htmlFor="phone">Nomor WhatsApp</Label>
-                        <Input id="phone" type="tel" placeholder="cth. 081234567890" value={phone} onChange={(e) => setPhone(e.target.value)} />
+                        <Input id="phone" type="tel" placeholder="cth. 081234567890" value={phone || ''} onChange={(e) => setPhone(e.target.value)} disabled={isPending} />
                     </div>
                 </div>
             </div>
              <DialogFooter className="pt-4 border-t px-6 pb-6 bg-background rounded-b-lg">
-                <Button variant="outline" onClick={onCancel}>Batal</Button>
-                <Button type="submit" onClick={handleSave}>{driver ? 'Simpan Perubahan' : 'Simpan Driver'}</Button>
+                <Button variant="outline" onClick={onCancel} disabled={isPending}>Batal</Button>
+                <Button type="submit" onClick={handleSave} disabled={isPending}>
+                    {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                    {isPending ? 'Menyimpan...' : (driver ? 'Simpan Perubahan' : 'Simpan Driver')}
+                </Button>
             </DialogFooter>
         </>
     )
@@ -152,10 +168,10 @@ function DriverForm({ driver, onSave, onCancel }: { driver?: Driver | null; onSa
 
 
 export default function DashboardPage() {
-  // Data is now managed by state, using initial data from data.ts
-  const [drivers, setDrivers] = useState<Driver[]>(initialDrivers)
-  const [fleet, setFleet] = useState<Vehicle[]>(initialFleet);
+  const [drivers, setDrivers] = useState<Driver[]>([]);
+  const [fleet, setFleet] = useState<Vehicle[]>([]);
   const [orders, setOrders] = useState<Order[]>(initialOrders);
+  const [isLoading, setIsLoading] = useState(true);
   
   const [date, setDate] = React.useState<DateRange | undefined>(undefined);
 
@@ -171,6 +187,24 @@ export default function DashboardPage() {
   const [isEditDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
   const { toast } = useToast();
+
+   const fetchData = async () => {
+        setIsLoading(true);
+        const { data: driverData, error: driverError } = await supabase.from('drivers').select('*').order('created_at', { ascending: false });
+        const { data: vehicleData, error: vehicleError } = await supabase.from('vehicles').select('id'); // Only fetch what's needed for stats
+
+        if (driverError || vehicleError) {
+            toast({ variant: "destructive", title: "Gagal memuat data", description: driverError?.message || vehicleError?.message });
+        } else {
+            setDrivers(driverData || []);
+            setFleet(vehicleData || []);
+        }
+        setIsLoading(false);
+    };
+
+    useEffect(() => {
+        fetchData();
+    }, []);
   
   const stats = useMemo(() => {
     const pendingOrders = orders.filter(o => o.status === 'pending').length;
@@ -180,8 +214,9 @@ export default function DashboardPage() {
         orders
             .filter(o => o.status === 'disetujui')
             .map(o => {
-                const vehicle = fleet.find(f => `${f.brand} ${f.name}` === o.carName);
-                return vehicle?.code;
+                // This part needs adjustment if we want accurate rented car count
+                // For now, it's just a placeholder calculation based on static orders data
+                return o.carName;
             })
     );
     const availableUnits = fleet.length - rentedCarCodes.size;
@@ -204,33 +239,28 @@ export default function DashboardPage() {
     setEditDialogOpen(true);
   };
   
-  const handleDeleteDriver = (driver: Driver) => {
-    // API call to delete driver would go here
-    setDrivers(prev => prev.filter(d => d.id !== driver.id));
-     toast({
-        variant: "destructive",
-        title: "Driver Dihapus",
-        description: `Driver ${driver.name} telah dihapus dari sistem.`,
-    });
+  const handleDeleteDriver = async (driverId: string) => {
+    const result = await deleteDriver(driverId);
+     if (result.error) {
+        toast({ variant: "destructive", title: "Gagal Menghapus", description: result.error.message });
+     } else {
+        toast({ title: "Driver Dihapus", description: `Data driver telah berhasil dihapus.` });
+        fetchData(); // Refetch
+     }
   }
 
-  const handleStatusChange = (driverId: string, newStatus: 'Tersedia' | 'Bertugas') => {
-     // API call to update driver status would go here
-    setDrivers(prev => prev.map(d => d.id === driverId ? { ...d, status: newStatus } : d));
-     toast({
-        title: "Status Diperbarui",
-        description: `Status driver telah berhasil diperbarui.`,
-    });
+  const handleStatusChange = async (driverId: string, newStatus: 'Tersedia' | 'Bertugas') => {
+    const result = await updateDriverStatus(driverId, newStatus);
+     if (result.error) {
+        toast({ variant: "destructive", title: "Gagal Memperbarui Status", description: result.error.message });
+     } else {
+        toast({ title: "Status Diperbarui", description: `Status driver telah berhasil diperbarui.` });
+        fetchData(); // Refetch
+     }
   };
   
-  const handleFormSave = (driverData: Driver) => {
-    if (selectedDriver) {
-        // Editing existing driver
-        setDrivers(prev => prev.map(d => d.id === driverData.id ? driverData : d));
-    } else {
-        // Adding new driver
-        setDrivers(prev => [...prev, driverData]);
-    }
+  const handleFormSave = () => {
+    fetchData(); // Refetch data after saving
     setAddDialogOpen(false);
     setEditDialogOpen(false);
     setSelectedDriver(null);
@@ -379,7 +409,7 @@ export default function DashboardPage() {
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <p className="text-3xl font-bold text-green-800">{stats.availableDrivers}</p>
+                            <p className="text-3xl font-bold text-green-800">{isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : stats.availableDrivers}</p>
                         </CardContent>
                     </Card>
                     <Card className="bg-blue-50 border-blue-200">
@@ -390,7 +420,7 @@ export default function DashboardPage() {
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <p className="text-3xl font-bold text-blue-800">{stats.availableUnits}</p>
+                             <p className="text-3xl font-bold text-blue-800">{isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : stats.availableUnits}</p>
                         </CardContent>
                     </Card>
                     <Card className="bg-gray-50 border-gray-200">
@@ -444,7 +474,16 @@ export default function DashboardPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {drivers.length > 0 ? (
+                {isLoading ? (
+                    <TableRow>
+                        <TableCell colSpan={4} className="h-24 text-center">
+                            <div className="flex justify-center items-center gap-2 text-muted-foreground">
+                                <Loader2 className="h-5 w-5 animate-spin" />
+                                <span>Memuat data driver...</span>
+                            </div>
+                        </TableCell>
+                    </TableRow>
+                ) : drivers.length > 0 ? (
                     drivers.map((driver) => (
                     <TableRow key={driver.id}>
                         <TableCell className="font-medium">{driver.name}</TableCell>
@@ -486,7 +525,7 @@ export default function DashboardPage() {
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
                                         <AlertDialogCancel>Batal</AlertDialogCancel>
-                                        <AlertDialogAction onClick={() => handleDeleteDriver(driver)} className="bg-destructive hover:bg-destructive/90">Ya, Hapus</AlertDialogAction>
+                                        <AlertDialogAction onClick={() => handleDeleteDriver(driver.id)} className="bg-destructive hover:bg-destructive/90">Ya, Hapus</AlertDialogAction>
                                     </AlertDialogFooter>
                                 </AlertDialogContent>
                             </AlertDialog>
