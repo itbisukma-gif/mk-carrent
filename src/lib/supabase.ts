@@ -11,16 +11,15 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 const createSupabaseClient = () => {
     // Lakukan pengecekan untuk memastikan variabel lingkungan ada
     if (!supabaseUrl || !supabaseAnonKey) {
-        console.warn('Supabase URL and/or Anon Key are not set. Supabase client will not be initialized.');
+        // console.warn('Supabase URL and/or Anon Key are not set on the client. Supabase client will not be initialized.');
         // Kembalikan objek dummy atau null untuk mencegah crash saat build
         // di mana environment variables mungkin tidak tersedia.
-        // Di lingkungan client-side atau server-side yang sebenarnya, ini akan diisi.
         return null;
     }
     return createClient(supabaseUrl, supabaseAnonKey);
 }
 
 // Buat dan ekspor klien Supabase
-// Jika null, setiap upaya untuk menggunakannya akan gagal saat runtime,
+// Jika null, setiap upaya untuk menggunakannya akan gagal saat runtime (jika dipanggil),
 // tetapi tidak akan menghentikan proses build.
 export const supabase = createSupabaseClient()!;

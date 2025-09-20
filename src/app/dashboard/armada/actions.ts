@@ -13,7 +13,7 @@ const createClient = () => {
 
   // Guard clause to prevent error during build process
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-    throw new Error('Supabase URL or Anon Key is missing in environment variables.');
+    return null;
   }
 
   return createServerClient(
@@ -48,10 +48,10 @@ const createClient = () => {
 }
 
 export async function upsertVehicle(vehicleData: Vehicle) {
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    const supabase = createClient();
+    if (!supabase) {
         return { data: null, error: { message: 'Supabase credentials are not configured.' } };
     }
-    const supabase = createClient();
 
     // If vehicleData has an id, it's an update. If not, it's an insert.
     // Supabase's upsert handles this. If id is provided and exists, it updates.
@@ -74,10 +74,10 @@ export async function upsertVehicle(vehicleData: Vehicle) {
 }
 
 export async function deleteVehicle(vehicleId: string) {
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    const supabase = createClient();
+    if (!supabase) {
         return { error: { message: 'Supabase credentials are not configured.' } };
     }
-    const supabase = createClient();
     
     const { error } = await supabase
         .from('vehicles')

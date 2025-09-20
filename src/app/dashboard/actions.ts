@@ -1,3 +1,4 @@
+
 'use server';
 
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
@@ -13,7 +14,10 @@ const createClient = () => {
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
     // In a server action, we can't return null, so we throw a clear error.
     // This part of the code should ideally not be reached during a production request.
-    throw new Error('Supabase URL or Anon Key is missing in environment variables.');
+    // But for build time, we need a way to not crash.
+    // Returning a dummy client or null won't work well with server actions.
+    // The best approach is to check this at the start of each action.
+    return null;
   }
 
   return createServerClient(
@@ -44,10 +48,10 @@ const createClient = () => {
 }
 
 export async function upsertDriver(driverData: Omit<Driver, 'created_at'>) {
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    const supabase = createClient();
+    if (!supabase) {
         return { data: null, error: { message: 'Supabase credentials are not configured.' } };
     }
-    const supabase = createClient();
 
     const { data, error } = await supabase
         .from('drivers')
@@ -67,10 +71,10 @@ export async function upsertDriver(driverData: Omit<Driver, 'created_at'>) {
 
 
 export async function deleteDriver(driverId: string) {
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    const supabase = createClient();
+    if (!supabase) {
         return { error: { message: 'Supabase credentials are not configured.' } };
     }
-    const supabase = createClient();
     
     const { error } = await supabase
         .from('drivers')
@@ -88,10 +92,10 @@ export async function deleteDriver(driverId: string) {
 }
 
 export async function updateDriverStatus(driverId: string, status: 'Tersedia' | 'Bertugas') {
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    const supabase = createClient();
+    if (!supabase) {
         return { error: { message: 'Supabase credentials are not configured.' } };
     }
-    const supabase = createClient();
 
     const { error } = await supabase
         .from('drivers')
