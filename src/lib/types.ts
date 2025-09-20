@@ -11,6 +11,7 @@ export type Driver = {
 export type Vehicle = {
   id: string;
   created_at?: string;
+  code: string;
   name: string;
   brand: string;
   type: string | null;

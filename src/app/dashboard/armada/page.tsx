@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -9,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Vehicle } from "@/lib/types";
-import { MoreVertical, PlusCircle, Trash2, Upload, Loader2 } from "lucide-react";
+import { MoreVertical, PlusCircle, Trash2, Upload, Loader2, Sparkles } from "lucide-react";
 import Image from "next/image";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -20,6 +21,7 @@ import { useForm, SubmitHandler } from "react-hook-form";
 import { upsertVehicle, deleteVehicle } from "./actions";
 import { createClient } from '@/utils/supabase/client';
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { useDebounce } from "@/hooks/use-debounce";
 
 export const dynamic = 'force-dynamic';
 
@@ -84,7 +86,7 @@ function VehicleCard({ vehicle, onEdit, onDelete }: { vehicle: Vehicle, onEdit: 
                                     <AlertDialogHeader>
                                         <AlertDialogTitle>Anda Yakin?</AlertDialogTitle>
                                         <AlertDialogDescription>
-                                            Tindakan ini tidak dapat diurungkan. Ini akan menghapus data kendaraan <span className="font-bold">{vehicle.brand} {vehicle.name}</span> secara permanen.
+                                            Tindakan ini tidak dapat diurungkan. Ini akan menghapus data kendaraan <span className="font-bold">{vehicle.brand} {vehicle.name} ({vehicle.code})</span> secara permanen.
                                         </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
@@ -108,7 +110,7 @@ function VehicleCard({ vehicle, onEdit, onDelete }: { vehicle: Vehicle, onEdit: 
             <CardContent className="p-4 flex-grow">
                 <div>
                     <h3 className="text-lg font-bold">{vehicle.brand} {vehicle.name}</h3>
-                    <p className="text-sm text-muted-foreground">{vehicle.type} - {vehicle.year}</p>
+                    <p className="text-sm text-muted-foreground">{vehicle.type} - {vehicle.year} ({vehicle.code})</p>
                 </div>
                 <div className="text-sm mt-4 text-muted-foreground grid grid-cols-2 gap-x-4 gap-y-2">
                     <span><span className="font-medium text-foreground">Penumpang:</span> {vehicle.passengers}</span>
@@ -140,13 +142,16 @@ function VehicleForm({ vehicle, onSave, onCancel }: { vehicle?: Vehicle | null; 
     const { toast } = useToast();
     const [isPending, startTransition] = useTransition();
     const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<Vehicle>({
-        defaultValues: vehicle || { id: crypto.randomUUID(), unitType: 'biasa', stock: 0 }
+        defaultValues: vehicle || { id: crypto.randomUUID(), code: '', unitType: 'biasa', stock: 0 }
     });
     
     const [previewUrl, setPreviewUrl] = useState<string | null>(vehicle?.photo || null);
     
+    const vehicleName = watch('name');
     const brand = watch('brand');
     const unitType = watch('unitType');
+    const debouncedName = useDebounce(vehicleName, 500);
+
     const { logoUrl } = useVehicleLogo(brand);
 
     useEffect(() => {
@@ -156,6 +161,38 @@ function VehicleForm({ vehicle, onSave, onCancel }: { vehicle?: Vehicle | null; 
             setValue('photo', vehicle.photo);
         }
     }, [vehicle, setValue]);
+
+    // Autofill logic when adding a new vehicle variant
+    useEffect(() => {
+        if (!debouncedName || vehicle) return; // Don't run on edit or if name is empty
+        
+        const fetchExistingVariant = async () => {
+            const supabase = createClient();
+            const { data } = await supabase
+                .from('vehicles')
+                .select('brand, type, photo')
+                .ilike('name', `%${debouncedName}%`)
+                .limit(1)
+                .single();
+
+            if (data) {
+                setValue('brand', data.brand, { shouldValidate: true });
+                setValue('type', data.type, { shouldValidate: true });
+                if (data.photo) {
+                    setPreviewUrl(data.photo);
+                    setValue('photo', data.photo, { shouldValidate: true });
+                }
+                toast({
+                    title: "Varian Ditemukan!",
+                    description: `Data dari mobil ${data.brand} ${debouncedName} telah diisi otomatis.`,
+                    className: "bg-blue-50 border-blue-200 text-blue-800"
+                });
+            }
+        };
+
+        fetchExistingVariant();
+
+    }, [debouncedName, setValue, vehicle, toast]);
     
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -270,7 +307,12 @@ function VehicleForm({ vehicle, onSave, onCancel }: { vehicle?: Vehicle | null; 
                                 </div>
                             )}
                         </div>
-                        <div className="space-y-2">
+                         <div className="space-y-2">
+                            <Label htmlFor="code">Kode Unit</Label>
+                            <Input id="code" placeholder="cth. AVZ-01" {...register('code', { required: "Kode unit wajib diisi" })} />
+                             {errors.code && <p className="text-sm text-destructive">{errors.code.message}</p>}
+                        </div>
+                         <div className="space-y-2">
                             <Label htmlFor="name">Nama Mobil</Label>
                             <Input id="name" placeholder="cth. Avanza" {...register('name', { required: "Nama mobil wajib diisi" })} />
                              {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
@@ -349,7 +391,7 @@ export default function ArmadaPage() {
   const { toast } = useToast();
   const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
   
-  const fetchFleet = async () => {
+  const fetchFleet = useCallback(async () => {
     if (!supabase) return;
     setIsLoading(true);
     const { data, error } = await supabase
@@ -363,7 +405,7 @@ export default function ArmadaPage() {
         setFleet(data || []);
     }
     setIsLoading(false);
-  }
+  }, [supabase, toast]);
 
   useEffect(() => {
     const supabaseClient = createClient();
@@ -374,7 +416,7 @@ export default function ArmadaPage() {
     if (supabase) {
         fetchFleet();
     }
-  }, [supabase]);
+  }, [supabase, fetchFleet]);
 
   const handleAddClick = () => {
     setSelectedVehicle(null);
@@ -411,7 +453,7 @@ export default function ArmadaPage() {
   }
 
   const dialogTitle = selectedVehicle ? "Edit Kendaraan" : "Tambahkan Armada Baru";
-  const dialogDescription = selectedVehicle ? "Perbarui detail kendaraan di bawah ini." : "Isi detail kendaraan baru di bawah ini.";
+  const dialogDescription = selectedVehicle ? "Perbarui detail kendaraan di bawah ini." : "Isi detail kendaraan baru di bawah ini. Jika varian sudah ada, beberapa data akan terisi otomatis.";
 
   if (isLoading) {
     return (
