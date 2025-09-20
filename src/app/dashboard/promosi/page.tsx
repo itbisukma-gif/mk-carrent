@@ -84,7 +84,7 @@ function PromotionForm({ promotion, vehicles, onSave, onCancel }: { promotion?: 
             if (vehicleId && vehicleId !== 'none') {
                 const vehicleToUpdate = vehicles.find(v => v.id === vehicleId);
                 if (vehicleToUpdate) {
-                    const updatedVehicle: Vehicle = { ...vehicleToUpdate, discountPercentage: discount };
+                    const updatedVehicle: Vehicle = { ...vehicleToUpdate, discountPercentage: discount || null };
                     await upsertVehicle(updatedVehicle);
                 }
             }
@@ -396,3 +396,5 @@ export default function PromosiPage() {
         </div>
     );
 }
+
+    
