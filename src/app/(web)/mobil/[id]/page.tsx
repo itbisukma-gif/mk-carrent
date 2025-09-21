@@ -120,7 +120,9 @@ function VehicleDetail() {
   }, [params.id, supabase]);
 
   const handleVariantChange = (variantId: string) => {
-    router.push(`/mobil/${variantId}`);
+    if (variantId && variantId !== params.id) {
+        router.push(`/mobil/${variantId}`);
+    }
   };
 
   const handleSubmitReview = async () => {
@@ -152,6 +154,7 @@ function VehicleDetail() {
 
   const allVariants = useMemo(() => {
     if (!vehicle) return [];
+    // Combine the current vehicle with its other variants
     return [vehicle, ...variants].sort((a, b) => a.transmission.localeCompare(b.transmission));
   }, [vehicle, variants]);
   
