@@ -154,6 +154,9 @@ function VehicleDetail() {
     if (!vehicle) return [];
     return [vehicle, ...variants].sort((a, b) => a.transmission.localeCompare(b.transmission));
   }, [vehicle, variants]);
+  
+  // FIX: Ensure vehicle is not null before calling the hook
+  const { logoUrl } = useVehicleLogo(vehicle ? vehicle.brand : '');
 
   if (isLoading || !vehicle) {
       return <div className="flex h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin"/></div>
@@ -173,8 +176,6 @@ function VehicleDetail() {
     { label: dictionary.vehicleDetail.details.capacity, value: `${vehicle.passengers} ${dictionary.vehicleDetail.details.passenger}`, icon: Users },
     { label: dictionary.vehicleDetail.details.year, value: vehicle.year, icon: Calendar },
   ];
-
-  const { logoUrl } = useVehicleLogo(vehicle.brand);
 
   return (
     <div className="container py-6 md:py-10">
