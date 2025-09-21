@@ -99,14 +99,39 @@ function HomePageContent() {
         setFilters(prev => ({ ...prev, type: type }));
     };
     
-    const filteredFleet = useMemo(() => {
+    const groupedAndFilteredFleet = useMemo(() => {
         if (!fleet) return [];
-        return fleet.filter(vehicle => {
+
+        // 1. Filter first
+        const filtered = fleet.filter(vehicle => {
             const searchMatch = vehicle.name.toLowerCase().includes(searchQuery.toLowerCase()) || vehicle.brand.toLowerCase().includes(searchQuery.toLowerCase());
             const brandMatch = filters.brand === 'all' || vehicle.brand === filters.brand;
             const typeMatch = filters.type === 'all' || vehicle.type === filters.type;
             return searchMatch && brandMatch && typeMatch;
         });
+
+        // 2. Group by brand and name
+        const grouped = filtered.reduce((acc, vehicle) => {
+            const key = `${vehicle.brand}|${vehicle.name}`;
+            if (!acc[key]) {
+                acc[key] = [];
+            }
+            acc[key].push(vehicle);
+            return acc;
+        }, {} as Record<string, Vehicle[]>);
+
+        // 3. Create a representative vehicle for each group
+        return Object.values(grouped).map(group => {
+            // Find the vehicle with the lowest price in the group to be the representative
+            const representative = group.reduce((lowest, current) => {
+                const lowestPrice = lowest.discountPercentage ? (lowest.price! * (1 - lowest.discountPercentage / 100)) : lowest.price;
+                const currentPrice = current.discountPercentage ? (current.price! * (1 - current.discountPercentage / 100)) : current.price;
+                return lowestPrice! < currentPrice! ? lowest : current;
+            });
+            // Also store all variants in the representative vehicle object
+            return { ...representative, variants: group };
+        });
+
     }, [searchQuery, filters, fleet]);
 
     const availableBrands = useMemo(() => {
@@ -114,7 +139,7 @@ function HomePageContent() {
         const brands = new Set(
             fleet
                 .map(v => v.brand)
-                .filter((b): b is string => !!b) // Filter out null, undefined, or empty strings
+                .filter((b): b is string => !!b)
         );
         return ['all', ...Array.from(brands)];
     }, [fleet]);
@@ -124,14 +149,13 @@ function HomePageContent() {
         const types = new Set(
             fleet
                 .map(v => v.type)
-                .filter((t): t is string => !!t) // Filter out null, undefined, or empty strings
+                .filter((t): t is string => !!t)
         );
         return ['all', ...Array.from(types)];
     }, [fleet]);
 
-
     const sortedFleet = useMemo(() => {
-        return [...filteredFleet].sort((a, b) => {
+        return [...groupedAndFilteredFleet].sort((a, b) => {
             if (!a.price || !b.price) return 0;
             switch (sortBy) {
                 case 'price-asc':
@@ -144,7 +168,7 @@ function HomePageContent() {
                     return 0;
             }
         });
-    }, [filteredFleet, sortBy]);
+    }, [groupedAndFilteredFleet, sortBy]);
 
   return (
         <div>

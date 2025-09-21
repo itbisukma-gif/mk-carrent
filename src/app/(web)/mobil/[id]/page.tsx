@@ -1,4 +1,5 @@
 
+
 'use client'
 
 import { notFound, useParams, useRouter } from 'next/navigation';
@@ -22,9 +23,10 @@ import {
   SheetContent,
   SheetTrigger,
 } from '@/components/ui/sheet';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { VehicleCard } from '@/components/vehicle-card';
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useMemo } from 'react';
 import Autoplay from 'embla-carousel-autoplay';
 import { StarRating } from '@/components/star-rating';
 import { useLanguage } from '@/hooks/use-language';
@@ -148,6 +150,11 @@ function VehicleDetail() {
       setIsSubmittingReview(false);
   }
 
+  const allVariants = useMemo(() => {
+    if (!vehicle) return [];
+    return [vehicle, ...variants].sort((a, b) => a.transmission.localeCompare(b.transmission));
+  }, [vehicle, variants]);
+
   if (isLoading || !vehicle) {
       return <div className="flex h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin"/></div>
   }
@@ -162,14 +169,12 @@ function VehicleDetail() {
   const vehicleDetails = [
     { label: dictionary.vehicleDetail.details.brand, value: vehicle.brand, icon: CheckCircle },
     { label: dictionary.vehicleDetail.details.type, value: vehicle.type, icon: CheckCircle },
-    { label: dictionary.vehicleDetail.details.transmission, value: vehicle.transmission, icon: Cog },
     { label: dictionary.vehicleDetail.details.fuel, value: vehicle.fuel, icon: Fuel },
     { label: dictionary.vehicleDetail.details.capacity, value: `${vehicle.passengers} ${dictionary.vehicleDetail.details.passenger}`, icon: Users },
     { label: dictionary.vehicleDetail.details.year, value: vehicle.year, icon: Calendar },
   ];
 
   const { logoUrl } = useVehicleLogo(vehicle.brand);
-  const allVariants = [vehicle, ...variants].sort((a, b) => a.transmission.localeCompare(b.transmission));
 
   return (
     <div className="container py-6 md:py-10">
@@ -210,25 +215,6 @@ function VehicleDetail() {
             <StarRating rating={vehicle.rating || 0} totalReviews={testimonials.length} />
           </div>
           
-          {allVariants.length > 1 && (
-            <Card>
-              <CardHeader className="p-4">
-                <CardTitle className="text-base">Varian Tersedia</CardTitle>
-              </CardHeader>
-              <CardContent className="p-4 pt-0">
-                <Tabs value={vehicle.id} onValueChange={handleVariantChange}>
-                  <TabsList className="grid w-full grid-cols-2">
-                    {allVariants.map(v => (
-                      <TabsTrigger key={v.id} value={v.id}>
-                        {v.transmission}
-                      </TabsTrigger>
-                    ))}
-                  </TabsList>
-                </Tabs>
-              </CardContent>
-            </Card>
-          )}
-
           <Card>
             <CardHeader className='p-4'>
                 <CardTitle className="text-base">{dictionary.vehicleDetail.details.title}</CardTitle>
@@ -242,6 +228,24 @@ function VehicleDetail() {
                             <span className="font-medium ml-auto">{detail.value || '-'}</span>
                         </li>
                     ))}
+                      <li className="flex items-center gap-3">
+                        <Cog className="h-4 w-4 text-primary" />
+                        <span className="text-muted-foreground">Transmisi:</span>
+                        <div className="ml-auto">
+                            <Select onValueChange={handleVariantChange} defaultValue={vehicle.id} disabled={allVariants.length <= 1}>
+                                <SelectTrigger className="w-[150px]">
+                                    <SelectValue placeholder="Pilih Transmisi" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {allVariants.map((v) => (
+                                        <SelectItem key={v.id} value={v.id}>
+                                            {v.transmission}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                      </li>
                 </ul>
             </CardContent>
           </Card>
