@@ -40,7 +40,6 @@ import type { Promotion, Vehicle } from '@/lib/types';
 import { Filter, Loader2 } from 'lucide-react';
 import { VehicleCard } from '@/components/vehicle-card';
 import { useLanguage } from '@/hooks/use-language';
-import { LanguageProvider } from '@/app/language-provider';
 import { FeaturesSection } from '@/components/features-section';
 import { createClient } from '@/utils/supabase/client';
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -347,8 +346,6 @@ function HomePageContent() {
 
 export default function HomePage() {
   return (
-    <LanguageProvider>
       <HomePageContent />
-    </LanguageProvider>
   )
 }

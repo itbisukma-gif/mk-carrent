@@ -30,7 +30,6 @@ import { useRef, useState, useEffect, useMemo } from 'react';
 import Autoplay from 'embla-carousel-autoplay';
 import { StarRating } from '@/components/star-rating';
 import { useLanguage } from '@/hooks/use-language';
-import { LanguageProvider } from '@/app/language-provider';
 import { OrderForm } from '@/components/order-form';
 import { Separator } from '@/components/ui/separator';
 import { useVehicleLogo } from '@/hooks/use-vehicle-logo';
@@ -158,7 +157,6 @@ function VehicleDetail() {
     return [vehicle, ...variants].sort((a, b) => a.transmission.localeCompare(b.transmission));
   }, [vehicle, variants]);
   
-  // FIX: Ensure vehicle is not null before calling the hook
   const { logoUrl } = useVehicleLogo(vehicle ? vehicle.brand : '');
 
   if (isLoading || !vehicle) {
@@ -388,8 +386,6 @@ function VehicleDetail() {
 
 export default function MobilDetailPage() {
     return (
-        <LanguageProvider>
-            <VehicleDetail />
-        </LanguageProvider>
+        <VehicleDetail />
     );
 }

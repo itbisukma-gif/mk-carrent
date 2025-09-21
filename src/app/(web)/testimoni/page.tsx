@@ -1,3 +1,4 @@
+
 'use client'
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -5,7 +6,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Star, UserCircle, Loader2, Image as ImageIcon } from "lucide-react";
 import Image from "next/image";
 import { useLanguage } from "@/hooks/use-language";
-import { LanguageProvider } from "@/app/language-provider";
 import { FeaturesSection } from "@/components/features-section";
 import { useState, useEffect } from "react";
 import type { Testimonial, GalleryItem } from "@/lib/types";
@@ -146,8 +146,6 @@ function TestimonialsPageContent() {
 
 export default function TestimonialsPage() {
     return (
-        <LanguageProvider>
-            <TestimonialsPageContent />
-        </LanguageProvider>
+        <TestimonialsPageContent />
     )
 }

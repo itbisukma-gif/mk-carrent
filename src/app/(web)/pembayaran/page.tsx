@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Suspense, useMemo, useState, useEffect } from 'react';
@@ -15,7 +16,6 @@ import { Banknote, QrCode, ArrowLeft, Loader2 } from 'lucide-react';
 import { format, parseISO, differenceInCalendarDays } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { useLanguage } from '@/hooks/use-language';
-import { LanguageProvider } from '@/app/language-provider';
 import { useToast } from '@/hooks/use-toast';
 import { createClient } from '@/utils/supabase/client';
 import type { Vehicle } from '@/lib/types';
@@ -308,10 +308,8 @@ function PembayaranComponent() {
 export default function PembayaranPage() {
     const { dictionary } = useLanguage();
     return (
-        <LanguageProvider>
-            <Suspense fallback={<div className="flex h-screen items-center justify-center">{dictionary.loading}...</div>}>
-                <PembayaranComponent />
-            </Suspense>
-        </LanguageProvider>
+        <Suspense fallback={<div className="flex h-screen items-center justify-center">{dictionary.loading}...</div>}>
+            <PembayaranComponent />
+        </Suspense>
     )
 }

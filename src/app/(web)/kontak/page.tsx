@@ -1,9 +1,9 @@
+
 'use client';
 
 import { Button } from "@/components/ui/button";
 import { Mail, Phone, Pin, Navigation, Loader2 } from "lucide-react";
 import { useLanguage } from "@/hooks/use-language";
-import { LanguageProvider } from "@/app/language-provider";
 import { useState, useEffect } from "react";
 import type { ContactInfo } from "@/lib/types";
 import Image from "next/image";
@@ -165,8 +165,6 @@ function KontakPageContent() {
 
 export default function KontakPage() {
     return (
-        <LanguageProvider>
-            <KontakPageContent />
-        </LanguageProvider>
+        <KontakPageContent />
     )
 }

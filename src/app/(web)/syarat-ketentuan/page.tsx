@@ -1,9 +1,9 @@
+
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import { useLanguage } from "@/hooks/use-language";
-import { LanguageProvider } from "@/app/language-provider";
 import { useState, useEffect } from "react";
 import type { TermsContent } from "@/lib/types";
 import { createClient } from '@/utils/supabase/client';
@@ -103,8 +103,6 @@ function TermsPageContent() {
 
 export default function TermsPage() {
     return (
-        <LanguageProvider>
-            <TermsPageContent />
-        </LanguageProvider>
+        <TermsPageContent />
     )
 }

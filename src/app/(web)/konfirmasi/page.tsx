@@ -1,3 +1,4 @@
+
 'use client'
 
 import { Suspense, useEffect, useState, ChangeEvent, useMemo, SVGProps } from "react";
@@ -17,7 +18,6 @@ import { Input } from "@/components/ui/input";
 import { format, parseISO } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { useLanguage } from "@/hooks/use-language";
-import { LanguageProvider } from "@/app/language-provider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { BankAccount, Order, Vehicle, Driver } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
@@ -567,10 +567,8 @@ function KonfirmasiComponent() {
 export default function KonfirmasiPage() {
     const { dictionary } = useLanguage();
     return (
-        <LanguageProvider>
-            <Suspense fallback={<div className="flex h-screen items-center justify-center">{dictionary.loading}...</div>}>
-                <KonfirmasiComponent />
-            </Suspense>
-        </LanguageProvider>
+        <Suspense fallback={<div className="flex h-screen items-center justify-center">{dictionary.loading}...</div>}>
+            <KonfirmasiComponent />
+        </Suspense>
     )
 }
