@@ -199,7 +199,7 @@ export default function PengaturanPage() {
                             onChange={(e) => handleContactChange('maps', e.target.value)}
                             placeholder="Contoh: https://www.google.com/maps/embed?pb=..."
                         />
-                         <p className="text-xs text-muted-foreground">Buka Google Maps > Cari lokasi > Share > Pilih tab 'Embed a map' > Salin HANYA URL (src) dari dalam kode iframe.</p>
+                         <p className="text-xs text-muted-foreground">{'Buka Google Maps > Cari lokasi > Share > Pilih tab \'Embed a map\' > Salin HANYA URL (src) dari dalam kode iframe.'}</p>
                     </div>
                      {contactInfo.maps && contactInfo.maps.startsWith('https://') && (
                         <div className="space-y-2">
