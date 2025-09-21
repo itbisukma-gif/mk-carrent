@@ -52,7 +52,7 @@ export function VehicleCard({ vehicle }: VehicleCardProps) {
                 <CardContent className="p-0">
                   <div className="aspect-video w-full relative">
                       <Image
-                        src={displayVehicle.photo}
+                        src={displayVehicle.photo!}
                         alt={displayVehicle.name}
                         fill
                         className="object-cover group-hover:scale-105 transition-transform"
@@ -88,8 +88,8 @@ export function VehicleCard({ vehicle }: VehicleCardProps) {
           <div className="p-4 flex flex-col flex-grow">
             <div className="flex-grow">
                 <Link href={isOutOfStock ? '#' : detailUrl} className={isOutOfStock ? 'cursor-not-allowed' : 'hover:text-primary'}>
-                    <h3 className="text-base font-bold leading-snug">{displayVehicle.name}</h3>
-                    <p className="text-xs text-muted-foreground">{displayVehicle.brand} - {displayVehicle.type}</p>
+                    <h3 className="text-base font-bold leading-snug">{displayVehicle.brand} {displayVehicle.name}</h3>
+                    <p className="text-xs text-muted-foreground">{displayVehicle.type}</p>
                 </Link>
             </div>
             <div className="flex items-center justify-between text-xs text-muted-foreground mt-3">
