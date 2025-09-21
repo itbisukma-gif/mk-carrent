@@ -10,11 +10,6 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
 export const metadata: Metadata = {
   title: 'MudaKarya CarRent - Solusi Rental Mobil Terbaik',
   description: 'Penyedia layanan rental mobil terpercaya dengan berbagai pilihan armada dan harga terbaik.',
-  icons: {
-    icon: '/logo-icon.png',
-    shortcut: '/logo-icon.png',
-    apple: '/logo-icon.png',
-  },
 };
 
 export default function RootLayout({
