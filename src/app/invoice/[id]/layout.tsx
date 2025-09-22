@@ -1,8 +1,10 @@
 
+'use client';
+
 // This file can be a simple pass-through layout for the server-side rendered invoice.
 // The main layout styling for the shared invoice is in its own layout file.
 
-import { AdminLayout } from '@/app/admin/layout';
+import AdminLayout from '@/app/admin/layout';
 
 export default function InvoiceLayout({
   children,
@@ -17,5 +19,3 @@ export default function InvoiceLayout({
     </AdminLayout>
   );
 }
-
-    
