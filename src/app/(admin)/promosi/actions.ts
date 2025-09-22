@@ -42,7 +42,7 @@ export async function upsertPromotion(promoData: Omit<Promotion, 'created_at'>, 
         }
     }
 
-    revalidatePath(`/admin/promosi`);
+    revalidatePath(`${adminPath}/promosi`);
     revalidatePath('/'); // Revalidate home page where promotions are shown
     return { data, error: null };
 }
@@ -86,7 +86,7 @@ export async function deletePromotion(promo: Promotion, vehicles: Vehicle[]) {
         }
     }
 
-    revalidatePath(`/admin/promosi`);
+    revalidatePath(`${adminPath}/promosi`);
     revalidatePath('/'); // Revalidate home page
     return { error: null };
 }

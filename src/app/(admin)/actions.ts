@@ -263,7 +263,7 @@ export async function upsertVehicle(vehicleData: VehicleFormData) {
         return { data: null, error };
     }
 
-    revalidatePath(`/${adminPath}/armada`);
+    revalidatePath(`${adminPath}/armada`);
     revalidatePath('/');
     
     return { data, error: null };
@@ -294,7 +294,7 @@ export async function deleteVehicle(vehicleId: string) {
         await supabase.storage.from(bucketName).remove([filePath]);
     }
 
-    revalidatePath(`/${adminPath}/armada`);
+    revalidatePath(`${adminPath}/armada`);
     revalidatePath('/');
 
     return { error: null };

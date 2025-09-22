@@ -248,7 +248,7 @@ function InvoiceComponent() {
                         Bagikan ke Pelanggan
                     </Link>
                 </Button>
-                <Button variant="link" size="sm" className='text-muted-foreground' onClick={() => router.push(`/${adminPath}/keuangan`)}>
+                <Button variant="link" size="sm" className='text-muted-foreground' onClick={() => router.push(`${adminPath}/keuangan`)}>
                     <ArrowLeft className="h-3 w-3 mr-1.5" />
                     Kembali ke Halaman Keuangan
                 </Button>
