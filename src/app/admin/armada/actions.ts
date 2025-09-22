@@ -7,12 +7,34 @@ import { revalidatePath } from 'next/cache';
 
 const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || '/admin';
 
-export async function upsertVehicle(vehicleData: Vehicle) {
+// Define a specific type for form data to handle potential string values from the form
+export type VehicleFormData = Omit<Vehicle, 'price' | 'year' | 'passengers' | 'stock' | 'discountPercentage'> & {
+    price: string | number;
+    year?: string | number | null;
+    passengers?: string | number | null;
+    stock?: string | number | null;
+    discountPercentage?: string | number | null;
+};
+
+
+export async function upsertVehicle(vehicleData: VehicleFormData) {
     const supabase = createServiceRoleClient();
 
+    // Create a new object for insertion with corrected types
+    const vehicleToUpsert: Vehicle = {
+        ...vehicleData,
+        price: Number(vehicleData.price) || 0,
+        year: vehicleData.year ? Number(vehicleData.year) : null,
+        passengers: vehicleData.passengers ? Number(vehicleData.passengers) : null,
+        stock: vehicleData.unitType === 'khusus' ? Number(vehicleData.stock) : null,
+        discountPercentage: vehicleData.discountPercentage ? Number(vehicleData.discountPercentage) : null,
+        status: vehicleData.status || 'tersedia',
+        rating: vehicleData.rating || 5, // Default rating
+    };
+
     try {
-        if (vehicleData.photo && vehicleData.photo.startsWith('data:image')) {
-            vehicleData.photo = await uploadImageFromDataUri(vehicleData.photo, 'vehicles', `vehicle-${vehicleData.id}`);
+        if (vehicleToUpsert.photo && vehicleToUpsert.photo.startsWith('data:image')) {
+            vehicleToUpsert.photo = await uploadImageFromDataUri(vehicleToUpsert.photo, 'vehicles', `vehicle-${vehicleToUpsert.id}`);
         }
     } catch (uploadError) {
         console.error("Vehicle image upload failed:", uploadError);
@@ -21,7 +43,7 @@ export async function upsertVehicle(vehicleData: Vehicle) {
 
     const { data, error } = await supabase
         .from('vehicles')
-        .upsert(vehicleData, { onConflict: 'id' })
+        .upsert(vehicleToUpsert, { onConflict: 'id' })
         .select()
         .single();
     

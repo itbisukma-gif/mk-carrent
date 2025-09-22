@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { useVehicleLogo } from "@/hooks/use-vehicle-logo";
 import { useForm, SubmitHandler } from "react-hook-form";
-import { upsertVehicle, deleteVehicle } from "./actions";
+import { upsertVehicle, deleteVehicle, type VehicleFormData } from "./actions";
 import { createClient } from '@/utils/supabase/client';
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { useDebounce } from "@/hooks/use-debounce";
@@ -160,8 +160,32 @@ function VehicleCard({ vehicle, onEdit, onDelete }: { vehicle: Vehicle, onEdit: 
 function VehicleForm({ vehicle, onSave, onCancel }: { vehicle?: Vehicle | null; onSave: () => void; onCancel: () => void; }) {
     const { toast } = useToast();
     const [isPending, startTransition] = useTransition();
-    const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<Vehicle>({
-        defaultValues: vehicle || { id: crypto.randomUUID(), code: '', unitType: 'biasa', stock: 0, status: 'tersedia' }
+    
+    // Use the specific form data type for useForm
+    const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<VehicleFormData>({
+        defaultValues: vehicle 
+            ? { 
+                ...vehicle,
+                price: vehicle.price?.toString() ?? '',
+                year: vehicle.year?.toString() ?? '',
+                passengers: vehicle.passengers?.toString() ?? '',
+                stock: vehicle.stock?.toString() ?? '',
+                discountPercentage: vehicle.discountPercentage?.toString() ?? ''
+              } 
+            : { 
+                id: crypto.randomUUID(), 
+                code: '', 
+                name: '',
+                brand: '',
+                type: '',
+                transmission: 'Manual',
+                fuel: 'Bensin',
+                photo: '',
+                unitType: 'biasa', 
+                stock: 0, 
+                status: 'tersedia',
+                price: ''
+            }
     });
     
     const [previewUrl, setPreviewUrl] = useState<string | null>(vehicle?.photo || null);
@@ -224,25 +248,14 @@ function VehicleForm({ vehicle, onSave, onCancel }: { vehicle?: Vehicle | null; 
         }
     };
     
-    const onSubmit: SubmitHandler<Vehicle> = (data) => {
+    const onSubmit: SubmitHandler<VehicleFormData> = (data) => {
         startTransition(async () => {
             if (!data.photo) {
                  toast({ variant: "destructive", title: "Foto wajib diisi" });
                  return;
             }
 
-            const vehicleData: Vehicle = {
-                ...data,
-                price: Number(data.price),
-                year: data.year ? Number(data.year) : null,
-                passengers: data.passengers ? Number(data.passengers) : null,
-                stock: data.unitType === 'khusus' ? Number(data.stock) : null,
-                rating: data.rating || 5,
-                discountPercentage: data.discountPercentage || null,
-                status: data.status || 'tersedia',
-            };
-
-            const result = await upsertVehicle(vehicleData);
+            const result = await upsertVehicle(data);
 
             if (result.error) {
                 toast({
