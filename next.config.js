@@ -35,6 +35,18 @@ const nextConfig = {
             }
         ],
     },
+    async rewrites() {
+      return [
+        {
+          source: '/mk-portal',
+          destination: '/admin/dashboard',
+        },
+        {
+          source: '/mk-portal/:path*',
+          destination: '/admin/:path*',
+        },
+      ]
+    },
 };
 
 module.exports = nextConfig;
