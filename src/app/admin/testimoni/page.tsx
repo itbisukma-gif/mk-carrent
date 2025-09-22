@@ -320,7 +320,7 @@ function GalleryEditor({ vehicles }: { vehicles: Vehicle[] }) {
                         <DialogFooter>
                             <Button onClick={handleAddPhoto} disabled={!previewUrl || isPending}>
                                 {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                Upload &amp; Simpan
+                                Upload & Simpan
                             </Button>
                         </DialogFooter>
                     </DialogContent>
@@ -612,7 +612,7 @@ export default function TestimoniPage() {
   return (
     <div className="flex flex-col gap-8">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Manajemen Testimoni &amp; Keunggulan</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Manajemen Testimoni & Keunggulan</h1>
         <p className="text-muted-foreground">
           Kelola semua testimoni, galeri, dan poin keunggulan dari layanan Anda.
         </p>
@@ -777,3 +777,5 @@ export default function TestimoniPage() {
     </div>
   );
 }
+
+    
