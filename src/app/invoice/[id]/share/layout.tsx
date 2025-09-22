@@ -1,3 +1,4 @@
+
 import { WebHeader } from '@/components/layout/web-header';
 import { WebFooter } from '@/components/layout/web-footer';
 import { LanguageProvider } from '@/app/language-provider';

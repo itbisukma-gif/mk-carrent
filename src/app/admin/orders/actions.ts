@@ -6,7 +6,7 @@ import { updateVehicleStatus } from '../armada/actions';
 import type { OrderStatus } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
 
-const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || 'admin';
+const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || '/admin';
 
 
 export async function updateOrderStatusAction(orderId: string, status: OrderStatus, vehicleId: string, driverId?: string | null) {
@@ -22,18 +22,17 @@ export async function updateOrderStatusAction(orderId: string, status: OrderStat
         return { error };
     }
     
+    // Update related statuses
     if (status === 'disetujui') {
-        await updateVehicleStatus(vehicleId, 'dipesan');
-    } else if (status === 'selesai' || status === 'tidak disetujui') {
+        await updateVehicleStatus(vehicleId, 'disewa');
+    } else if (status === 'tidak disetujui' || status === 'selesai') {
         await updateVehicleStatus(vehicleId, 'tersedia');
         if (driverId) {
             await updateDriverStatus(driverId, 'Tersedia');
         }
     }
     
-    revalidatePath(`/${adminPath}/orders`);
-    revalidatePath(`/${adminPath}/armada`);
-    revalidatePath(`/${adminPath}/dashboard`);
+    revalidatePath(`${adminPath}/orders`);
 
     return { data, error };
 }
@@ -58,10 +57,12 @@ export async function updateOrderDriverAction(orderId: string, driverName: strin
     const { error: driverError } = await updateDriverStatus(driverId, 'Bertugas');
     if (driverError) {
         console.error("Error updating driver status:", driverError);
+        // Optionally handle this case, maybe revert the order driver update.
+        // For now, we'll let it pass but the admin might see an inconsistency.
     }
     
-    revalidatePath(`/${adminPath}/orders`);
-    revalidatePath(`/${adminPath}/dashboard`);
+    revalidatePath(`${adminPath}/orders`);
+    revalidatePath(`${adminPath}/dashboard`);
 
     return { data, error: null };
 }

@@ -4,45 +4,23 @@ import { createServiceRoleClient, uploadImageFromDataUri } from '@/utils/supabas
 import type { Vehicle } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
 
-const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || 'admin';
+const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || '/admin';
 
-export type VehicleFormData = Omit<Vehicle, 'price' | 'year' | 'passengers' | 'stock' | 'discountPercentage' | 'rating'> & {
-    price: string | number;
-    year: string | number | null;
-    passengers: string | number | null;
-    stock: string | number | null;
-    discountPercentage: string | number | null;
-    rating: number | null;
-};
-
-
-export async function upsertVehicle(vehicleData: VehicleFormData) {
+export async function upsertVehicle(vehicleData: Vehicle) {
     const supabase = createServiceRoleClient();
 
-    let vehicleToUpsert: Vehicle = {
-        ...vehicleData,
-        price: Number(vehicleData.price) || 0,
-        year: vehicleData.year ? Number(vehicleData.year) : null,
-        passengers: vehicleData.passengers ? Number(vehicleData.passengers) : null,
-        stock: vehicleData.unitType === 'khusus' ? (vehicleData.stock ? Number(vehicleData.stock) : null) : null,
-        discountPercentage: vehicleData.discountPercentage ? Number(vehicleData.discountPercentage) : null,
-        status: vehicleData.status || 'tersedia',
-        rating: vehicleData.rating || 5,
-    };
-
-    if (vehicleData.photo && typeof vehicleData.photo === 'string' && vehicleData.photo.startsWith('data:image')) {
-        try {
-            const newPhotoUrl = await uploadImageFromDataUri(vehicleData.photo, 'vehicles', `vehicle-${vehicleData.id}`);
-            vehicleToUpsert.photo = newPhotoUrl;
-        } catch (uploadError) {
-            console.error("Vehicle image upload failed:", uploadError);
-            return { data: null, error: { message: (uploadError as Error).message } };
+    try {
+        if (vehicleData.photo && vehicleData.photo.startsWith('data:image')) {
+            vehicleData.photo = await uploadImageFromDataUri(vehicleData.photo, 'vehicles', `vehicle-${vehicleData.id}`);
         }
+    } catch (uploadError) {
+        console.error("Vehicle image upload failed:", uploadError);
+        return { data: null, error: { message: (uploadError as Error).message } };
     }
-    
+
     const { data, error } = await supabase
         .from('vehicles')
-        .upsert(vehicleToUpsert, { onConflict: 'id' })
+        .upsert(vehicleData, { onConflict: 'id' })
         .select()
         .single();
     
@@ -51,9 +29,8 @@ export async function upsertVehicle(vehicleData: VehicleFormData) {
         return { data: null, error };
     }
 
-    revalidatePath(`/${adminPath}/armada`);
+    revalidatePath(`${adminPath}/armada`);
     revalidatePath('/');
-    revalidatePath('/mobil');
     
     return { data, error: null };
 }
@@ -78,19 +55,13 @@ export async function deleteVehicle(vehicleId: string) {
     }
 
     if(itemData.photo) {
-        try {
-            const bucketName = 'mudakarya-bucket';
-            const urlParts = itemData.photo.split('/');
-            const filePath = urlParts.slice(urlParts.indexOf(bucketName) + 1).join('/');
-            await supabase.storage.from(bucketName).remove([filePath]);
-        } catch (storageError) {
-            console.error("Error deleting from storage, but continuing:", storageError);
-        }
+        const bucketName = 'mudakarya-bucket';
+        const filePath = itemData.photo.substring(itemData.photo.indexOf(bucketName) + bucketName.length + 1);
+        await supabase.storage.from(bucketName).remove([filePath]);
     }
 
-    revalidatePath(`/${adminPath}/armada`);
+    revalidatePath(`${adminPath}/armada`);
     revalidatePath('/');
-    revalidatePath('/mobil');
 
     return { error: null };
 }
@@ -108,8 +79,8 @@ export async function updateVehicleStatus(vehicleId: string, status: 'tersedia' 
         return { error };
     }
 
-    revalidatePath(`/${adminPath}/armada`);
-    revalidatePath(`/${adminPath}/orders`);
+    revalidatePath(`${adminPath}/armada`);
+    revalidatePath(`${adminPath}/orders`);
 
     return { error: null };
 }

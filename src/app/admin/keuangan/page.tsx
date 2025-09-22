@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, ChangeEvent, useEffect } from 'react';
@@ -42,6 +43,7 @@ export default function KeuanganPage() {
   const [isPaymentsOpen, setIsPaymentsOpen] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
+  // States for new bank account form
   const [selectedBank, setSelectedBank] = useState<string>("");
   const [accountNumber, setAccountNumber] = useState("");
   const [accountName, setAccountName] = useState("");
@@ -134,6 +136,8 @@ export default function KeuanganPage() {
   };
 
   const handleSavePrices = () => {
+    // In a real app, this would be an API call to update the service costs.
+    // For this simulation, we're mutating the imported object directly.
     initialServiceCosts.matic = serviceCosts.matic;
     initialServiceCosts.driver = serviceCosts.driver;
     initialServiceCosts.fuel = serviceCosts.fuel;
@@ -361,7 +365,7 @@ export default function KeuanganPage() {
                                             </div>
                                             <DialogFooter>
                                                 <Button variant="outline" onClick={() => setQrisUploadOpen(false)}>Batal</Button>
-                                                <Button onClick={handleQrisSave} disabled={!previewUrl}>Upload &amp; Simpan</Button>
+                                                <Button onClick={handleQrisSave} disabled={!previewUrl}>Upload & Simpan</Button>
                                             </DialogFooter>
                                         </DialogContent>
                                      </Dialog>

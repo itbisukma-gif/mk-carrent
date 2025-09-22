@@ -15,6 +15,7 @@ import { createClient } from '@/utils/supabase/client';
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { updateContactInfo, updateTermsContent } from './actions';
 
+export const dynamic = 'force-dynamic';
 
 const socialPlatforms = [
     { value: 'instagram', label: 'Instagram' },
@@ -71,17 +72,17 @@ export default function PengaturanPage() {
     fetchData();
   }, [toast, supabase]);
    
-   const handleContactChange = (field: keyof Omit<ContactInfo, SocialPlatformKey | 'id'>, value: string) => {
+   const handleContactChange = (field: keyof Omit<ContactInfo, 'id'| 'created_at' | SocialPlatformKey>, value: string) => {
     setContactInfo(prev => prev ? ({ ...prev, [field]: value }) : null);
    }
    
-    const handleTermsChange = (field: keyof Omit<TermsContent, 'id'>, value: string) => {
+    const handleTermsChange = (field: keyof Omit<TermsContent, 'id' | 'created_at'>, value: string) => {
     setTerms(prev => prev ? ({ ...prev, [field]: value }) : null);
    }
    
    const handleSocialLinkChange = (index: number, field: 'platform' | 'url', value: string) => {
        const newLinks = [...socialLinks];
-       newLinks[index][field] = value as any;
+       newLinks[index] = { ...newLinks[index], [field]: value };
        setSocialLinks(newLinks);
    }
 
@@ -95,36 +96,40 @@ export default function PengaturanPage() {
 
   const handleSaveChanges = (type: 'Kontak' | 'S&K') => {
     startSavingTransition(async () => {
-        let result: { error: any } | null = null;
+        let error: any = null;
         if (type === 'Kontak' && contactInfo) {
-            const newContactInfo: Partial<ContactInfo> = { ...contactInfo };
-            
-            // First, clear all social media fields from the object that will be sent
-            socialPlatforms.forEach(p => {
-                const key = p.value as keyof ContactInfo;
-                (newContactInfo as any)[key] = null;
-            });
-            
-            // Then, re-add only the ones present in the socialLinks state
+            const newContactInfo: Partial<ContactInfo> = { 
+                address: contactInfo.address,
+                email: contactInfo.email,
+                whatsapp: contactInfo.whatsapp,
+                maps: contactInfo.maps
+            };
+            // Reset all social fields first
+            socialPlatforms.forEach(p => newContactInfo[p.value] = undefined);
+            // Then populate from the socialLinks array
             socialLinks.forEach(link => {
                 if (link.platform && link.url) {
-                    (newContactInfo as any)[link.platform] = link.url;
+                    newContactInfo[link.platform] = link.url;
                 }
             });
             
-            result = await updateContactInfo(newContactInfo as ContactInfo);
+            const result = await updateContactInfo(newContactInfo);
+            error = result.error;
+
         } else if (type === 'S&K' && terms) {
-            result = await updateTermsContent(terms);
+             const result = await updateTermsContent(terms);
+             error = result.error;
         }
         
-        if (result?.error) {
-            toast({ variant: 'destructive', title: 'Gagal Menyimpan', description: result.error.message });
-        } else {
-            toast({
-                title: "Perubahan Disimpan",
-                description: `Informasi ${type} telah berhasil diperbarui.`
-            });
+        if (error) {
+             toast({ variant: 'destructive', title: 'Gagal Menyimpan', description: error.message });
+             return;
         }
+
+        toast({
+            title: "Perubahan Disimpan",
+            description: `Informasi ${type} telah berhasil diperbarui.`
+        });
     });
   }
 
@@ -165,16 +170,16 @@ export default function PengaturanPage() {
                 <CardContent className="space-y-6">
                     <div className="space-y-2">
                         <Label htmlFor="address">Alamat Kantor</Label>
-                        <Input id="address" value={contactInfo.address} onChange={(e) => handleContactChange('address', e.target.value)} />
+                        <Input id="address" value={contactInfo.address || ''} onChange={(e) => handleContactChange('address', e.target.value)} />
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
                             <Label htmlFor="email">Email</Label>
-                            <Input id="email" type="email" value={contactInfo.email} onChange={(e) => handleContactChange('email', e.target.value)} />
+                            <Input id="email" type="email" value={contactInfo.email || ''} onChange={(e) => handleContactChange('email', e.target.value)} />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="whatsapp">WhatsApp</Label>
-                            <Input id="whatsapp" value={contactInfo.whatsapp} onChange={(e) => handleContactChange('whatsapp', e.target.value)} />
+                            <Input id="whatsapp" value={contactInfo.whatsapp || ''} onChange={(e) => handleContactChange('whatsapp', e.target.value)} />
                         </div>
                     </div>
                     <div className="space-y-2">
@@ -182,7 +187,7 @@ export default function PengaturanPage() {
                         <Textarea 
                             id="maps" 
                             rows={4} 
-                            value={contactInfo.maps} 
+                            value={contactInfo.maps || ''} 
                             onChange={(e) => handleContactChange('maps', e.target.value)}
                             placeholder="Contoh: https://www.google.com/maps/embed?pb=..."
                         />
@@ -259,12 +264,12 @@ export default function PengaturanPage() {
                 <CardContent className="space-y-6">
                     <div className="space-y-2">
                         <Label>Persyaratan Umum</Label>
-                        <Textarea rows={8} value={terms.general} onChange={(e) => handleTermsChange('general', e.target.value)} />
+                        <Textarea rows={8} value={terms.general || ''} onChange={(e) => handleTermsChange('general', e.target.value)} />
                         <p className="text-xs text-muted-foreground">Setiap baris akan menjadi satu poin persyaratan.</p>
                     </div>
                      <div className="space-y-2">
                         <Label>Metode Pembayaran</Label>
-                         <Textarea rows={4} value={terms.payment} onChange={(e) => handleTermsChange('payment', e.target.value)} />
+                         <Textarea rows={4} value={terms.payment || ''} onChange={(e) => handleTermsChange('payment', e.target.value)} />
                         <p className="text-xs text-muted-foreground">Setiap baris akan menjadi satu poin metode pembayaran.</p>
                     </div>
                     <Button onClick={() => handleSaveChanges('S&K')} disabled={isSaving}>

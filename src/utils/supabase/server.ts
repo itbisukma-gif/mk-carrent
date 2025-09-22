@@ -1,3 +1,4 @@
+
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { Buffer } from 'buffer';
@@ -68,12 +69,12 @@ export const createServiceRoleClient = () => {
 
 
 export const uploadImageFromDataUri = async (dataUri: string, folder: string, fileNamePrefix: string) => {
+    // Use the service role client for all storage operations from the server
     const supabase = createServiceRoleClient();
+    const matches = dataUri.match(/^data:(image\/(?:png|jpeg|jpg));base64,(.*)$/);
     
-    const matches = dataUri.match(/^data:(image\/(?:png|jpeg|jpg|webp));base64,(.*)$/);
-
     if (!matches || matches.length !== 3) {
-        throw new Error('Invalid Data URI format. Only PNG, JPG, and WEBP are supported.');
+        throw new Error('Invalid Data URI format');
     }
 
     const mimeType = matches[1];
@@ -81,16 +82,14 @@ export const uploadImageFromDataUri = async (dataUri: string, folder: string, fi
     const fileExtension = mimeType.split('/')[1];
     const buffer = Buffer.from(base64Data, 'base64');
     
-    // Sanitize the file name prefix by removing problematic characters like dashes.
-    const sanitizedPrefix = fileNamePrefix.replace(/-/g, "");
-    const fileName = `${sanitizedPrefix}${Date.now()}.${fileExtension}`;
+    const fileName = `${fileNamePrefix}-${Date.now()}.${fileExtension}`;
     const filePath = `${folder}/${fileName}`;
 
     const { error: uploadError } = await supabase.storage
         .from('mudakarya-bucket')
         .upload(filePath, buffer, {
             contentType: mimeType,
-            upsert: true, // Use upsert to handle potential name collisions, though unlikely with timestamp
+            upsert: true,
         });
 
     if (uploadError) {
@@ -108,3 +107,4 @@ export const uploadImageFromDataUri = async (dataUri: string, folder: string, fi
 
     return publicUrlData.publicUrl;
 }
+

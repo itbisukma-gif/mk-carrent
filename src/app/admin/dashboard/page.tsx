@@ -58,6 +58,7 @@ import {
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { orders as initialOrders } from '@/lib/data' // Keep dummy chart data
 import type { Driver, Vehicle, Order } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { useToast } from '@/hooks/use-toast'
@@ -113,7 +114,7 @@ function DriverForm({ driver, onSave, onCancel }: { driver?: Driver | null; onSa
     const handleSave = () => {
         startTransition(async () => {
             const driverData: Omit<Driver, 'created_at'> = {
-                id: driver?.id || crypto.randomUUID(),
+                id: driver?.id || crypto.randomUUID(), // Use existing ID or generate a new one for insert
                 name,
                 address,
                 phone,
@@ -250,7 +251,7 @@ export default function DashboardPage() {
         toast({ variant: "destructive", title: "Gagal Menghapus", description: result.error.message });
      } else {
         toast({ title: "Driver Dihapus", description: `Data driver telah berhasil dihapus.` });
-        fetchData();
+        fetchData(); // Refetch
      }
   }
 
@@ -260,12 +261,12 @@ export default function DashboardPage() {
         toast({ variant: "destructive", title: "Gagal Memperbarui Status", description: result.error.message });
      } else {
         toast({ title: "Status Diperbarui", description: `Status driver telah berhasil diperbarui.` });
-        fetchData();
+        fetchData(); // Refetch
      }
   };
   
   const handleFormSave = () => {
-    fetchData();
+    fetchData(); // Refetch data after saving
     setAddDialogOpen(false);
     setEditDialogOpen(false);
     setSelectedDriver(null);
@@ -358,6 +359,7 @@ export default function DashboardPage() {
                                 mode="range"
                                 defaultMonth={date?.from}
                                 selected={date}
+                                onSelect={setDate}
                                 numberOfMonths={2}
                             />
                             </PopoverContent>

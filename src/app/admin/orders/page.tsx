@@ -22,7 +22,7 @@ import { createClient } from '@/utils/supabase/client';
 import { updateOrderStatusAction, updateOrderDriverAction } from './actions';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { WhatsAppIcon } from '@/components/icons';
-import Link from 'next/link';
+
 
 const getStatusInfo = (status: OrderStatus | null) => {
     switch (status) {
@@ -49,7 +49,7 @@ function OrderCard({ order, drivers, onDataChange }: { order: Order, drivers: Dr
     }, []);
     
     const whatsAppInvoiceUrl = useMemo(() => {
-        if (!isClient || !order.customerPhone) return '#';
+        if (typeof window === 'undefined' || !order.customerPhone) return '#';
 
         const domain = window.location.origin;
         const shareableInvoiceUrl = `${domain}/invoice/${order.id}/share`;
@@ -64,7 +64,7 @@ function OrderCard({ order, drivers, onDataChange }: { order: Order, drivers: Dr
         }
 
         return `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`;
-    }, [isClient, order.id, order.customerName, order.customerPhone]);
+    }, [order.id, order.customerName, order.customerPhone]);
 
     const statusInfo = getStatusInfo(order.status);
     const requiresDriver = order.service?.toLowerCase().includes("supir") || order.service?.toLowerCase().includes("all");
@@ -207,9 +207,9 @@ function OrderCard({ order, drivers, onDataChange }: { order: Order, drivers: Dr
                     {order.status === 'disetujui' && (
                          <>
                             <Button size="sm" variant="outline" asChild className="bg-green-500 text-white hover:bg-green-600 hover:text-white border-green-600">
-                                <Link href={whatsAppInvoiceUrl} target="_blank" rel="noopener noreferrer">
+                                <a href={whatsAppInvoiceUrl} target="_blank" rel="noopener noreferrer">
                                     <WhatsAppIcon className="h-4 w-4" />
-                                </Link>
+                                </a>
                             </Button>
                             <AlertDialog>
                                 <AlertDialogTrigger asChild>

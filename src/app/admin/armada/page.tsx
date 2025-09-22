@@ -3,13 +3,13 @@
 import { useState, useTransition, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Vehicle } from "@/lib/types";
-import { MoreVertical, PlusCircle, Trash2, Upload, Loader2, CheckCircle, Clock, Car } from "lucide-react";
+import { MoreVertical, PlusCircle, Trash2, Upload, Loader2, Sparkles, CheckCircle, Clock, Car } from "lucide-react";
 import Image from "next/image";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { useVehicleLogo } from "@/hooks/use-vehicle-logo";
 import { useForm, SubmitHandler } from "react-hook-form";
-import { upsertVehicle, deleteVehicle, type VehicleFormData } from "./actions";
+import { upsertVehicle, deleteVehicle } from "./actions";
 import { createClient } from '@/utils/supabase/client';
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { useDebounce } from "@/hooks/use-debounce";
@@ -159,36 +159,8 @@ function VehicleCard({ vehicle, onEdit, onDelete }: { vehicle: Vehicle, onEdit: 
 function VehicleForm({ vehicle, onSave, onCancel }: { vehicle?: Vehicle | null; onSave: () => void; onCancel: () => void; }) {
     const { toast } = useToast();
     const [isPending, startTransition] = useTransition();
-    
-    const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<VehicleFormData>({
-        defaultValues: vehicle 
-            ? { 
-                ...vehicle,
-                price: vehicle.price?.toString() ?? '',
-                year: vehicle.year?.toString() ?? '',
-                passengers: vehicle.passengers?.toString() ?? '',
-                stock: vehicle.stock?.toString() ?? '',
-                discountPercentage: vehicle.discountPercentage?.toString() ?? ''
-              } 
-            : { 
-                id: crypto.randomUUID(), 
-                code: '', 
-                name: '',
-                brand: '',
-                type: '',
-                passengers: '',
-                transmission: 'Manual',
-                fuel: 'Bensin',
-                year: '',
-                price: '',
-                rating: 5,
-                dataAiHint: '',
-                discountPercentage: '',
-                photo: '',
-                unitType: 'biasa', 
-                stock: '', 
-                status: 'tersedia'
-            }
+    const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<Vehicle>({
+        defaultValues: vehicle || { id: crypto.randomUUID(), code: '', unitType: 'biasa', stock: 0, status: 'tersedia' }
     });
     
     const [previewUrl, setPreviewUrl] = useState<string | null>(vehicle?.photo || null);
@@ -251,14 +223,25 @@ function VehicleForm({ vehicle, onSave, onCancel }: { vehicle?: Vehicle | null; 
         }
     };
     
-    const onSubmit: SubmitHandler<VehicleFormData> = (data) => {
+    const onSubmit: SubmitHandler<Vehicle> = (data) => {
         startTransition(async () => {
             if (!data.photo) {
                  toast({ variant: "destructive", title: "Foto wajib diisi" });
                  return;
             }
 
-            const result = await upsertVehicle(data);
+            const vehicleData: Vehicle = {
+                ...data,
+                price: Number(data.price),
+                year: data.year ? Number(data.year) : null,
+                passengers: data.passengers ? Number(data.passengers) : null,
+                stock: data.unitType === 'khusus' ? Number(data.stock) : null,
+                rating: data.rating || 5,
+                discountPercentage: data.discountPercentage || null,
+                status: data.status || 'tersedia',
+            };
+
+            const result = await upsertVehicle(vehicleData);
 
             if (result.error) {
                 toast({
@@ -469,14 +452,14 @@ export default function ArmadaPage() {
             title: "Berhasil Dihapus",
             description: `Kendaraan telah dihapus.`,
         });
-        fetchFleet();
+        fetchFleet(); // Refetch data
     }
   };
 
   const handleFormSave = () => {
     setFormOpen(false);
     setSelectedVehicle(null);
-    fetchFleet();
+    fetchFleet(); // Refetch data after saving
   }
   
   const handleFormCancel = () => {
