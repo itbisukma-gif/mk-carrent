@@ -16,7 +16,7 @@ export async function upsertTestimonial(testimonialData: Omit<Testimonial, 'crea
         console.error('Error upserting testimonial:', error);
         return { data: null, error };
     }
-    revalidatePath(`/${adminPath}/testimoni`);
+    revalidatePath(`${adminPath}/testimoni`);
     revalidatePath('/testimoni');
     if (data.vehicleName) {
         revalidatePath('/mobil');
@@ -29,7 +29,7 @@ export async function deleteTestimonial(id: string) {
     const supabase = createServiceRoleClient();
     const { error } = await supabase.from('testimonials').delete().eq('id', id);
     if (error) return { error };
-    revalidatePath(`/${adminPath}/testimoni`);
+    revalidatePath(`${adminPath}/testimoni`);
     revalidatePath('/testimoni');
     revalidatePath('/mobil');
     return { error: null };
@@ -54,7 +54,7 @@ export async function addGalleryItem(galleryData: Omit<GalleryItem, 'id' | 'crea
         console.error('Error adding gallery item:', error);
         return { data: null, error };
     }
-    revalidatePath(`/${adminPath}/testimoni`);
+    revalidatePath(`${adminPath}/testimoni`);
     revalidatePath('/testimoni');
     revalidatePath('/mobil');
     return { data, error: null };
@@ -86,7 +86,7 @@ export async function deleteGalleryItem(id: string) {
         }
     }
 
-    revalidatePath(`/${adminPath}/testimoni`);
+    revalidatePath(`${adminPath}/testimoni`);
     revalidatePath('/testimoni');
     revalidatePath('/mobil');
     return { error: null };
@@ -112,7 +112,7 @@ export async function upsertFeature(featureData: Omit<FeatureItem, 'created_at'>
         console.error('Error upserting feature:', error);
         return { data: null, error };
     }
-    revalidatePath(`/${adminPath}/testimoni`);
+    revalidatePath(`${adminPath}/testimoni`);
     revalidatePath('/'); // Revalidate home page where features are shown
     return { data, error: null };
 }
@@ -140,7 +140,7 @@ export async function deleteFeature(id: string) {
         }
     }
 
-    revalidatePath(`/${adminPath}/testimoni`);
+    revalidatePath(`${adminPath}/testimoni`);
     revalidatePath('/'); // Revalidate home page
     return { error: null };
 }

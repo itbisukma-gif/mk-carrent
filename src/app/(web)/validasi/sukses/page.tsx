@@ -24,7 +24,7 @@ export default function ValidasiSuksesPage() {
             </CardContent>
             <CardFooter>
                 <Button asChild className="w-full">
-                    <Link href={`/${adminPath}/orders`}>
+                    <Link href={`${adminPath}/orders`}>
                         <ArrowLeft className="mr-2 h-4 w-4" />
                         Kembali ke List Order
                     </Link>

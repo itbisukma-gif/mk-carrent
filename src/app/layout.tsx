@@ -2,7 +2,11 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/toaster';
-import { Space_Grotesk, Inter } from 'next/font/google'
+import { Space_Grotesk, Inter } from 'next/font/google';
+import { WebHeader } from '@/components/layout/web-header';
+import { WebFooter } from '@/components/layout/web-footer';
+import { LanguageProvider } from './(web)/language-provider';
+import { WhatsappFab } from '@/components/whatsapp-fab';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
 const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-heading'})
@@ -32,7 +36,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head />
       <body className={cn(
-        'min-h-screen bg-background font-sans antialiased', 
+        'min-h-screen bg-background font-sans antialiased flex flex-col', 
         inter.variable, 
         spaceGrotesk.variable
       )}>

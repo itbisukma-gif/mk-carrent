@@ -54,7 +54,7 @@ export async function upsertVehicle(vehicleData: VehicleFormData) {
         return { data: null, error };
     }
 
-    revalidatePath(`/${adminPath}/armada`);
+    revalidatePath(`${adminPath}/armada`);
     revalidatePath('/');
     
     return { data, error: null };
@@ -90,7 +90,7 @@ export async function deleteVehicle(vehicleId: string) {
         }
     }
 
-    revalidatePath(`/${adminPath}/armada`);
+    revalidatePath(`${adminPath}/armada`);
     revalidatePath('/');
 
     return { error: null };
@@ -109,8 +109,8 @@ export async function updateVehicleStatus(vehicleId: string, status: 'tersedia' 
         return { error };
     }
 
-    revalidatePath(`/${adminPath}/armada`);
-    revalidatePath(`/${adminPath}/orders`);
+    revalidatePath(`${adminPath}/armada`);
+    revalidatePath(`${adminPath}/orders`);
 
     return { error: null };
 }
