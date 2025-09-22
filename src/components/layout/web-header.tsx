@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -43,10 +42,10 @@ export function WebHeader({ className }: { className?: string }) {
             </Link>
           ))}
           <Link
-              href={adminPath}
+              href={`/${adminPath}`}
               className={cn(
                 "text-sm font-medium transition-colors hover:text-primary",
-                pathname.startsWith(adminPath) ? "text-primary" : "text-muted-foreground"
+                pathname.startsWith(`/${adminPath}`) ? "text-primary" : "text-muted-foreground"
               )}
             >
               Admin

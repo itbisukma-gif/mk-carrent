@@ -1,4 +1,3 @@
-
 'use client'
 
 import { useParams, notFound, useRouter, useSearchParams } from 'next/navigation';

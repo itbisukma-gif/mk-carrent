@@ -20,10 +20,9 @@ export async function middleware(request: NextRequest) {
           // If no session, redirect to the main login page.
           return NextResponse.redirect(new URL('/login', request.url));
       }
-      // If the user has a session but tries to access /admin directly,
-      // redirect them to the masked public path for consistency.
-      const maskedPath = pathname.replace('/admin', `/${adminPath}`);
-      return NextResponse.redirect(new URL(maskedPath, request.url));
+      // If a logged-in user tries to access /admin directly, rewrite to the internal route.
+      // This is a safe fallback.
+      return NextResponse.next();
   }
 
   // 3. Handle the public-facing secret admin path
