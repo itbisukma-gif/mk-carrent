@@ -125,7 +125,7 @@ export function VehicleCard({ vehicle }: VehicleCardProps) {
                         <Button size="sm" className="transition-all duration-200 ease-in-out hover:scale-105 hover:shadow-md active:scale-100">{dictionary.vehicleCard.book}</Button>
                     </SheetTrigger>
                     <SheetContent className="p-0 flex flex-col">
-                        <OrderForm vehicle={displayVehicle} />
+                        <OrderForm variants={vehicle.variants || [displayVehicle]} />
                     </SheetContent>
                 </Sheet>
               )}
