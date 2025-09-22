@@ -30,16 +30,14 @@ import { UserNav } from "./user-nav";
 import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 
-const adminPath = '/admin';
-
 const menuItems = [
-  { href: `${adminPath}/dashboard`, label: "Dashboard", icon: LayoutDashboard },
-  { href: `${adminPath}/armada`, label: "Armada", icon: Car },
-  { href: `${adminPath}/keuangan`, label: "Keuangan", icon: Wallet },
-  { href: `${adminPath}/orders`, label: "List Order", icon: ClipboardList },
-  { href: `${adminPath}/promosi`, label: "Promosi", icon: Wand2 },
-  { href: `${adminPath}/testimoni`, label: "Testimoni", icon: Star },
-  { href: `${adminPath}/pengaturan`, label: "Pengaturan", icon: Settings },
+  { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/admin/armada", label: "Armada", icon: Car },
+  { href: "/admin/keuangan", label: "Keuangan", icon: Wallet },
+  { href: "/admin/orders", label: "List Order", icon: ClipboardList },
+  { href: "/admin/promosi", label: "Promosi", icon: Wand2 },
+  { href: "/admin/testimoni", label: "Testimoni", icon: Star },
+  { href: "/admin/pengaturan", label: "Pengaturan", icon: Settings },
 ];
 
 export function AppSidebar() {
@@ -65,7 +63,7 @@ export function AppSidebar() {
       collapsible="icon"
     >
       <SidebarHeader className="p-4 h-14 flex items-center">
-        <Link href={`${adminPath}/dashboard`} className="flex items-center gap-2.5">
+        <Link href="/admin/dashboard" className="flex items-center gap-2.5">
           <Logo className="w-7 h-7 text-primary" />
           <span className="text-lg font-bold tracking-tight">
             MudaKarya CarRent

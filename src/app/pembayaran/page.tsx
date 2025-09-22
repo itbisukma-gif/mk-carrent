@@ -2,9 +2,9 @@
 'use client';
 
 import { Suspense } from "react";
-import PaymentPageContent from "./content";
 import { WebHeader } from '@/components/layout/web-header';
 import { WebFooter } from '@/components/layout/web-footer';
+import { ConfirmationPageContent } from '@/app/konfirmasi/content';
 
 export default function PembayaranPage() {
     return (
@@ -12,7 +12,7 @@ export default function PembayaranPage() {
             <WebHeader />
             <main className="flex-1">
                 <Suspense fallback={<div>Loading...</div>}>
-                    <PaymentPageContent />
+                    <ConfirmationPageContent />
                 </Suspense>
             </main>
             <WebFooter />
