@@ -4,7 +4,6 @@
 import { createServiceRoleClient, uploadImageFromDataUri } from '@/utils/supabase/server';
 import type { Promotion, Vehicle, Testimonial, GalleryItem, FeatureItem } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
-import { type VehicleFormData } from './armada/actions';
 
 const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || '/admin';
 
