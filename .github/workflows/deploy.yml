@@ -1,0 +1,46 @@
+# This workflow will build and deploy your Next.js application to Firebase App Hosting.
+
+name: Deploy to Firebase App Hosting
+
+on:
+  push:
+    branches:
+      - main # Trigger deployment on every push to the main branch
+
+jobs:
+  build_and_deploy:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build Next.js app
+        run: npm run build
+        env:
+          # These secrets must be configured in your GitHub repository settings
+          # for the build process to succeed.
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+
+      - name: Deploy to Firebase App Hosting
+        uses: firebase/actions/setup-gcloud@v0
+        with:
+          # This secret is a service account key required to authenticate with Firebase.
+          # You can generate it in your Google Cloud project settings.
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+        
+      - name: Deploy
+        run: npx firebase-tools apphosting:backends:deploy --project=${{ secrets.GCP_PROJECT_ID }} --backend=nextn
