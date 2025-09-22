@@ -1,18 +1,14 @@
 
-'use client';
-
-import AdminLayout from '@/app/admin/layout';
+import { ReactNode } from 'react';
 
 export default function InvoiceLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
-    <AdminLayout>
-        <div className="flex items-center justify-center bg-muted/40 p-4">
-            {children}
-        </div>
-    </AdminLayout>
+    <div className="flex items-center justify-center bg-muted/40 p-4 min-h-screen">
+        {children}
+    </div>
   );
 }
