@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { PlusCircle, Trash2, Loader2 } from "lucide-react";
 import { createClient } from '@/utils/supabase/client';
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { revalidatePath } from 'next/cache';
+import { updateContactInfo, updateTermsContent } from './actions';
 
 
 const socialPlatforms = [
@@ -30,28 +30,6 @@ type SocialLinkItem = {
     platform: SocialPlatformKey;
     url: string;
 }
-
-// Server Actions
-async function updateContactInfo(data: ContactInfo) {
-    'use server';
-    const supabase = createClient();
-    const { error } = await supabase.from('contact_info').update(data).eq('id', 1);
-    if (!error) {
-        revalidatePath('/kontak');
-    }
-    return { error };
-}
-
-async function updateTermsContent(data: TermsContent) {
-    'use server';
-    const supabase = createClient();
-    const { error } = await supabase.from('terms_content').update(data).eq('id', 1);
-    if (!error) {
-        revalidatePath('/syarat-ketentuan');
-    }
-    return { error };
-}
-
 
 export default function PengaturanPage() {
   const { toast } = useToast();
@@ -93,11 +71,11 @@ export default function PengaturanPage() {
     fetchData();
   }, [toast, supabase]);
    
-   const handleContactChange = (field: keyof Omit<ContactInfo, SocialPlatformKey>, value: string) => {
+   const handleContactChange = (field: keyof Omit<ContactInfo, SocialPlatformKey | 'id'>, value: string) => {
     setContactInfo(prev => prev ? ({ ...prev, [field]: value }) : null);
    }
    
-    const handleTermsChange = (field: keyof TermsContent, value: string) => {
+    const handleTermsChange = (field: keyof Omit<TermsContent, 'id'>, value: string) => {
     setTerms(prev => prev ? ({ ...prev, [field]: value }) : null);
    }
    
@@ -120,10 +98,17 @@ export default function PengaturanPage() {
         let result: { error: any } | null = null;
         if (type === 'Kontak' && contactInfo) {
             const newContactInfo: Partial<ContactInfo> = { ...contactInfo };
-            socialPlatforms.forEach(p => newContactInfo[p.value] = undefined);
+            
+            // First, clear all social media fields from the object that will be sent
+            socialPlatforms.forEach(p => {
+                const key = p.value as keyof ContactInfo;
+                (newContactInfo as any)[key] = null;
+            });
+            
+            // Then, re-add only the ones present in the socialLinks state
             socialLinks.forEach(link => {
                 if (link.platform && link.url) {
-                    newContactInfo[link.platform] = link.url;
+                    (newContactInfo as any)[link.platform] = link.url;
                 }
             });
             
