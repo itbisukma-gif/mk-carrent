@@ -1,108 +1,74 @@
+"use client";
 
-'use client';
-
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle2, Loader2 } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from 'next/navigation';
+import { Button } from "@/components/ui/button";
+import { Logo } from "@/components/icons";
+import { Globe } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useLanguage } from "@/hooks/use-language";
-import { useState, useEffect } from "react";
-import type { TermsContent } from "@/lib/types";
-import { createClient } from '@/utils/supabase/client';
-import { useToast } from "@/hooks/use-toast";
-import type { SupabaseClient } from '@supabase/supabase-js';
+import { cn } from "@/lib/utils";
 
-export const dynamic = 'force-dynamic';
 
-function TermsPageContent() {
-    const { dictionary } = useLanguage();
-    const { toast } = useToast();
-    const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
-    const [termsContent, setTermsContent] = useState<TermsContent | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+export function WebHeader({ className }: { className?: string }) {
+  const pathname = usePathname();
+  const { dictionary, language, setLanguage } = useLanguage();
+  const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || '/admin';
 
-    useEffect(() => {
-        const supabaseClient = createClient();
-        setSupabase(supabaseClient);
-    }, []);
+  return (
+    <header className={cn("sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60", className)}>
+      <div className="container h-14 flex items-center justify-between">
+        <Link href="/" className="flex items-center gap-2.5">
+          <Logo className="w-7 h-7 text-primary" />
+          <span className="text-lg font-bold tracking-tight">MudaKarya CarRent</span>
+        </Link>
 
-    useEffect(() => {
-        if (!supabase) return;
+        <nav className="hidden md:flex gap-6">
+          {dictionary.navLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={cn(
+                "text-sm font-medium transition-colors hover:text-primary",
+                pathname === link.href ? "text-primary" : "text-muted-foreground"
+              )}
+            >
+              {link.label}
+            </Link>
+          ))}
+          <Link
+              href={adminPath}
+              className={cn(
+                "text-sm font-medium transition-colors hover:text-primary",
+                pathname.startsWith(adminPath) ? "text-primary" : "text-muted-foreground"
+              )}
+            >
+              Admin
+            </Link>
+        </nav>
 
-        const fetchTerms = async () => {
-            setIsLoading(true);
-            const { data, error } = await supabase.from('terms_content').select('*').single();
-            if (error || !data) {
-                toast({ variant: 'destructive', title: 'Gagal memuat syarat & ketentuan.', description: error?.message });
-            } else {
-                setTermsContent(data);
-            }
-            setIsLoading(false);
-        };
-        fetchTerms();
-    }, [toast, supabase]);
-
-    if (isLoading) {
-        return (
-             <div className="container py-16 text-center flex justify-center items-center gap-2">
-                <Loader2 className="h-5 w-5 animate-spin" />
-                {dictionary.loading}...
-            </div>
-        )
-    }
-
-    if (!termsContent) {
-        return <div className="container py-16 text-center">Gagal memuat syarat & ketentuan.</div>
-    }
-
-    const generalTermsList = termsContent.general?.split('\n').filter(line => line.trim() !== '') || [];
-    const paymentMethodsList = termsContent.payment?.split('\n').filter(line => line.trim() !== '') || [];
-
-    return (
-            <div className="bg-muted/30">
-                <div className="container py-8 md:py-16">
-                     <div className="text-center mb-12 max-w-2xl mx-auto">
-                        <h1 className="text-4xl font-bold tracking-tight">{dictionary.terms.title}</h1>
-                        <p className="mt-4 text-lg text-muted-foreground">{dictionary.terms.description}</p>
-                    </div>
-
-                    <div className="max-w-4xl mx-auto">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>{dictionary.terms.general.title}</CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <ul className="space-y-3">
-                                    {generalTermsList.map((term: string, index: number) => (
-                                    <li key={index} className="flex items-start gap-3">
-                                        <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                                        <span>{term}</span>
-                                    </li>
-                                    ))}
-                                </ul>
-                            </CardContent>
-                        </Card>
-
-                        <Card className="mt-8">
-                            <CardHeader>
-                                <CardTitle>{dictionary.terms.payment.title}</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-muted-foreground mb-4">{dictionary.terms.payment.description}</p>
-                                <ul className="list-disc list-inside space-y-2">
-                                    {paymentMethodsList.map((method: string, index: number) => (
-                                        <li key={index}>{method}</li>
-                                    ))}
-                                </ul>
-                                <p className="text-sm text-muted-foreground mt-6">{dictionary.terms.payment.downPayment}</p>
-                            </CardContent>
-                        </Card>
-                    </div>
-                </div>
-            </div>
-    )
-}
-
-export default function TermsPage() {
-    return (
-        <TermsPageContent />
-    )
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm">
+              <Globe className="h-4 w-4 mr-2" />
+              {language.toUpperCase()}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => setLanguage('id')}>
+              Bahasa Indonesia
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setLanguage('en')}>
+              English
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </header>
+  );
 }

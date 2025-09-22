@@ -1,85 +1,74 @@
+"use client";
 
-'use server';
+import Link from "next/link";
+import { usePathname } from 'next/navigation';
+import { Button } from "@/components/ui/button";
+import { Logo } from "@/components/icons";
+import { Globe } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useLanguage } from "@/hooks/use-language";
+import { cn } from "@/lib/utils";
 
-import { createServiceRoleClient, uploadImageFromDataUri } from '@/utils/supabase/server';
-import type { Vehicle } from '@/lib/types';
-import { revalidatePath } from 'next/cache';
 
-export async function upsertVehicle(vehicleData: Vehicle) {
-    const supabase = createServiceRoleClient();
+export function WebHeader({ className }: { className?: string }) {
+  const pathname = usePathname();
+  const { dictionary, language, setLanguage } = useLanguage();
+  const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || '/admin';
 
-    try {
-        if (vehicleData.photo && vehicleData.photo.startsWith('data:image')) {
-            vehicleData.photo = await uploadImageFromDataUri(vehicleData.photo, 'vehicles', `vehicle-${vehicleData.id}`);
-        }
-    } catch (uploadError) {
-        console.error("Vehicle image upload failed:", uploadError);
-        return { data: null, error: { message: (uploadError as Error).message } };
-    }
+  return (
+    <header className={cn("sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60", className)}>
+      <div className="container h-14 flex items-center justify-between">
+        <Link href="/" className="flex items-center gap-2.5">
+          <Logo className="w-7 h-7 text-primary" />
+          <span className="text-lg font-bold tracking-tight">MudaKarya CarRent</span>
+        </Link>
 
-    const { data, error } = await supabase
-        .from('vehicles')
-        .upsert(vehicleData, { onConflict: 'id' })
-        .select()
-        .single();
-    
-    if (error) {
-        console.error('Error upserting vehicle:', error);
-        return { data: null, error };
-    }
+        <nav className="hidden md:flex gap-6">
+          {dictionary.navLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={cn(
+                "text-sm font-medium transition-colors hover:text-primary",
+                pathname === link.href ? "text-primary" : "text-muted-foreground"
+              )}
+            >
+              {link.label}
+            </Link>
+          ))}
+          <Link
+              href={adminPath}
+              className={cn(
+                "text-sm font-medium transition-colors hover:text-primary",
+                pathname.startsWith(adminPath) ? "text-primary" : "text-muted-foreground"
+              )}
+            >
+              Admin
+            </Link>
+        </nav>
 
-    revalidatePath('/dashboard/armada');
-    revalidatePath('/');
-    
-    return { data, error: null };
-}
-
-export async function deleteVehicle(vehicleId: string) {
-    const supabase = createServiceRoleClient();
-    
-    const { data: itemData, error: fetchError } = await supabase.from('vehicles').select('photo').eq('id', vehicleId).single();
-    if (fetchError) {
-        console.error("Error fetching vehicle for deletion:", fetchError);
-        return { error: fetchError };
-    }
-    
-    const { error } = await supabase
-        .from('vehicles')
-        .delete()
-        .eq('id', vehicleId);
-    
-    if (error) {
-        console.error('Error deleting vehicle:', error);
-        return { error };
-    }
-
-    if(itemData.photo) {
-        const bucketName = 'mudakarya-bucket';
-        const filePath = itemData.photo.substring(itemData.photo.indexOf(bucketName) + bucketName.length + 1);
-        await supabase.storage.from(bucketName).remove([filePath]);
-    }
-
-    revalidatePath('/dashboard/armada');
-    revalidatePath('/');
-
-    return { error: null };
-}
-
-export async function updateVehicleStatus(vehicleId: string, status: 'tersedia' | 'dipesan' | 'disewa') {
-    const supabase = createServiceRoleClient();
-
-    const { error } = await supabase
-        .from('vehicles')
-        .update({ status })
-        .eq('id', vehicleId);
-    
-    if (error) {
-        console.error('Error updating vehicle status:', error);
-        return { error };
-    }
-
-    revalidatePath('/dashboard/armada');
-    revalidatePath('/dashboard/orders');
-
-    return { error: null };
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm">
+              <Globe className="h-4 w-4 mr-2" />
+              {language.toUpperCase()}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => setLanguage('id')}>
+              Bahasa Indonesia
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setLanguage('en')}>
+              English
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </header>
+  );
 }
