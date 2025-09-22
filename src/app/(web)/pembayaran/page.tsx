@@ -1,30 +1,13 @@
-import { NextResponse, type NextRequest } from "next/server";
 
-export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+'use client';
 
-  const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || '/admin';
-  const sessionCookie = request.cookies.get("session");
-  const hasSession = !!sessionCookie;
+import { Suspense } from "react";
+import { PaymentPageContent } from "./content";
 
-  if (pathname === "/logout") {
-    const response = NextResponse.redirect(new URL(adminPath, request.url));
-    response.cookies.set("session", "", { expires: new Date(0), path: '/' });
-    return response;
-  }
-  
-  if (pathname.startsWith(adminPath)) {
-    if (!hasSession) {
-      const loginUrl = new URL('/login', request.url);
-      return NextResponse.redirect(loginUrl);
-    }
-  }
-
-  return NextResponse.next();
+export default function PembayaranPage() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <PaymentPageContent />
+        </Suspense>
+    )
 }
-
-export const config = {
-  matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|logo-icon.png|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
-  ],
-};
