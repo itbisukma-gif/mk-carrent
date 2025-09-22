@@ -26,6 +26,7 @@ import { WhatsAppIcon } from "@/components/icons";
 import { createClient } from '@/utils/supabase/client';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { updateVehicleStatus } from "@/app/dashboard/armada/actions";
+import { uploadFileAction } from "@/app/actions/upload-actions";
 
 export const dynamic = 'force-dynamic';
 
@@ -67,40 +68,15 @@ function BankAccountDetails({ bank }: { bank: BankAccount }) {
     );
 }
 
-// In a real app, this would be an API call to a serverless function
-// that uploads the file to Firebase Storage. We'll simulate it for now.
-async function uploadFile(supabase: SupabaseClient, file: File, orderId: string): Promise<string> {
-    if (!file) throw new Error("No file provided for upload.");
-
-    const fileExtension = file.name.split('.').pop();
-    const fileName = `${orderId}.${fileExtension}`;
-    const filePath = `public/proofs/${fileName}`;
-
-    // Upload file to Supabase Storage
-    const { error: uploadError } = await supabase.storage
-        .from('mudakarya-bucket')
-        .upload(filePath, file, {
-            cacheControl: '3600',
-            upsert: true, // Overwrite file if it exists
-        });
-
-    if (uploadError) {
-        console.error("Error uploading file to Supabase:", uploadError);
-        throw new Error(`Gagal mengunggah file: ${uploadError.message}`);
-    }
-
-    // Get public URL of the uploaded file
-    const { data: urlData } = supabase.storage
-        .from('mudakarya-bucket')
-        .getPublicUrl(filePath);
-
-    if (!urlData.publicUrl) {
-        throw new Error("Gagal mendapatkan URL publik untuk file yang diunggah.");
-    }
-
-    return urlData.publicUrl;
+// Client-side helper to read file as data URI
+async function fileToDataUri(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
 }
-
 
 function UploadProof({ onUpload, orderId }: { onUpload: (proofUrl: string) => void, orderId: string }) {
     const { dictionary } = useLanguage();
@@ -108,11 +84,6 @@ function UploadProof({ onUpload, orderId }: { onUpload: (proofUrl: string) => vo
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [uploadState, setUploadState] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
     const [errorMessage, setErrorMessage] = useState('');
-    const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
-
-    useEffect(() => {
-        setSupabase(createClient());
-    }, []);
 
     const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
         if (event.target.files && event.target.files[0]) {
@@ -125,13 +96,18 @@ function UploadProof({ onUpload, orderId }: { onUpload: (proofUrl: string) => vo
     };
 
     const handleUpload = async () => {
-        if (!selectedFile || !supabase) return;
+        if (!selectedFile) return;
         
         setUploadState('uploading');
         setErrorMessage('');
 
         try {
-            const uploadedUrl = await uploadFile(supabase, selectedFile, orderId);
+            // 1. Convert file to data URI on the client
+            const dataUri = await fileToDataUri(selectedFile);
+            
+            // 2. Call the server action with the data URI
+            const uploadedUrl = await uploadFileAction(dataUri, 'public/proofs', orderId);
+
             setUploadState('success');
             onUpload(uploadedUrl); 
 
