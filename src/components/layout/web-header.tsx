@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 export function WebHeader({ className }: { className?: string }) {
   const pathname = usePathname();
   const { dictionary, language, setLanguage } = useLanguage();
-  const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || '/admin';
+  const adminPath = '/admin';
 
   return (
     <header className={cn("sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60", className)}>
@@ -43,7 +43,7 @@ export function WebHeader({ className }: { className?: string }) {
             </Link>
           ))}
           <Link
-              href={adminPath}
+              href={`${adminPath}/dashboard`}
               className={cn(
                 "text-sm font-medium transition-colors hover:text-primary",
                 pathname.startsWith(adminPath) ? "text-primary" : "text-muted-foreground"

@@ -4,7 +4,7 @@ import { NextResponse, type NextRequest } from "next/server";
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || '/admin';
+  const adminPath = '/admin';
   const sessionCookie = request.cookies.get("session");
   const hasSession = !!sessionCookie;
 

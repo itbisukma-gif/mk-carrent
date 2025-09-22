@@ -13,6 +13,8 @@ import { StarRating } from '@/components/star-rating';
 import { useLanguage } from '@/hooks/use-language';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { WebHeader } from '@/components/layout/web-header';
+import { WebFooter } from '@/components/layout/web-footer';
 
 export const dynamic = 'force-dynamic';
 
@@ -120,5 +122,13 @@ function TestimoniPageContent() {
 }
 
 export default function TestimoniPage() {
-    return <TestimoniPageContent />
+    return (
+        <div className="flex flex-col min-h-screen">
+            <WebHeader />
+            <main className="flex-1">
+                <TestimoniPageContent />
+            </main>
+            <WebFooter />
+        </div>
+    )
 }

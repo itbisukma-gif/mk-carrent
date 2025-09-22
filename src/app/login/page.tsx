@@ -17,7 +17,7 @@ export default function LoginPage() {
     const { toast } = useToast();
     const router = useRouter();
     const searchParams = useSearchParams();
-    const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || '/admin';
+    const adminPath = '/admin';
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();

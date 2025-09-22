@@ -31,10 +31,10 @@ import { UserNav } from "./user-nav";
 import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 
-const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || '/admin';
+const adminPath = '/admin';
 
 const menuItems = [
-  { href: `${adminPath}`, label: "Dashboard", icon: LayoutDashboard },
+  { href: `${adminPath}/dashboard`, label: "Dashboard", icon: LayoutDashboard },
   { href: `${adminPath}/armada`, label: "Armada", icon: Car },
   { href: `${adminPath}/keuangan`, label: "Keuangan", icon: Wallet },
   { href: `${adminPath}/orders`, label: "List Order", icon: ClipboardList },
@@ -66,7 +66,7 @@ export function AppSidebar() {
       collapsible="icon"
     >
       <SidebarHeader className="p-4 h-14 flex items-center">
-        <Link href={`${adminPath}`} className="flex items-center gap-2.5">
+        <Link href={`${adminPath}/dashboard`} className="flex items-center gap-2.5">
           <Logo className="w-7 h-7 text-primary" />
           <span className="text-lg font-bold tracking-tight">
             MudaKarya CarRent
@@ -79,7 +79,7 @@ export function AppSidebar() {
             <SidebarMenuItem key={item.href}>
               <SidebarMenuButton
                 asChild
-                isActive={pathname === item.href || (item.href !== adminPath && pathname.startsWith(item.href))}
+                isActive={pathname === item.href || (item.href !== `${adminPath}/dashboard` && pathname.startsWith(item.href))}
                 tooltip={{ children: item.label }}
                 className="justify-start data-[active=true]:bg-primary data-[active=true]:text-primary-foreground data-[active=true]:shadow-md hover:bg-primary/90 hover:text-primary-foreground"
               >
