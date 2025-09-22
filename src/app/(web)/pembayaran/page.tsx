@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Suspense, useMemo, useState, useEffect } from 'react';
@@ -21,8 +20,6 @@ import { createClient } from '@/utils/supabase/client';
 import type { Vehicle } from '@/lib/types';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-export const dynamic = 'force-dynamic';
-
 function PembayaranComponent() {
     const { dictionary, language } = useLanguage();
     const router = useRouter();
@@ -44,7 +41,8 @@ function PembayaranComponent() {
     
     const days = useMemo(() => {
         if (startDateStr && endDateStr) {
-            return differenceInCalendarDays(new Date(endDateStr), new Date(startDateStr)) || 1;
+            const diff = differenceInCalendarDays(new Date(endDateStr), new Date(startDateStr));
+            return diff > 0 ? diff : 1;
         }
         return parseInt(daysStr || '1', 10);
     }, [startDateStr, endDateStr, daysStr]);
@@ -306,9 +304,8 @@ function PembayaranComponent() {
 }
 
 export default function PembayaranPage() {
-    const { dictionary } = useLanguage();
     return (
-        <Suspense fallback={<div className="flex h-screen items-center justify-center">{dictionary.loading}...</div>}>
+        <Suspense fallback={<div className="flex h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin"/></div>}>
             <PembayaranComponent />
         </Suspense>
     )

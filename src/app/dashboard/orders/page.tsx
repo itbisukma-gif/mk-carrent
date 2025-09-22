@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo, useEffect, useTransition } from 'react';
@@ -25,12 +24,7 @@ import { updateDriverStatus } from '../actions';
 import { updateVehicleStatus } from '../armada/actions';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-export const dynamic = 'force-dynamic';
-
-// Server action to update order status
 async function updateOrderStatus(orderId: string, status: OrderStatus) {
-    // NOTE: This uses client-side Supabase instance, but should ideally be a server action
-    // For simplicity of this example, we keep it here. In a real app, move to a separate server action file.
     const supabase = createClient();
     const { data, error } = await supabase
         .from('orders')
@@ -39,7 +33,6 @@ async function updateOrderStatus(orderId: string, status: OrderStatus) {
     return { data, error };
 }
 
-// Server action to update order driver
 async function updateOrderDriver(orderId: string, driverName: string, driverId: string) {
     const supabase = createClient();
     const { data, error } = await supabase
@@ -90,12 +83,10 @@ function OrderCard({ order, drivers, onDataChange }: { order: Order, drivers: Dr
                 return;
             }
 
-            // Update vehicle status based on new order status
             if (newStatus === 'disetujui') {
                 await updateVehicleStatus(order.vehicleId, 'disewa');
-            } else if (newStatus === 'tidak disetujui') {
+            } else if (newStatus === 'tidak disetujui' || newStatus === 'selesai') {
                 await updateVehicleStatus(order.vehicleId, 'tersedia');
-                 // If a driver was assigned, free them up
                 if (order.driverId) {
                     await updateDriverStatus(order.driverId, 'Tersedia');
                 }
@@ -111,19 +102,16 @@ function OrderCard({ order, drivers, onDataChange }: { order: Order, drivers: Dr
         if (!driverId || !driverName) return;
 
         startTransition(async () => {
-            // Free up old driver if there was one
             if (order.driverId) {
                 await updateDriverStatus(order.driverId, 'Tersedia');
             }
 
-            // Assign new driver to order
             const { error: orderError } = await updateOrderDriver(order.id, driverName, driverId);
             if (orderError) {
                 toast({ variant: 'destructive', title: 'Gagal Menugaskan Driver', description: orderError.message });
                 return;
             }
 
-            // Set new driver's status to 'Bertugas'
             const { error: driverError } = await updateDriverStatus(driverId, 'Bertugas');
             if (driverError) {
                 toast({ variant: 'destructive', title: 'Gagal Memperbarui Status Driver', description: driverError.message });
@@ -136,25 +124,10 @@ function OrderCard({ order, drivers, onDataChange }: { order: Order, drivers: Dr
     };
     
     const handleSelesaikanPesanan = () => {
-        startTransition(async () => {
-             // If a driver was assigned, set their status back to 'Tersedia'
-            if (order.driverId) {
-                await updateDriverStatus(order.driverId, 'Tersedia');
-            }
-            
-            // Set vehicle status back to 'tersedia'
-            await updateVehicleStatus(order.vehicleId, 'tersedia');
-            
-            const { error: orderError } = await updateOrderStatus(order.id, 'selesai');
-            if (orderError) {
-                toast({ variant: 'destructive', title: 'Gagal Menyelesaikan Pesanan', description: orderError.message });
-            } else {
-                 toast({ title: "Pesanan Selesai", description: `Pesanan dengan ID ${order.id} telah ditandai sebagai selesai.` });
-            }
-
-            onDataChange();
-        });
+        handleStatusChange('selesai');
     };
+
+    const invoiceUrl = `/invoice/${order.id}`;
 
     return (
          <Card className="flex flex-col">
@@ -258,9 +231,9 @@ function OrderCard({ order, drivers, onDataChange }: { order: Order, drivers: Dr
                     {order.status === 'disetujui' && (
                          <>
                             <Button size="sm" variant="outline" asChild>
-                            <Link href={`/invoice/${order.id}/share`} target="_blank">
-                                <Share className="h-3 w-3" />
-                            </Link>
+                                <Link href={invoiceUrl} target="_blank">
+                                    <Share className="h-3 w-3" />
+                                </Link>
                             </Button>
                             <AlertDialog>
                                 <AlertDialogTrigger asChild>
@@ -419,7 +392,7 @@ export default function OrdersPage() {
         </TabsList>
         <TabsContent value="incoming" className="mt-6">
            {pendingOrders.length > 0 ? (
-            <div className="flex flex-col gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {pendingOrders.map((order) => (
                    <OrderCard 
                     key={order.id} 
@@ -438,7 +411,7 @@ export default function OrdersPage() {
         </TabsContent>
          <TabsContent value="on-progress" className="mt-6">
            {approvedOrders.length > 0 ? (
-            <div className="flex flex-col gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {approvedOrders.map((order) => (
                    <OrderCard 
                     key={order.id} 
@@ -457,7 +430,7 @@ export default function OrdersPage() {
         </TabsContent>
          <TabsContent value="completed" className="mt-6">
            {completedOrders.length > 0 ? (
-            <div className="flex flex-col gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {completedOrders.map((order) => (
                    <OrderCard 
                     key={order.id} 

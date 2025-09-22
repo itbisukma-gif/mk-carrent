@@ -1,8 +1,6 @@
-
-
 'use client'
 
-import { Suspense, useEffect, useState, ChangeEvent, useMemo, SVGProps } from "react";
+import { Suspense, useEffect, useState, ChangeEvent, useMemo } from "react";
 import { useSearchParams, notFound, useRouter } from 'next/navigation'
 import Link from "next/link";
 import Image from "next/image";
@@ -10,8 +8,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { CheckCircle, Loader2, ClipboardCopy, Upload, AlertCircle, ArrowLeft, Paperclip, Phone, FileCheck, Download } from "lucide-react";
+import { CheckCircle, Loader2, ClipboardCopy, Paperclip, AlertCircle, ArrowLeft, FileCheck, Download } from "lucide-react";
 import { bankAccounts } from "@/lib/data";
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
@@ -28,7 +25,14 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { updateVehicleStatus } from "@/app/dashboard/armada/actions";
 import { uploadFileAction } from "@/app/actions/upload-actions";
 
-export const dynamic = 'force-dynamic';
+async function fileToDataUri(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
 
 function BankAccountDetails({ bank }: { bank: BankAccount }) {
     const { dictionary } = useLanguage();
@@ -68,16 +72,6 @@ function BankAccountDetails({ bank }: { bank: BankAccount }) {
     );
 }
 
-// Client-side helper to read file as data URI
-async function fileToDataUri(file: File): Promise<string> {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-    });
-}
-
 function UploadProof({ onUpload, orderId }: { onUpload: (proofUrl: string) => void, orderId: string }) {
     const { dictionary } = useLanguage();
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -102,10 +96,7 @@ function UploadProof({ onUpload, orderId }: { onUpload: (proofUrl: string) => vo
         setErrorMessage('');
 
         try {
-            // 1. Convert file to data URI on the client
             const dataUri = await fileToDataUri(selectedFile);
-            
-            // 2. Call the server action with the data URI
             const uploadedUrl = await uploadFileAction(dataUri, 'public/proofs', orderId);
 
             setUploadState('success');
@@ -242,7 +233,7 @@ function KonfirmasiComponent() {
             try {
                 const start = parseISO(startDateStr);
                 const end = parseISO(endDateStr);
-                const locale = id; // Always use Indonesian locale for server-generated strings
+                const locale = id;
                 return `${format(start, 'd LLL yy', { locale })} - ${format(end, 'd LLL yy', { locale })}`;
             } catch (error) {
                 console.error("Error parsing date strings:", error);
@@ -283,7 +274,6 @@ function KonfirmasiComponent() {
     const handleUploadSuccess = async (proofUrl: string) => {
         if (!supabase || !vehicleId) return;
 
-        // 1. Create the new order
         const newOrder: Omit<Order, 'created_at'> = {
             id: orderId,
             customerName: customerName,
@@ -310,11 +300,8 @@ function KonfirmasiComponent() {
             return;
         }
 
-        // 2. Update vehicle status to 'dipesan'
         const { error: vehicleStatusError } = await updateVehicleStatus(vehicleId, 'dipesan');
         if (vehicleStatusError) {
-            // This is not a critical failure for the user, but should be logged.
-            // We'll show a toast for admins to check, but let the user proceed.
              toast({ variant: 'destructive', title: 'Gagal Memperbarui Status Mobil', description: `Order ${orderId} dibuat, tapi status mobil gagal diubah. Harap perbarui manual.` });
         }
 
@@ -322,6 +309,16 @@ function KonfirmasiComponent() {
         console.log('New order added to Supabase:', newOrder);
         setUploadSuccess(true);
     };
+
+    const invoiceUrl = useMemo(() => {
+        let url = `/invoice/${orderId}/share`;
+        const params = new URLSearchParams();
+        if (startDateStr) params.append('startDate', startDateStr);
+        if (endDateStr) params.append('endDate', endDateStr);
+        if (searchParams.get('days')) params.append('days', searchParams.get('days')!);
+        const queryString = params.toString();
+        return queryString ? `${url}?${queryString}` : url;
+    }, [orderId, startDateStr, endDateStr, searchParams]);
 
     if (uploadSuccess) {
         const driverWhatsappUrl = driver?.phone ? `https://wa.me/${driver.phone.replace(/\D/g, '')}` : "#";
@@ -376,7 +373,7 @@ function KonfirmasiComponent() {
                             )}
                             <div className="pt-2">
                                  <Button asChild className="w-full" variant="outline">
-                                    <Link href={`/invoice/${orderId}/share`} target="_blank">
+                                    <Link href={invoiceUrl} target="_blank">
                                         <FileCheck className="h-4 w-4 mr-2" />
                                         Lihat & Unduh Invoice
                                     </Link>
@@ -388,7 +385,7 @@ function KonfirmasiComponent() {
                             {showDriverContact && (
                                  <Button asChild variant="outline" className="w-full transition-all duration-200 ease-in-out hover:scale-105 hover:shadow-md active:scale-100">
                                     <Link href={driverWhatsappUrl} target="_blank">
-                                        <Phone className="h-4 w-4 mr-2" />
+                                        <WhatsAppIcon className="h-4 w-4 mr-2" />
                                         Hubungi Supir
                                     </Link>
                                 </Button>
@@ -553,7 +550,7 @@ function KonfirmasiComponent() {
 
 export default function KonfirmasiPage() {
     return (
-        <Suspense fallback={<div className="flex h-screen items-center justify-center">Memuat...</div>}>
+        <Suspense fallback={<div className="flex h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin"/></div>}>
             <KonfirmasiComponent />
         </Suspense>
     )

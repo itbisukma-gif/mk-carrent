@@ -1,6 +1,6 @@
 'use client'
 
-import { useParams, notFound, useRouter } from 'next/navigation';
+import { useParams, notFound, useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
@@ -8,15 +8,14 @@ import { Logo } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Download, Loader2, UserCheck, Share2, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, Suspense } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { createClient } from '@/utils/supabase/client';
 import type { Order } from '@/lib/types';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { format, parseISO } from 'date-fns';
+import { id } from 'date-fns/locale';
 
-export const dynamic = 'force-dynamic';
-
-// Helper to get status color
 const getStatusVariant = (status: string): "default" | "secondary" | "destructive" => {
     switch (status) {
         case 'Lunas':
@@ -30,10 +29,10 @@ const getStatusVariant = (status: string): "default" | "secondary" | "destructiv
     }
 }
 
-
-export default function InvoicePage() {
+function InvoiceComponent() {
     const params = useParams();
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { toast } = useToast();
     const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
 
@@ -42,10 +41,13 @@ export default function InvoicePage() {
     const [order, setOrder] = useState<Order | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
+    const startDateStr = searchParams.get('startDate');
+    const endDateStr = searchParams.get('endDate');
+    const days = searchParams.get('days');
+
     useEffect(() => {
         const supabaseClient = createClient();
         setSupabase(supabaseClient);
-        // Check for session cookie on client-side to determine if user is an admin
         if (typeof window !== 'undefined') {
             const sessionCookie = document.cookie.split('; ').find(row => row.startsWith('session='));
             if (sessionCookie) {
@@ -60,6 +62,7 @@ export default function InvoicePage() {
         const orderId = params.id as string;
         if (orderId) {
             const fetchOrder = async () => {
+                setIsLoading(true);
                 const { data, error } = await supabase
                     .from('orders')
                     .select('*')
@@ -80,6 +83,20 @@ export default function InvoicePage() {
 
     }, [params.id, supabase]);
 
+    const formattedRentalPeriod = useMemo(() => {
+        if (startDateStr && endDateStr) {
+            try {
+                const start = parseISO(startDateStr);
+                const end = parseISO(endDateStr);
+                return `${format(start, 'd LLL yy', { locale: id })} - ${format(end, 'd LLL yy', { locale: id })}`;
+            } catch (error) {
+                console.error("Error parsing date strings:", error);
+                return days ? `${days} hari` : '-';
+            }
+        }
+        return days ? `${days} hari` : '-';
+    }, [startDateStr, endDateStr, days]);
+
     if (isLoading) {
         return (
             <div className="flex items-center justify-center min-h-screen">
@@ -92,8 +109,7 @@ export default function InvoicePage() {
         notFound();
     }
     
-    // Rule: Invoice is only available for approved orders
-    if (order.status !== 'disetujui') {
+    if (order.status !== 'disetujui' && order.status !== 'selesai') {
         return (
              <Card className="w-full max-w-md shadow-lg text-center">
                 <CardHeader>
@@ -117,18 +133,14 @@ export default function InvoicePage() {
 
     const formatCurrency = (value: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(value);
     
-    const displayStatus = order.status === 'disetujui' ? 'Lunas' : order.status;
+    const displayStatus = order.status === 'disetujui' || order.status === 'selesai' ? 'Lunas' : order.status;
 
 
     const handleDownload = async () => {
         setIsDownloading(true);
         const element = document.getElementById('invoice-card-for-pdf');
         if (!element) {
-            toast({
-                variant: 'destructive',
-                title: 'Terjadi Kesalahan',
-                description: 'Elemen invoice tidak ditemukan. Silakan coba lagi.',
-            });
+            toast({ variant: 'destructive', title: 'Terjadi Kesalahan', description: 'Elemen invoice tidak ditemukan.' });
             setIsDownloading(false);
             return;
         }
@@ -143,21 +155,24 @@ export default function InvoicePage() {
               jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
             };
             await html2pdf().set(opt).from(element).save();
-            toast({
-                title: 'Invoice Diunduh!',
-                description: 'File PDF berhasil dibuat dan diunduh.',
-            });
+            toast({ title: 'Invoice Diunduh!', description: 'File PDF berhasil dibuat dan diunduh.' });
         } catch (err) {
-            toast({
-                variant: 'destructive',
-                title: 'Gagal Mengunduh',
-                description: 'Terjadi kesalahan saat membuat file PDF.',
-            });
+            toast({ variant: 'destructive', title: 'Gagal Mengunduh', description: 'Terjadi kesalahan saat membuat file PDF.' });
             console.error(err);
         } finally {
             setIsDownloading(false);
         }
     };
+    
+    const shareUrl = useMemo(() => {
+        let url = `/invoice/${order.id}/share`;
+        const params = new URLSearchParams();
+        if (startDateStr) params.append('startDate', startDateStr);
+        if (endDateStr) params.append('endDate', endDateStr);
+        if (days) params.append('days', days);
+        const queryString = params.toString();
+        return queryString ? `${url}?${queryString}` : url;
+    }, [order.id, startDateStr, endDateStr, days]);
 
 
     return (
@@ -192,7 +207,7 @@ export default function InvoicePage() {
                     </div>
                      <div className="flex justify-between">
                         <span className="text-muted-foreground">Periode</span>
-                        <span className='font-medium'>-</span> {/* TODO: Implement date calculation */}
+                        <span className='font-medium'>{formattedRentalPeriod}</span>
                     </div>
                      <div className="flex justify-between">
                         <span className="text-muted-foreground">Layanan</span>
@@ -222,15 +237,11 @@ export default function InvoicePage() {
             </CardContent>
             <CardFooter className='flex flex-col gap-4'>
                  <Button className="w-full" onClick={handleDownload} disabled={isDownloading}>
-                    {isDownloading ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                        <Download className="h-4 w-4 mr-2" />
-                    )}
+                    {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
                     {isDownloading ? 'Mengunduh...' : 'Download PDF'}
                 </Button>
                 <Button asChild className="w-full" variant="outline">
-                    <Link href={`/invoice/${order.id}/share`} target="_blank">
+                    <Link href={shareUrl} target="_blank">
                         <Share2 className="h-4 w-4 mr-2" />
                         Bagikan ke Pelanggan
                     </Link>
@@ -242,4 +253,12 @@ export default function InvoicePage() {
             </CardFooter>
         </Card>
     );
+}
+
+export default function InvoicePage() {
+    return (
+        <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+            <InvoiceComponent />
+        </Suspense>
+    )
 }
