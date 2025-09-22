@@ -1,30 +1,15 @@
-import { NextResponse, type NextRequest } from "next/server";
 
-export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+// This file is likely a remnant of previous structures and might not be needed.
+// A layout at `/invoice/layout.tsx` would wrap `/invoice/[id]/...` which is not what we want.
+// For now, let's make it a simple pass-through to avoid conflicts.
+// It will be cleaned up if it proves unnecessary.
 
-  const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || '/admin';
-  const sessionCookie = request.cookies.get("session");
-  const hasSession = !!sessionCookie;
-
-  if (pathname === "/logout") {
-    const response = NextResponse.redirect(new URL(adminPath, request.url));
-    response.cookies.set("session", "", { expires: new Date(0), path: '/' });
-    return response;
-  }
-  
-  if (pathname.startsWith(adminPath)) {
-    if (!hasSession) {
-      const loginUrl = new URL('/login', request.url);
-      return NextResponse.redirect(loginUrl);
-    }
-  }
-
-  return NextResponse.next();
+export default function InvoiceRootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return <>{children}</>;
 }
 
-export const config = {
-  matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|logo-icon.png|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
-  ],
-};
+    

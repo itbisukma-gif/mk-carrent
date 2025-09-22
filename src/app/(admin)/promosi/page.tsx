@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { createClient } from '@/utils/supabase/client';
 import { upsertPromotion, deletePromotion } from '@/app/admin/promosi/actions';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { Badge } from '@/components/ui/badge';
 
 export const dynamic = 'force-dynamic';
 
@@ -136,7 +137,7 @@ export default function PromosiPage() {
         if (promoError) toast({ variant: 'destructive', title: 'Gagal memuat promosi' });
         else setPromotions(promoData || []);
 
-        const { data: vehicleData, error: vehicleError } = await supabase.from('vehicles').select('id, name, brand, code');
+        const { data: vehicleData, error: vehicleError } = await supabase.from('vehicles').select('*');
         if (vehicleError) toast({ variant: 'destructive', title: 'Gagal memuat kendaraan' });
         else setVehicles(vehicleData || []);
         
@@ -268,3 +269,5 @@ export default function PromosiPage() {
         </div>
     )
 }
+
+    
