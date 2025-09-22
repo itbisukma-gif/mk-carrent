@@ -2,7 +2,7 @@
 'use client';
 
 import { Suspense } from "react";
-import { PaymentPageContent } from "./content";
+import PaymentPageContent from "./content";
 import { WebHeader } from '@/components/layout/web-header';
 import { WebFooter } from '@/components/layout/web-footer';
 

@@ -3,8 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-
-  const adminPath = '/admin';
+  const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || '/admin';
   const sessionCookie = request.cookies.get("session");
   const hasSession = !!sessionCookie;
 
@@ -22,24 +21,15 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Jika sudah login dan mencoba mengakses halaman login, redirect ke dashboard
   if (pathname === '/login' && hasSession) {
     return NextResponse.redirect(new URL(adminPath, request.url));
   }
-
 
   return NextResponse.next();
 }
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - and files in public folder
-     */
     "/((?!_next/static|_next/image|favicon.ico|logo-icon.png|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

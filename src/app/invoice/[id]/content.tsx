@@ -5,11 +5,10 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Order, ContactInfo } from '@/lib/types';
-import Image from 'next/image';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
@@ -115,7 +114,7 @@ export function InvoicePageContent({ orderId, isShared = false }: InvoicePageCon
 
     return (
          <Card id="invoice-card" className="w-full max-w-2xl shadow-lg printable-card">
-            <CardHeader className="space-y-0">
+            <CardHeader className="space-y-0 p-6">
                 <div className="flex justify-between items-start">
                     <div>
                         <div className="flex items-center gap-3 mb-4">
@@ -144,7 +143,7 @@ export function InvoicePageContent({ orderId, isShared = false }: InvoicePageCon
                     </div>
                 </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-6">
                 <div className="w-full overflow-x-auto">
                     <table className="w-full text-sm">
                         <thead className="border-b">
@@ -193,7 +192,7 @@ export function InvoicePageContent({ orderId, isShared = false }: InvoicePageCon
                 </div>
             </CardContent>
             {!isShared && (
-                <CardFooter className="flex justify-end gap-2 no-print">
+                <CardFooter className="flex justify-end gap-2 p-6 no-print">
                     <Button variant="outline" onClick={handleShare}>
                         <Share2 className="mr-2 h-4 w-4" />
                         Bagikan
@@ -211,5 +210,3 @@ export function InvoicePageContent({ orderId, isShared = false }: InvoicePageCon
         </Card>
     );
 }
-
-    

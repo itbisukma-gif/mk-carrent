@@ -5,7 +5,6 @@ import {
   Car,
   ClipboardList,
   LayoutDashboard,
-  LogOut,
   Settings,
   Wallet,
   Star,
@@ -79,7 +78,7 @@ export function AppSidebar() {
             <SidebarMenuItem key={item.href}>
               <SidebarMenuButton
                 asChild
-                isActive={pathname === item.href || (item.href !== `${adminPath}/dashboard` && pathname.startsWith(item.href))}
+                isActive={pathname.startsWith(item.href)}
                 tooltip={{ children: item.label }}
                 className="justify-start data-[active=true]:bg-primary data-[active=true]:text-primary-foreground data-[active=true]:shadow-md hover:bg-primary/90 hover:text-primary-foreground"
               >

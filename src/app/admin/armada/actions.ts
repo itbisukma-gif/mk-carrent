@@ -1,7 +1,7 @@
 
 'use server';
 
-import { createServiceRoleClient, uploadImageFromDataUri } from '@/utils/supabase/server';
+import { createServiceRoleClient } from '@/utils/supabase/server';
 import type { Vehicle } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
 
@@ -13,7 +13,24 @@ export async function upsertVehicle(vehicleData: Vehicle) {
     try {
         // Only upload a new image if the photo is a new data URI
         if (vehicleData.photo && vehicleData.photo.startsWith('data:image')) {
-            vehicleData.photo = await uploadImageFromDataUri(vehicleData.photo, 'vehicles', `vehicle-${vehicleData.id}`);
+            const matches = vehicleData.photo.match(/^data:(image\/(?:png|jpeg|jpg));base64,(.*)$/);
+            if (!matches) throw new Error('Invalid image data URI');
+            
+            const mimeType = matches[1];
+            const base64Data = matches[2];
+            const fileExtension = mimeType.split('/')[1];
+            const buffer = Buffer.from(base64Data, 'base64');
+            const fileName = `vehicle-${vehicleData.id}-${Date.now()}.${fileExtension}`;
+            const filePath = `vehicles/${fileName}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from('mudakarya-bucket')
+                .upload(filePath, buffer, { contentType: mimeType, upsert: true });
+
+            if (uploadError) throw uploadError;
+
+            const { data: publicUrlData } = supabase.storage.from('mudakarya-bucket').getPublicUrl(filePath);
+            vehicleData.photo = publicUrlData.publicUrl;
         }
     } catch (uploadError) {
         console.error("Vehicle image upload failed:", uploadError);
@@ -57,9 +74,14 @@ export async function deleteVehicle(vehicleId: string) {
     }
 
     if(itemData.photo) {
-        const bucketName = 'mudakarya-bucket';
-        const filePath = itemData.photo.substring(itemData.photo.indexOf(bucketName) + bucketName.length + 1);
-        await supabase.storage.from(bucketName).remove([filePath]);
+        try {
+            const bucketName = 'mudakarya-bucket';
+            const urlParts = itemData.photo.split('/');
+            const filePath = urlParts.slice(urlParts.indexOf(bucketName) + 1).join('/');
+            if(filePath) await supabase.storage.from(bucketName).remove([filePath]);
+        } catch(e) {
+            console.error("Error deleting old photo from storage:", e)
+        }
     }
 
     revalidatePath(`${adminPath}/armada`);
