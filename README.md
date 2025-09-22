@@ -1,4 +1,4 @@
-ld# Firebase Studio
+ldrun # Firebase Studio
 
 This is a NextJS starter in Firebase Studio.
 
