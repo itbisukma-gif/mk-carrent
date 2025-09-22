@@ -259,7 +259,7 @@ function KonfirmasiComponent() {
         fetchVehicleAndDriver();
     }, [vehicleId, driverId, supabase]);
 
-    const { rentalPeriod, dictionary } = useLanguage();
+    const { dictionary } = useLanguage();
 
     const formattedRentalPeriod = useMemo(() => {
         if (startDateStr && endDateStr) {
@@ -582,3 +582,5 @@ export default function KonfirmasiPage() {
         </Suspense>
     )
 }
+
+    
