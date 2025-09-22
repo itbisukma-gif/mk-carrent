@@ -4,8 +4,6 @@ import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/toaster';
 import { Inter } from 'next/font/google'
 import { LanguageProvider } from './language-provider';
-import { WebHeader } from '@/components/layout/web-header';
-import { WebFooter } from '@/components/layout/web-footer';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
 
@@ -34,13 +32,7 @@ export default function RootLayout({
       <head />
       <body className={cn('min-h-screen bg-background font-sans antialiased', inter.variable)}>
         <LanguageProvider>
-          <div className="flex flex-col min-h-screen">
-            <WebHeader />
-            <main className="flex-1">
-              {children}
-            </main>
-            <WebFooter />
-          </div>
+          {children}
         </LanguageProvider>
         <Toaster />
       </body>
