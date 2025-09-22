@@ -337,7 +337,9 @@ export default function PromosiPage() {
                                         </AlertDialogHeader>
                                         <AlertDialogFooter>
                                             <AlertDialogCancel>Batal</AlertDialogCancel>
-                                            <AlertDialogAction onClick={() => handleDelete(promo)} className="bg-destructive hover:bg-destructive/90">Ya, Hapus</AlertDialogAction>
+                                            <AlertDialogAction onClick={() => handleDelete(promo)} className="bg-destructive hover:bg-destructive/90">
+                                                {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                                                Ya, Hapus</AlertDialogAction>
                                         </AlertDialogFooter>
                                     </AlertDialogContent>
                                 </AlertDialog>

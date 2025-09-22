@@ -16,7 +16,7 @@ export async function upsertTestimonial(testimonialData: Omit<Testimonial, 'crea
         console.error('Error upserting testimonial:', error);
         return { data: null, error };
     }
-    revalidatePath(`${adminPath}/testimoni`);
+    revalidatePath(`/${adminPath}/testimoni`);
     revalidatePath('/testimoni');
     if (data.vehicleName) {
         revalidatePath('/mobil');
@@ -29,7 +29,7 @@ export async function deleteTestimonial(id: string) {
     const supabase = createServiceRoleClient();
     const { error } = await supabase.from('testimonials').delete().eq('id', id);
     if (error) return { error };
-    revalidatePath(`${adminPath}/testimoni`);
+    revalidatePath(`/${adminPath}/testimoni`);
     revalidatePath('/testimoni');
     revalidatePath('/mobil');
     return { error: null };
@@ -42,7 +42,7 @@ export async function addGalleryItem(galleryData: Omit<GalleryItem, 'id' | 'crea
 
     try {
         if (galleryData.url && galleryData.url.startsWith('data:image')) {
-            galleryData.url = await uploadImageFromDataUri(galleryData.url, 'gallery', `gallery-photo`);
+            galleryData.url = await uploadImageFromDataUri(galleryData.url, 'gallery', `gallery-photo-${Date.now()}`);
         }
     } catch (uploadError) {
         console.error("Gallery image upload failed:", uploadError);
@@ -54,7 +54,7 @@ export async function addGalleryItem(galleryData: Omit<GalleryItem, 'id' | 'crea
         console.error('Error adding gallery item:', error);
         return { data: null, error };
     }
-    revalidatePath(`${adminPath}/testimoni`);
+    revalidatePath(`/${adminPath}/testimoni`);
     revalidatePath('/testimoni');
     revalidatePath('/mobil');
     return { data, error: null };
@@ -62,35 +62,31 @@ export async function addGalleryItem(galleryData: Omit<GalleryItem, 'id' | 'crea
 
 export async function deleteGalleryItem(id: string) {
     const supabase = createServiceRoleClient();
-    // First, get the path of the object to delete from storage
-    const { data: itemData, error: fetchError } = await supabase.from('gallery').select('url').eq('id', id).single();
     
+    const { data: itemData, error: fetchError } = await supabase.from('gallery').select('url').eq('id', id).single();
     if (fetchError) {
         console.error("Error fetching gallery item for deletion:", fetchError);
         return { error: fetchError };
     }
 
-    // Delete from DB
     const { error: deleteDbError } = await supabase.from('gallery').delete().eq('id', id);
     if (deleteDbError) {
         console.error("Error deleting gallery item from DB:", deleteDbError);
         return { error: deleteDbError };
     }
 
-    // If DB deletion is successful, delete from storage
     if(itemData?.url) {
-        const bucketName = 'mudakarya-bucket';
-        const filePath = itemData.url.substring(itemData.url.indexOf(bucketName) + bucketName.length + 1);
-        const { error: deleteStorageError } = await supabase.storage.from(bucketName).remove([filePath]);
-
-        if (deleteStorageError) {
-            console.error("Error deleting gallery item from Storage:", deleteStorageError);
-            // We don't return an error here because the DB record is already gone, which is the main goal.
+        try {
+            const bucketName = 'mudakarya-bucket';
+            const urlParts = itemData.url.split('/');
+            const filePath = urlParts.slice(urlParts.indexOf(bucketName) + 1).join('/');
+            await supabase.storage.from(bucketName).remove([filePath]);
+        } catch (storageError) {
+            console.error("Error deleting from storage, but continuing:", storageError);
         }
     }
 
-
-    revalidatePath(`${adminPath}/testimoni`);
+    revalidatePath(`/${adminPath}/testimoni`);
     revalidatePath('/testimoni');
     revalidatePath('/mobil');
     return { error: null };
@@ -102,13 +98,13 @@ export async function deleteGalleryItem(id: string) {
 export async function upsertFeature(featureData: Omit<FeatureItem, 'created_at'>) {
     const supabase = createServiceRoleClient();
 
-    try {
-        if (featureData.imageUrl && featureData.imageUrl.startsWith('data:image')) {
+    if (featureData.imageUrl && featureData.imageUrl.startsWith('data:image')) {
+        try {
              featureData.imageUrl = await uploadImageFromDataUri(featureData.imageUrl, 'features', `feature-${featureData.id}`);
+        } catch (uploadError) {
+            console.error("Feature image upload failed:", uploadError);
+            return { data: null, error: { message: (uploadError as Error).message } };
         }
-    } catch (uploadError) {
-        console.error("Feature image upload failed:", uploadError);
-        return { data: null, error: { message: (uploadError as Error).message } };
     }
 
     const { data, error } = await supabase.from('features').upsert(featureData, { onConflict: 'id' }).select().single();
@@ -116,7 +112,7 @@ export async function upsertFeature(featureData: Omit<FeatureItem, 'created_at'>
         console.error('Error upserting feature:', error);
         return { data: null, error };
     }
-    revalidatePath(`${adminPath}/testimoni`);
+    revalidatePath(`/${adminPath}/testimoni`);
     revalidatePath('/'); // Revalidate home page where features are shown
     return { data, error: null };
 }
@@ -134,12 +130,17 @@ export async function deleteFeature(id: string) {
     if (error) return { error };
 
     if(itemData.imageUrl) {
-        const bucketName = 'mudakarya-bucket';
-        const filePath = itemData.imageUrl.substring(itemData.imageUrl.indexOf(bucketName) + bucketName.length + 1);
-        await supabase.storage.from(bucketName).remove([filePath]);
+        try {
+            const bucketName = 'mudakarya-bucket';
+            const urlParts = itemData.imageUrl.split('/');
+            const filePath = urlParts.slice(urlParts.indexOf(bucketName) + 1).join('/');
+            await supabase.storage.from(bucketName).remove([filePath]);
+        } catch (storageError) {
+            console.error("Error deleting from storage, but continuing:", storageError);
+        }
     }
 
-    revalidatePath(`${adminPath}/testimoni`);
+    revalidatePath(`/${adminPath}/testimoni`);
     revalidatePath('/'); // Revalidate home page
     return { error: null };
 }

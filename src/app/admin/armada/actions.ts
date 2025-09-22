@@ -20,8 +20,8 @@ export type VehicleFormData = Omit<Vehicle, 'price' | 'year' | 'passengers' | 's
 export async function upsertVehicle(vehicleData: VehicleFormData) {
     const supabase = createServiceRoleClient();
 
-    // Create a new object for insertion with corrected types
-    const vehicleToUpsert: Vehicle = {
+    // Create a mutable copy to potentially update the photo URL
+    let vehicleToUpsert: Vehicle = {
         ...vehicleData,
         price: Number(vehicleData.price) || 0,
         year: vehicleData.year ? Number(vehicleData.year) : null,
@@ -32,15 +32,17 @@ export async function upsertVehicle(vehicleData: VehicleFormData) {
         rating: vehicleData.rating || 5, // Default rating
     };
 
-    try {
-        if (vehicleToUpsert.photo && vehicleToUpsert.photo.startsWith('data:image')) {
-            vehicleToUpsert.photo = await uploadImageFromDataUri(vehicleToUpsert.photo, 'vehicles', `vehicle-${vehicleToUpsert.id}`);
+    // --- LOGIC FIX: Only upload if photo is a new Data URI ---
+    if (vehicleData.photo && typeof vehicleData.photo === 'string' && vehicleData.photo.startsWith('data:image')) {
+        try {
+            const newPhotoUrl = await uploadImageFromDataUri(vehicleData.photo, 'vehicles', `vehicle-${vehicleData.id}`);
+            vehicleToUpsert.photo = newPhotoUrl;
+        } catch (uploadError) {
+            console.error("Vehicle image upload failed:", uploadError);
+            return { data: null, error: { message: (uploadError as Error).message } };
         }
-    } catch (uploadError) {
-        console.error("Vehicle image upload failed:", uploadError);
-        return { data: null, error: { message: (uploadError as Error).message } };
     }
-
+    
     const { data, error } = await supabase
         .from('vehicles')
         .upsert(vehicleToUpsert, { onConflict: 'id' })
@@ -52,7 +54,7 @@ export async function upsertVehicle(vehicleData: VehicleFormData) {
         return { data: null, error };
     }
 
-    revalidatePath(`/admin/armada`);
+    revalidatePath(`/${adminPath}/armada`);
     revalidatePath('/');
     
     return { data, error: null };
@@ -78,12 +80,17 @@ export async function deleteVehicle(vehicleId: string) {
     }
 
     if(itemData.photo) {
-        const bucketName = 'mudakarya-bucket';
-        const filePath = itemData.photo.substring(itemData.photo.indexOf(bucketName) + bucketName.length + 1);
-        await supabase.storage.from(bucketName).remove([filePath]);
+        try {
+            const bucketName = 'mudakarya-bucket';
+            const urlParts = itemData.photo.split('/');
+            const filePath = urlParts.slice(urlParts.indexOf(bucketName) + 1).join('/');
+            await supabase.storage.from(bucketName).remove([filePath]);
+        } catch (storageError) {
+            console.error("Error deleting from storage, but continuing:", storageError);
+        }
     }
 
-    revalidatePath(`/admin/armada`);
+    revalidatePath(`/${adminPath}/armada`);
     revalidatePath('/');
 
     return { error: null };
@@ -102,8 +109,8 @@ export async function updateVehicleStatus(vehicleId: string, status: 'tersedia' 
         return { error };
     }
 
-    revalidatePath(`/admin/armada`);
-    revalidatePath(`/admin/orders`);
+    revalidatePath(`/${adminPath}/armada`);
+    revalidatePath(`/${adminPath}/orders`);
 
     return { error: null };
 }

@@ -11,11 +11,11 @@ export default function WebLayout({
   return (
     <LanguageProvider>
         <WebHeader />
-        main className="flex-1">
+        <main className="flex-1">
             {children}
-        main>
+        </main>
         <WhatsappFab />
         <WebFooter />
-    LanguageProvider>
+    </LanguageProvider>
   );
 }
