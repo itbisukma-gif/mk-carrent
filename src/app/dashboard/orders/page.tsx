@@ -137,12 +137,12 @@ function OrderCard({ order, drivers, onDataChange }: { order: Order, drivers: Dr
     }, [order.id]);
 
     const whatsAppInvoiceUrl = useMemo(() => {
-        if (!order.customerPhone) return '#';
+        if (!order.customerPhone || typeof window === 'undefined') return '#';
 
         const domain = window.location.origin;
         const shareableInvoiceUrl = `${domain}/invoice/${order.id}/share`;
         
-        const message = `Halo ${order.customerName}, terima kasih telah memesan di MudaKarya CarRent. Berikut adalah rincian invoice untuk pesanan Anda: ${shareableInvoiceUrl}`;
+        const message = `Halo ${order.customerName}, terima kasih telah memesan di MudaKarya CarRent. Pembayaran Anda telah kami konfirmasi. Berikut adalah rincian invoice untuk pesanan Anda: ${shareableInvoiceUrl}`;
         
         // Basic phone number cleaning and formatting for Indonesia
         let formattedPhone = order.customerPhone.replace(/\D/g, '');
@@ -256,12 +256,7 @@ function OrderCard({ order, drivers, onDataChange }: { order: Order, drivers: Dr
                 <div className="flex items-center gap-2">
                     {order.status === 'disetujui' && (
                          <>
-                            <Button size="sm" variant="outline" asChild>
-                                <Link href={invoiceUrl} target="_blank">
-                                    <Share className="h-3 w-3" />
-                                </Link>
-                            </Button>
-                             <Button size="sm" variant="outline" asChild className="bg-green-500 text-white hover:bg-green-600 hover:text-white border-green-600">
+                            <Button size="sm" variant="outline" asChild className="bg-green-500 text-white hover:bg-green-600 hover:text-white border-green-600">
                                 <a href={whatsAppInvoiceUrl} target="_blank" rel="noopener noreferrer">
                                     <WhatsAppIcon className="h-4 w-4" />
                                 </a>
@@ -300,19 +295,18 @@ function OrderCard({ order, drivers, onDataChange }: { order: Order, drivers: Dr
                             Pesanan Ditolak
                         </div>
                     )}
-                    {order.status !== 'selesai' && order.status !== 'tidak disetujui' && (
+                    {order.status === 'pending' && (
                          <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant={order.status === 'disetujui' ? "secondary" : "default"} size="sm" disabled={isPending}>
+                                <Button variant="default" size="sm" disabled={isPending}>
                                     {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4 mr-2" />}
-                                    {order.status === 'pending' ? 'Verifikasi' : 'Ubah Status'}
+                                    Verifikasi
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                                  <DropdownMenuLabel>Ubah Status Pesanan</DropdownMenuLabel>
                                  <DropdownMenuSeparator />
                                 <DropdownMenuRadioGroup value={order.status || 'pending'} onValueChange={(value) => handleStatusChange(value as OrderStatus)}>
-                                    <DropdownMenuRadioItem value="pending">Pending</DropdownMenuRadioItem>
                                     <DropdownMenuRadioItem value="disetujui">Disetujui</DropdownMenuRadioItem>
                                     <DropdownMenuRadioItem value="tidak disetujui">Ditolak</DropdownMenuRadioItem>
                                 </DropdownMenuRadioGroup>
