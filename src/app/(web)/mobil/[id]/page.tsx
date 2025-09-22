@@ -152,6 +152,13 @@ function VehicleDetail() {
   }, [variants]);
 
   const { logoUrl } = useVehicleLogo(representativeVehicle ? representativeVehicle.brand : '');
+  
+  const availableTransmissionsText = useMemo(() => {
+    if (!variants || variants.length === 0) return '-';
+    const transmissionTypes = new Set(variants.map(v => v.transmission));
+    return Array.from(transmissionTypes).join(' | ');
+  }, [variants]);
+
 
   if (isLoading || !representativeVehicle) {
       return <div className="flex h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin"/></div>
@@ -167,6 +174,7 @@ function VehicleDetail() {
   const vehicleDetails = [
     { label: dictionary.vehicleDetail.details.brand, value: representativeVehicle.brand, icon: CheckCircle },
     { label: dictionary.vehicleDetail.details.type, value: representativeVehicle.type, icon: CheckCircle },
+    { label: dictionary.vehicleDetail.details.transmission, value: availableTransmissionsText, icon: Cog },
     { label: dictionary.vehicleDetail.details.fuel, value: representativeVehicle.fuel, icon: Fuel },
     { label: dictionary.vehicleDetail.details.capacity, value: `${representativeVehicle.passengers} ${dictionary.vehicleDetail.details.passenger}`, icon: Users },
     { label: dictionary.vehicleDetail.details.year, value: representativeVehicle.year, icon: Calendar },
@@ -365,3 +373,4 @@ export default function MobilDetailPage() {
         <VehicleDetail />
     );
 }
+
