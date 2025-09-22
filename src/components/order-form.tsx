@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect, forwardRef } from 'react';
@@ -30,7 +31,7 @@ import {
 
 import type { Vehicle, Driver } from '@/lib/types';
 import { serviceCosts } from '@/lib/data';
-import { Minus, Plus, CalendarIcon, ChevronDown } from 'lucide-react';
+import { Minus, Plus, CalendarIcon, ChevronDown, Loader2 } from 'lucide-react';
 import { format, addDays, differenceInCalendarDays, isBefore, startOfDay } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { useLanguage } from '@/hooks/use-language';
@@ -39,7 +40,7 @@ import { createClient } from '@/utils/supabase/client';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 
-export const OrderForm = forwardRef<HTMLDivElement, { vehicle: Vehicle }>(({ vehicle }, ref) => {
+export const OrderForm = forwardRef<HTMLDivElement, { variants: Vehicle[] }>(({ variants }, ref) => {
     const { dictionary, language } = useLanguage();
     const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
     const [activeTab, setActiveTab] = useState('reservation');
@@ -49,11 +50,26 @@ export const OrderForm = forwardRef<HTMLDivElement, { vehicle: Vehicle }>(({ veh
     const [service, setService] = useState('lepas-kunci');
     const [driverId, setDriverId] = useState<string | undefined>(undefined);
     const [availableDrivers, setAvailableDrivers] = useState<Driver[]>([]);
+    const [selectedVehicleId, setSelectedVehicleId] = useState<string | undefined>(variants[0]?.id);
 
     const [isStartCalendarOpen, setStartCalendarOpen] = useState(false);
     const [isEndCalendarOpen, setEndCalendarOpen] = useState(false);
 
     const showDriverSelection = service === 'dengan-supir' || service === 'all-include';
+
+    const representativeVehicle = useMemo(() => {
+        if (!variants || variants.length === 0) return null;
+        // Find the vehicle with the lowest price in the group to be the representative
+        return variants.reduce((lowest, current) => {
+            const lowestPrice = lowest.discountPercentage ? (lowest.price! * (1 - lowest.discountPercentage / 100)) : lowest.price;
+            const currentPrice = current.discountPercentage ? (current.price! * (1 - current.discountPercentage / 100)) : current.price;
+            return lowestPrice! < currentPrice! ? lowest : current;
+        });
+    }, [variants]);
+    
+    const selectedVehicle = useMemo(() => {
+        return variants.find(v => v.id === selectedVehicleId);
+    }, [variants, selectedVehicleId]);
 
 
     useEffect(() => {
@@ -105,21 +121,20 @@ export const OrderForm = forwardRef<HTMLDivElement, { vehicle: Vehicle }>(({ veh
     }, [startDate, endDate, rentalDays, activeTab]);
 
     const { totalCost, discountAmount, baseRentalCost, maticFee, driverFee, fuelFee } = useMemo(() => {
-        if (calculatedDuration <= 0) {
+        if (!selectedVehicle || calculatedDuration <= 0) {
             return { totalCost: 0, discountAmount: 0, baseRentalCost: 0, maticFee: 0, driverFee: 0, fuelFee: 0 };
         }
         
-        const rental = (vehicle.price || 0) * calculatedDuration;
-        const mFee = vehicle.transmission === 'Matic' ? serviceCosts.matic * calculatedDuration : 0;
+        const rental = (selectedVehicle.price || 0) * calculatedDuration;
+        const mFee = selectedVehicle.transmission === 'Matic' ? serviceCosts.matic * calculatedDuration : 0;
         const dFee = (service === 'dengan-supir' || service === 'all-include') ? serviceCosts.driver * calculatedDuration : 0;
         
-        // Include fuel fee only if the service is 'all-include'
         const fFee = (service === 'all-include') ? serviceCosts.fuel * calculatedDuration : 0;
 
         const subtotal = rental + mFee + dFee + fFee;
 
-        const discAmount = vehicle.discountPercentage && vehicle.price
-            ? (rental * vehicle.discountPercentage) / 100 
+        const discAmount = selectedVehicle.discountPercentage && selectedVehicle.price
+            ? (rental * selectedVehicle.discountPercentage) / 100 
             : 0;
         
         const total = subtotal - discAmount;
@@ -132,14 +147,13 @@ export const OrderForm = forwardRef<HTMLDivElement, { vehicle: Vehicle }>(({ veh
             driverFee: dFee,
             fuelFee: fFee,
         };
-    }, [vehicle, calculatedDuration, service]);
+    }, [selectedVehicle, calculatedDuration, service]);
     
     const handleStartDateChange = (date: Date | undefined) => {
         if (!date) return;
         const newStartDate = startOfDay(date);
         setStartDate(newStartDate);
         
-        // If the current end date is before the new start date, update it.
         if (endDate && isBefore(endDate, newStartDate)) {
             setEndDate(addDays(newStartDate, 1));
         } else if (!endDate) {
@@ -152,7 +166,6 @@ export const OrderForm = forwardRef<HTMLDivElement, { vehicle: Vehicle }>(({ veh
     const handleEndDateChange = (date: Date | undefined) => {
         if (!date || !startDate) return;
         let newEndDate = startOfDay(date);
-        // Ensure end date is not before the start date.
         if (isBefore(newEndDate, startDate)) {
             newEndDate = startOfDay(startDate);
         }
@@ -160,11 +173,11 @@ export const OrderForm = forwardRef<HTMLDivElement, { vehicle: Vehicle }>(({ veh
         setEndCalendarOpen(false);
     };
 
-    const isBookingDisabled = (showDriverSelection && !driverId) || calculatedDuration <= 0;
+    const isBookingDisabled = (showDriverSelection && !driverId) || calculatedDuration <= 0 || !selectedVehicleId;
 
     const paymentUrl = useMemo(() => {
-        if (isBookingDisabled) return '#';
-        let url = `/pembayaran?vehicleId=${vehicle.id}&days=${calculatedDuration}&service=${service}`;
+        if (isBookingDisabled || !selectedVehicleId) return '#';
+        let url = `/pembayaran?vehicleId=${selectedVehicleId}&days=${calculatedDuration}&service=${service}`;
         if (activeTab === 'reservation' && startDate && endDate) {
             url += `&startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`;
         }
@@ -172,9 +185,13 @@ export const OrderForm = forwardRef<HTMLDivElement, { vehicle: Vehicle }>(({ veh
             url += `&driverId=${driverId}`;
         }
         return url;
-    }, [vehicle.id, calculatedDuration, service, activeTab, startDate, endDate, driverId, isBookingDisabled]);
+    }, [selectedVehicleId, calculatedDuration, service, activeTab, startDate, endDate, driverId, isBookingDisabled]);
 
     const locale = language === 'id' ? id : undefined;
+
+    if (!representativeVehicle) {
+        return <div className="flex h-full items-center justify-center"><Loader2 className="h-6 w-6 animate-spin"/></div>
+    }
 
     return (
       <div className="flex flex-col h-full" ref={ref}>
@@ -184,10 +201,10 @@ export const OrderForm = forwardRef<HTMLDivElement, { vehicle: Vehicle }>(({ veh
         
         <div className="p-6 border-b flex-shrink-0">
             <div className="flex items-center gap-4">
-                <Image src={vehicle.photo || ''} alt={vehicle.name} width={120} height={80} className="rounded-lg object-cover" data-ai-hint={vehicle.dataAiHint || ''} />
+                <Image src={representativeVehicle.photo || ''} alt={representativeVehicle.name} width={120} height={80} className="rounded-lg object-cover" data-ai-hint={representativeVehicle.dataAiHint || ''} />
                 <div>
-                    <h3 className="font-bold text-lg">{vehicle.brand} {vehicle.name}</h3>
-                    <p className="text-sm text-muted-foreground">{vehicle.type}</p>
+                    <h3 className="font-bold text-lg">{representativeVehicle.brand} {representativeVehicle.name}</h3>
+                    <p className="text-sm text-muted-foreground">{representativeVehicle.type}</p>
                 </div>
             </div>
         </div>
@@ -269,7 +286,18 @@ export const OrderForm = forwardRef<HTMLDivElement, { vehicle: Vehicle }>(({ veh
                 <div className="space-y-4 pt-4 border-t mt-6">
                     <div className="space-y-2">
                         <label className="text-sm font-medium">{dictionary.orderForm.common.transmission.label}</label>
-                         <Input value={vehicle.transmission} readOnly disabled />
+                         <Select onValueChange={setSelectedVehicleId} defaultValue={selectedVehicleId} disabled={variants.length <= 1}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Pilih Transmisi" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {variants.map(v => (
+                                    <SelectItem key={v.id} value={v.id}>
+                                        {v.transmission}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
                      <div className="space-y-2">
                         <label className="text-sm font-medium">{dictionary.orderForm.common.service.label}</label>
@@ -343,9 +371,9 @@ export const OrderForm = forwardRef<HTMLDivElement, { vehicle: Vehicle }>(({ veh
                                <span>{formatCurrency(maticFee)}</span>
                            </div>
                         )}
-                         {discountAmount > 0 && (
+                         {discountAmount > 0 && selectedVehicle && (
                             <div className="flex justify-between text-green-600">
-                                <span className="font-medium">Diskon ({vehicle.discountPercentage}%)</span>
+                                <span className="font-medium">Diskon ({selectedVehicle.discountPercentage}%)</span>
                                 <span>- {formatCurrency(discountAmount)}</span>
                             </div>
                         )}

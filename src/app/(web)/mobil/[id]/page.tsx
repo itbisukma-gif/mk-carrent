@@ -4,7 +4,6 @@
 
 import { notFound, useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,7 +22,6 @@ import {
   SheetContent,
   SheetTrigger,
 } from '@/components/ui/sheet';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { VehicleCard } from '@/components/vehicle-card';
 import { useRef, useState, useEffect, useMemo } from 'react';
@@ -43,7 +41,6 @@ export const dynamic = 'force-dynamic';
 
 function VehicleDetail() {
   const params = useParams();
-  const router = useRouter();
   const { dictionary } = useLanguage();
   const { toast } = useToast();
   const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
@@ -84,13 +81,12 @@ function VehicleDetail() {
         }
         setVehicle(vehicleData);
 
-        // Fetch variants (same brand and name, but different id)
+        // Fetch variants (same brand and name)
         const { data: variantData } = await supabase
             .from('vehicles')
             .select('*')
             .eq('brand', vehicleData.brand)
-            .eq('name', vehicleData.name)
-            .neq('id', vehicleData.id);
+            .eq('name', vehicleData.name);
         setVariants(variantData || []);
 
         // Fetch other vehicles (different name)
@@ -118,12 +114,6 @@ function VehicleDetail() {
     fetchData();
   }, [params.id, supabase]);
 
-  const handleVariantChange = (variantId: string) => {
-    if (variantId && variantId !== params.id) {
-        router.push(`/mobil/${variantId}`);
-    }
-  };
-
   const handleSubmitReview = async () => {
       if (userRating === 0 || !userComment.trim() || !vehicle) {
           toast({ variant: 'destructive', title: 'Form Tidak Lengkap', description: 'Mohon berikan rating dan komentar.' });
@@ -150,32 +140,36 @@ function VehicleDetail() {
       }
       setIsSubmittingReview(false);
   }
-
-  const allVariants = useMemo(() => {
-    if (!vehicle) return [];
-    // Combine the current vehicle with its other variants
-    return [vehicle, ...variants].sort((a, b) => a.transmission.localeCompare(b.transmission));
-  }, [vehicle, variants]);
   
-  const { logoUrl } = useVehicleLogo(vehicle ? vehicle.brand : '');
+  const representativeVehicle = useMemo(() => {
+    if (!variants || variants.length === 0) return null;
+    // Find the vehicle with the lowest price in the group to be the representative
+    return variants.reduce((lowest, current) => {
+        const lowestPrice = lowest.discountPercentage ? (lowest.price! * (1 - lowest.discountPercentage / 100)) : lowest.price;
+        const currentPrice = current.discountPercentage ? (current.price! * (1 - current.discountPercentage / 100)) : current.price;
+        return lowestPrice! < currentPrice! ? lowest : current;
+    });
+  }, [variants]);
 
-  if (isLoading || !vehicle) {
+  const { logoUrl } = useVehicleLogo(representativeVehicle ? representativeVehicle.brand : '');
+
+  if (isLoading || !representativeVehicle) {
       return <div className="flex h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin"/></div>
   }
 
   const formatCurrency = (value: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(value);
   
-  const hasDiscount = vehicle.discountPercentage && vehicle.discountPercentage > 0;
-  const discountedPrice = (hasDiscount && vehicle.price && vehicle.discountPercentage)
-    ? vehicle.price * (1 - vehicle.discountPercentage / 100)
-    : vehicle.price;
+  const hasDiscount = representativeVehicle.discountPercentage && representativeVehicle.discountPercentage > 0;
+  const discountedPrice = (hasDiscount && representativeVehicle.price && representativeVehicle.discountPercentage)
+    ? representativeVehicle.price * (1 - representativeVehicle.discountPercentage / 100)
+    : representativeVehicle.price;
 
   const vehicleDetails = [
-    { label: dictionary.vehicleDetail.details.brand, value: vehicle.brand, icon: CheckCircle },
-    { label: dictionary.vehicleDetail.details.type, value: vehicle.type, icon: CheckCircle },
-    { label: dictionary.vehicleDetail.details.fuel, value: vehicle.fuel, icon: Fuel },
-    { label: dictionary.vehicleDetail.details.capacity, value: `${vehicle.passengers} ${dictionary.vehicleDetail.details.passenger}`, icon: Users },
-    { label: dictionary.vehicleDetail.details.year, value: vehicle.year, icon: Calendar },
+    { label: dictionary.vehicleDetail.details.brand, value: representativeVehicle.brand, icon: CheckCircle },
+    { label: dictionary.vehicleDetail.details.type, value: representativeVehicle.type, icon: CheckCircle },
+    { label: dictionary.vehicleDetail.details.fuel, value: representativeVehicle.fuel, icon: Fuel },
+    { label: dictionary.vehicleDetail.details.capacity, value: `${representativeVehicle.passengers} ${dictionary.vehicleDetail.details.passenger}`, icon: Users },
+    { label: dictionary.vehicleDetail.details.year, value: representativeVehicle.year, icon: Calendar },
   ];
 
   return (
@@ -184,18 +178,18 @@ function VehicleDetail() {
         <div className="relative">
            <div className="relative aspect-video w-full overflow-hidden rounded-lg shadow-md">
             <Image 
-                src={vehicle.photo!} 
-                alt={`${vehicle.brand} ${vehicle.name}`} 
+                src={representativeVehicle.photo!} 
+                alt={`${representativeVehicle.brand} ${representativeVehicle.name}`} 
                 fill 
                 className="object-cover" 
-                data-ai-hint={vehicle.dataAiHint || ''}
+                data-ai-hint={representativeVehicle.dataAiHint || ''}
             />
              {logoUrl && (
                 <div className="absolute top-3 left-3 bg-white/70 backdrop-blur-sm p-1.5 rounded-md shadow-sm">
                     <div className="relative h-8 w-12">
                         <Image
                             src={logoUrl}
-                            alt={`${vehicle.brand} logo`}
+                            alt={`${representativeVehicle.brand} logo`}
                             fill
                             className="object-contain"
                         />
@@ -206,15 +200,15 @@ function VehicleDetail() {
            {hasDiscount && (
             <Badge variant="destructive" className="absolute top-3 right-3 text-sm py-1 px-2 shadow-lg">
               <Tag className="h-4 w-4 mr-1.5" />
-              {vehicle.discountPercentage}% OFF
+              {representativeVehicle.discountPercentage}% OFF
             </Badge>
           )}
         </div>
 
         <div className="flex flex-col gap-4">
           <div className="space-y-1.5">
-            <h1 className="text-2xl font-bold tracking-tight">{vehicle.brand} {vehicle.name}</h1>
-            <StarRating rating={vehicle.rating || 0} totalReviews={testimonials.length} />
+            <h1 className="text-2xl font-bold tracking-tight">{representativeVehicle.brand} {representativeVehicle.name}</h1>
+            <StarRating rating={representativeVehicle.rating || 0} totalReviews={testimonials.length} />
           </div>
           
           <Card>
@@ -230,24 +224,6 @@ function VehicleDetail() {
                             <span className="font-medium ml-auto">{detail.value || '-'}</span>
                         </li>
                     ))}
-                      <li className="flex items-center gap-3">
-                        <Cog className="h-4 w-4 text-primary" />
-                        <span className="text-muted-foreground">Transmisi:</span>
-                        <div className="ml-auto">
-                            <Select onValueChange={handleVariantChange} defaultValue={vehicle.id} disabled={allVariants.length <= 1}>
-                                <SelectTrigger className="w-[150px]">
-                                    <SelectValue placeholder="Pilih Transmisi" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {allVariants.map((v) => (
-                                        <SelectItem key={v.id} value={v.id}>
-                                            {v.transmission}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                      </li>
                 </ul>
             </CardContent>
           </Card>
@@ -255,14 +231,14 @@ function VehicleDetail() {
            <Card className="mt-2">
             <CardContent className="p-4 space-y-4">
                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Harga per hari</span>
+                  <span className="text-sm text-muted-foreground">{dictionary.vehicleCard.priceStartFrom}</span>
                    {hasDiscount && discountedPrice ? (
                       <div className='text-right'>
-                          <p className="text-sm line-through text-muted-foreground">{formatCurrency(vehicle.price || 0)}</p>
+                          <p className="text-sm line-through text-muted-foreground">{formatCurrency(representativeVehicle.price || 0)}</p>
                           <p className="text-xl font-bold text-primary">{formatCurrency(discountedPrice)}</p>
                       </div>
                     ) : (
-                      <p className="text-xl font-bold text-primary">{formatCurrency(vehicle.price || 0)}</p>
+                      <p className="text-xl font-bold text-primary">{formatCurrency(representativeVehicle.price || 0)}</p>
                   )}
                </div>
                <Separator />
@@ -271,7 +247,7 @@ function VehicleDetail() {
                     <Button size="lg" className="w-full transition-all duration-200 ease-in-out hover:scale-105 hover:shadow-md active:scale-100">{dictionary.vehicleDetail.bookNow}</Button>
                   </SheetTrigger>
                   <SheetContent className="p-0 flex flex-col">
-                    <OrderForm vehicle={vehicle} />
+                    <OrderForm variants={variants} />
                   </SheetContent>
                 </Sheet>
             </CardContent>
@@ -337,7 +313,7 @@ function VehicleDetail() {
                                          <div key={photo.id} className="relative group aspect-square">
                                             <Image
                                                 src={photo.url}
-                                                alt={`${dictionary.testimonials.galleryAlt} - ${vehicle.name}`}
+                                                alt={`${dictionary.testimonials.galleryAlt} - ${representativeVehicle.name}`}
                                                 fill
                                                 className="object-cover rounded-lg shadow-md transition-transform group-hover:scale-105"
                                                 data-ai-hint="customer photo"
