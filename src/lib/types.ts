@@ -1,5 +1,4 @@
 
-
 export type Driver = {
   id: string;
   created_at?: string;
@@ -110,4 +109,3 @@ export type Promotion = {
     imageUrl: string;
     vehicleId?: string | null;
 };
-
