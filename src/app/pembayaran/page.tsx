@@ -4,7 +4,7 @@
 import { Suspense } from "react";
 import { WebHeader } from '@/components/layout/web-header';
 import { WebFooter } from '@/components/layout/web-footer';
-import { ConfirmationPageContent } from '../konfirmasi/content';
+import { ConfirmationPageContent } from '@/app/konfirmasi/content';
 
 export default function PembayaranPage() {
     return (
