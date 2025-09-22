@@ -4,7 +4,7 @@ import { createServiceRoleClient, uploadImageFromDataUri } from '@/utils/supabas
 import type { Vehicle } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
 
-const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || 'admin';
+const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || '/admin';
 
 // Define a specific type for form data to handle potential string values from the form
 export type VehicleFormData = Omit<Vehicle, 'price' | 'year' | 'passengers' | 'stock' | 'discountPercentage' | 'rating'> & {

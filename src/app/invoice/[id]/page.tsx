@@ -45,7 +45,7 @@ function InvoiceComponent() {
     const startDateStr = searchParams.get('startDate');
     const endDateStr = searchParams.get('endDate');
     const days = searchParams.get('days');
-    const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || '/admin';
+    const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || 'admin';
 
     useEffect(() => {
         const supabaseClient = createClient();
@@ -124,9 +124,11 @@ function InvoiceComponent() {
                     <p className="text-muted-foreground">Invoice hanya dapat dibuat untuk pesanan yang telah lunas dan disetujui. Status pesanan ini adalah <span className='font-semibold capitalize'>{order.status}</span>.</p>
                 </CardContent>
                 <CardFooter className='flex flex-col gap-4'>
-                    <Button variant="outline" className="w-full" onClick={() => router.push(`${adminPath}/keuangan`)}>
-                        <ArrowLeft className="h-4 w-4 mr-2" />
-                        Kembali ke Halaman Keuangan
+                    <Button variant="outline" className="w-full" asChild>
+                        <Link href={`/${adminPath}/keuangan`}>
+                            <ArrowLeft className="h-4 w-4 mr-2" />
+                            Kembali ke Halaman Keuangan
+                        </Link>
                     </Button>
                 </CardFooter>
             </Card>
@@ -248,9 +250,11 @@ function InvoiceComponent() {
                         Bagikan ke Pelanggan
                     </Link>
                 </Button>
-                <Button variant="link" size="sm" className='text-muted-foreground' onClick={() => router.push(`${adminPath}/keuangan`)}>
-                    <ArrowLeft className="h-3 w-3 mr-1.5" />
-                    Kembali ke Halaman Keuangan
+                <Button variant="link" size="sm" className='text-muted-foreground' asChild>
+                    <Link href={`/${adminPath}/keuangan`}>
+                        <ArrowLeft className="h-3 w-3 mr-1.5" />
+                        Kembali ke Halaman Keuangan
+                    </Link>
                 </Button>
             </CardFooter>
         </Card>

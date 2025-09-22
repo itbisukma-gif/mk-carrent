@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import { useState, ReactNode } from 'react';
@@ -22,5 +20,3 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     </LanguageContext.Provider>
   );
 }
-
-    

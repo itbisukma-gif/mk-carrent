@@ -42,10 +42,14 @@ import { useLanguage } from '@/hooks/use-language';
 import { FeaturesSection } from '@/components/features-section';
 import { createClient } from '@/utils/supabase/client';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { WebHeader } from '@/components/layout/web-header';
+import { WebFooter } from '@/components/layout/web-footer';
+import { LanguageProvider } from './language-provider';
+import { WhatsappFab } from '@/components/whatsapp-fab';
 
 export const dynamic = 'force-dynamic';
 
-export default function HomePage() {
+function HomePageContent() {
     const { dictionary } = useLanguage();
     const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
     const [fleet, setFleet] = useState<Vehicle[]>([]);
@@ -341,4 +345,18 @@ export default function HomePage() {
       </section>
     </>
   );
+}
+
+
+export default function Home() {
+    return (
+        <LanguageProvider>
+            <WebHeader />
+            <main className="flex-1">
+                <HomePageContent />
+            </main>
+            <WhatsappFab />
+            <WebFooter />
+        </LanguageProvider>
+    );
 }
