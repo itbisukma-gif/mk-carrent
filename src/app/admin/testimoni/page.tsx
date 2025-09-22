@@ -30,7 +30,6 @@ function TestimonialForm({ testimonial, vehicles, onSave, onCancel }: { testimon
     const { toast } = useToast();
     const [isPending, startTransition] = useTransition();
     
-    // Form state
     const [customerName, setCustomerName] = useState(testimonial?.customerName || '');
     const [vehicleName, setVehicleName] = useState(testimonial?.vehicleName || '');
     const [rating, setRating] = useState(testimonial?.rating || 0);
@@ -253,7 +252,7 @@ function GalleryEditor({ vehicles }: { vehicles: Vehicle[] }) {
                 setAddPhotoOpen(false);
                 setPreviewUrl(null);
                 setSelectedVehicleName(undefined);
-                fetchGallery(); // refetch
+                fetchGallery();
             }
         });
     };
@@ -265,7 +264,7 @@ function GalleryEditor({ vehicles }: { vehicles: Vehicle[] }) {
                 toast({ variant: 'destructive', title: 'Gagal menghapus foto', description: result.error.message });
             } else {
                 toast({ variant: "destructive", title: "Foto Dihapus" });
-                fetchGallery(); // refetch
+                fetchGallery();
             }
         });
     };
@@ -424,7 +423,7 @@ function FeatureEditor() {
     const handleFormSave = () => {
         setIsFormOpen(false);
         setSelectedFeature(null);
-        fetchFeatures(); // refetch
+        fetchFeatures();
     };
 
     const handleDelete = (featureId: string) => {
@@ -434,7 +433,7 @@ function FeatureEditor() {
                  toast({ variant: "destructive", title: "Gagal Menghapus", description: result.error.message });
             } else {
                 toast({ variant: "destructive", title: "Keunggulan Dihapus" });
-                fetchFeatures(); // refetch
+                fetchFeatures();
             }
         });
     };
@@ -511,7 +510,7 @@ function FeatureEditor() {
     );
 }
 
-export default function TestimoniPage() {
+export default function TestimoniAdminPage() {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -565,7 +564,7 @@ export default function TestimoniPage() {
   
   const handleFilterChange = (value: string) => {
     setFilter(value);
-    setCurrentPage(1); // Reset to first page on filter change
+    setCurrentPage(1);
   };
 
 
@@ -602,7 +601,7 @@ export default function TestimoniPage() {
   const handleFormSave = () => {
     setFormOpen(false);
     setSelectedTestimonial(null);
-    fetchData(); // refetch
+    fetchData();
   };
 
   const dialogTitle = selectedTestimonial ? "Edit Testimoni" : "Tambahkan Testimoni Baru";

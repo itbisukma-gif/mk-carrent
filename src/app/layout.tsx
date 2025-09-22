@@ -3,9 +3,9 @@ import './globals.css';
 import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/toaster';
 import { Space_Grotesk, Inter } from 'next/font/google';
+import { LanguageProvider } from './language-provider';
 import { WebHeader } from '@/components/layout/web-header';
 import { WebFooter } from '@/components/layout/web-footer';
-import { LanguageProvider } from './language-provider';
 import { WhatsappFab } from '@/components/whatsapp-fab';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })

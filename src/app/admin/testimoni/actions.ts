@@ -6,9 +6,6 @@ import { revalidatePath } from 'next/cache';
 
 const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || '/admin';
 
-
-// --- Testimonial Actions ---
-
 export async function upsertTestimonial(testimonialData: Omit<Testimonial, 'created_at'>) {
     const supabase = createServiceRoleClient();
     const { data, error } = await supabase.from('testimonials').upsert(testimonialData, { onConflict: 'id' }).select().single();
@@ -24,7 +21,6 @@ export async function upsertTestimonial(testimonialData: Omit<Testimonial, 'crea
     return { data, error: null };
 }
 
-
 export async function deleteTestimonial(id: string) {
     const supabase = createServiceRoleClient();
     const { error } = await supabase.from('testimonials').delete().eq('id', id);
@@ -34,8 +30,6 @@ export async function deleteTestimonial(id: string) {
     revalidatePath('/mobil');
     return { error: null };
 }
-
-// --- Gallery Actions ---
 
 export async function addGalleryItem(galleryData: Omit<GalleryItem, 'id' | 'created_at'>) {
     const supabase = createServiceRoleClient();
@@ -92,9 +86,6 @@ export async function deleteGalleryItem(id: string) {
     return { error: null };
 }
 
-
-// --- Feature Actions ---
-
 export async function upsertFeature(featureData: Omit<FeatureItem, 'created_at'>) {
     const supabase = createServiceRoleClient();
 
@@ -113,7 +104,7 @@ export async function upsertFeature(featureData: Omit<FeatureItem, 'created_at'>
         return { data: null, error };
     }
     revalidatePath(`/${adminPath}/testimoni`);
-    revalidatePath('/'); // Revalidate home page where features are shown
+    revalidatePath('/');
     return { data, error: null };
 }
 
@@ -141,6 +132,6 @@ export async function deleteFeature(id: string) {
     }
 
     revalidatePath(`/${adminPath}/testimoni`);
-    revalidatePath('/'); // Revalidate home page
+    revalidatePath('/');
     return { error: null };
 }

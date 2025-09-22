@@ -31,6 +31,7 @@ export function WebFooter({ className }: { className?: string }) {
   const { dictionary } = useLanguage();
   const [contactInfo, setContactInfo] = useState<ContactInfo | null>(null);
   const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
+  const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || 'admin';
 
   useEffect(() => {
     const supabaseClient = createClient();
@@ -45,6 +46,11 @@ export function WebFooter({ className }: { className?: string }) {
     };
     fetchContactInfo();
   }, [supabase]);
+
+  // Do not render footer on admin routes
+  if (pathname.startsWith('/admin') || pathname.startsWith(`/${adminPath}`)) {
+    return null;
+  }
 
   const hasSocialMedia = contactInfo && (contactInfo.instagram || contactInfo.facebook || contactInfo.twitter || contactInfo.tiktok || contactInfo.telegram);
 
@@ -69,7 +75,6 @@ export function WebFooter({ className }: { className?: string }) {
           ))}
         </nav>
       </footer>
-      {/* Add padding to the bottom of the main content on mobile to prevent overlap */}
       <div className="pb-16 md:pb-0"></div>
 
 

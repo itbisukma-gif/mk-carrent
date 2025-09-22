@@ -4,9 +4,8 @@ import { createServiceRoleClient, uploadImageFromDataUri } from '@/utils/supabas
 import type { Vehicle } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
 
-const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || '/admin';
+const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || 'admin';
 
-// Define a specific type for form data to handle potential string values from the form
 export type VehicleFormData = Omit<Vehicle, 'price' | 'year' | 'passengers' | 'stock' | 'discountPercentage' | 'rating'> & {
     price: string | number;
     year: string | number | null;
@@ -20,7 +19,6 @@ export type VehicleFormData = Omit<Vehicle, 'price' | 'year' | 'passengers' | 's
 export async function upsertVehicle(vehicleData: VehicleFormData) {
     const supabase = createServiceRoleClient();
 
-    // Create a mutable copy to potentially update the photo URL
     let vehicleToUpsert: Vehicle = {
         ...vehicleData,
         price: Number(vehicleData.price) || 0,
@@ -29,10 +27,9 @@ export async function upsertVehicle(vehicleData: VehicleFormData) {
         stock: vehicleData.unitType === 'khusus' ? (vehicleData.stock ? Number(vehicleData.stock) : null) : null,
         discountPercentage: vehicleData.discountPercentage ? Number(vehicleData.discountPercentage) : null,
         status: vehicleData.status || 'tersedia',
-        rating: vehicleData.rating || 5, // Default rating
+        rating: vehicleData.rating || 5,
     };
 
-    // --- LOGIC FIX: Only upload if photo is a new Data URI ---
     if (vehicleData.photo && typeof vehicleData.photo === 'string' && vehicleData.photo.startsWith('data:image')) {
         try {
             const newPhotoUrl = await uploadImageFromDataUri(vehicleData.photo, 'vehicles', `vehicle-${vehicleData.id}`);

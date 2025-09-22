@@ -25,7 +25,6 @@ export async function upsertPromotion(promoData: Omit<Promotion, 'created_at'>, 
         return { data: null, error };
     }
 
-    // Apply discount to the selected vehicle
     if (promoData.vehicleId && promoData.vehicleId !== 'none') {
         const vehicleToUpdate = vehicles.find(v => v.id === promoData.vehicleId);
         if (vehicleToUpdate) {
@@ -43,7 +42,7 @@ export async function upsertPromotion(promoData: Omit<Promotion, 'created_at'>, 
     }
 
     revalidatePath(`/${adminPath}/promosi`);
-    revalidatePath('/'); // Revalidate home page where promotions are shown
+    revalidatePath('/');
     return { data, error: null };
 }
 
@@ -74,7 +73,6 @@ export async function deletePromotion(promo: Promotion, vehicles: Vehicle[]) {
         }
     }
     
-    // Also remove discount from vehicle if it was linked
     if (promo.vehicleId) {
         const vehicleToUpdate = vehicles.find(v => v.id === promo.vehicleId);
         if(vehicleToUpdate) {
@@ -92,6 +90,6 @@ export async function deletePromotion(promo: Promotion, vehicles: Vehicle[]) {
     }
 
     revalidatePath(`/${adminPath}/promosi`);
-    revalidatePath('/'); // Revalidate home page
+    revalidatePath('/');
     return { error: null };
 }

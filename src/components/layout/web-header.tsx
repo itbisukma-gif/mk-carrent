@@ -18,7 +18,12 @@ import { cn } from "@/lib/utils";
 export function WebHeader({ className }: { className?: string }) {
   const pathname = usePathname();
   const { dictionary, language, setLanguage } = useLanguage();
-  const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || '/admin';
+  const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || 'admin';
+
+  // Do not render header on admin routes
+  if (pathname.startsWith('/admin') || pathname.startsWith(`/${adminPath}`)) {
+    return null;
+  }
 
   return (
     <header className={cn("sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60", className)}>
@@ -44,8 +49,7 @@ export function WebHeader({ className }: { className?: string }) {
           <Link
               href={`/${adminPath}`}
               className={cn(
-                "text-sm font-medium transition-colors hover:text-primary",
-                pathname.startsWith(`/${adminPath}`) ? "text-primary" : "text-muted-foreground"
+                "text-sm font-medium transition-colors hover:text-primary text-muted-foreground"
               )}
             >
               Admin

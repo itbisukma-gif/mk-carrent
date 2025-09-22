@@ -7,8 +7,6 @@ import { useLanguage } from '@/hooks/use-language';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Star, MessageSquareQuote } from 'lucide-react';
-import { StarRating } from '@/components/star-rating';
-import { Badge } from '@/components/ui/badge';
 import { createClient } from '@/utils/supabase/client';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
@@ -43,7 +41,6 @@ function ReviewCard({ review }: { review: Testimonial }) {
 function Testimonials() {
     const { dictionary } = useLanguage();
     const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
-    const [vehicles, setVehicles] = useState<Vehicle[]>([]);
     const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
 
     useEffect(() => {
@@ -55,38 +52,22 @@ function Testimonials() {
         if (!supabase) return;
         const fetchTestimonials = async () => {
             const { data: testimonialsData } = await supabase.from('testimonials').select('*').order('created_at', { ascending: false });
-            const { data: vehiclesData } = await supabase.from('vehicles').select('name, brand');
             if (testimonialsData) setTestimonials(testimonialsData);
-            if (vehiclesData) setVehicles(vehiclesData as Vehicle[]);
         };
         fetchTestimonials();
     }, [supabase]);
 
-    const vehicleOptions = useMemo(() => {
-        return ['all', ...vehicles.map(v => `${v.brand} ${v.name}`)];
-    }, [vehicles]);
-
-    const [filter, setFilter] = useState('all');
-
-    const filteredTestimonials = useMemo(() => {
-        if (filter === 'all') return testimonials;
-        return testimonials.filter(t => t.vehicleName === filter);
-    }, [testimonials, filter]);
-
     return (
         <div className="space-y-8">
-            <div className="flex items-center justify-between">
-                <div className="relative">
-                    <MessageSquareQuote className="absolute -left-4 -top-4 h-12 w-12 text-primary/10" />
-                    <h2 className="text-3xl font-bold tracking-tight">{dictionary.testimonials.title}</h2>
-                    <p className="mt-2 text-muted-foreground max-w-2xl">{dictionary.testimonials.description}</p>
-                </div>
+            <div className="relative">
+                <MessageSquareQuote className="absolute -left-4 -top-4 h-12 w-12 text-primary/10" />
+                <h2 className="text-3xl font-bold tracking-tight">{dictionary.testimonials.title}</h2>
+                <p className="mt-2 text-muted-foreground max-w-2xl">{dictionary.testimonials.description}</p>
             </div>
 
-            {/* Masonry-style layout for reviews */}
             <div className="columns-1 sm:columns-2 lg:columns-3 gap-6 space-y-6">
-                {filteredTestimonials.length > 0 ? (
-                    filteredTestimonials.map(review => <ReviewCard key={review.id} review={review} />)
+                {testimonials.length > 0 ? (
+                    testimonials.map(review => <ReviewCard key={review.id} review={review} />)
                 ) : (
                     <p className="col-span-full text-center text-muted-foreground">Tidak ada testimoni untuk ditampilkan.</p>
                 )}

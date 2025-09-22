@@ -23,7 +23,6 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 export const dynamic = 'force-dynamic';
 
-// Form component for adding/editing a promotion
 function PromotionForm({ promotion, vehicles, onSave, onCancel }: { promotion?: Promotion | null; vehicles: Vehicle[]; onSave: () => void; onCancel: () => void; }) {
     const { toast } = useToast();
     const [isPending, startTransition] = useTransition();
@@ -227,7 +226,7 @@ export default function PromosiPage() {
     const handleFormSave = () => {
         setFormOpen(false);
         setSelectedPromo(null);
-        fetchData(); // refetch data
+        fetchData();
     };
 
     const dialogTitle = selectedPromo ? "Edit Promosi" : "Tambahkan Promosi Baru";

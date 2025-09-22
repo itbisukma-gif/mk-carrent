@@ -469,14 +469,14 @@ export default function ArmadaPage() {
             title: "Berhasil Dihapus",
             description: `Kendaraan telah dihapus.`,
         });
-        fetchFleet(); // Refetch data
+        fetchFleet();
     }
   };
 
   const handleFormSave = () => {
     setFormOpen(false);
     setSelectedVehicle(null);
-    fetchFleet(); // Refetch data after saving
+    fetchFleet();
   }
   
   const handleFormCancel = () => {

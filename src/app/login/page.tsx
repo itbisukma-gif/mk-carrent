@@ -17,12 +17,12 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || 'admin';
+
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
-    const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || 'admin';
 
     // Simulate authentication
     if (email === 'admin@example.com' && password === 'password') {
@@ -31,12 +31,8 @@ export default function LoginPage() {
         description: 'Anda akan diarahkan ke dashboard.',
       });
 
-      // Set a manual session cookie
-      // In a real app, this would be a secure, HTTP-only cookie set by a server
-      document.cookie = "session=true; path=/; max-age=3600"; // Expires in 1 hour
+      document.cookie = "session=true; path=/; max-age=3600"; 
 
-      // Redirect to the dashboard. Using window.location.href to force a full page reload
-      // which ensures the middleware picks up the new cookie.
       window.location.href = `/${adminPath}/dashboard`;
 
     } else {
