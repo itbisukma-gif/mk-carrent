@@ -45,7 +45,7 @@ function InvoiceComponent() {
     const startDateStr = searchParams.get('startDate');
     const endDateStr = searchParams.get('endDate');
     const days = searchParams.get('days');
-    const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || '/dashboard';
+    const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || '/admin';
 
     useEffect(() => {
         const supabaseClient = createClient();

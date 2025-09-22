@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -21,7 +22,7 @@ export default function LoginPage() {
     e.preventDefault();
     setIsLoading(true);
 
-    const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || '/dashboard';
+    const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || '/admin';
 
     // Simulate authentication
     if (email === 'admin@example.com' && password === 'password') {
@@ -36,7 +37,7 @@ export default function LoginPage() {
 
       // Redirect to the dashboard. Using window.location.href to force a full page reload
       // which ensures the middleware picks up the new cookie.
-      window.location.href = adminPath;
+      window.location.href = `${adminPath}/dashboard`;
 
     } else {
       toast({

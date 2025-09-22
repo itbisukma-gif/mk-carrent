@@ -1,143 +1,60 @@
+import { NextResponse, type NextRequest } from "next/server";
 
-'use server';
+export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
 
-import { createServiceRoleClient, uploadImageFromDataUri } from '@/utils/supabase/server';
-import type { Testimonial, GalleryItem, FeatureItem } from '@/lib/types';
-import { revalidatePath } from 'next/cache';
+  // Get the secret admin path from environment variables, default to /admin
+  const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || '/admin';
+  
+  // Get session from the manual cookie
+  const sessionCookie = request.cookies.get("session");
+  const hasSession = !!sessionCookie;
 
-const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || '/dashboard';
+  // Handle logout: delete cookie and redirect to the secret admin path (which will show login)
+  if (pathname === "/logout") {
+    const response = NextResponse.redirect(new URL(adminPath, request.url));
+    response.cookies.set("session", "", { expires: new Date(0), path: '/' });
+    return response;
+  }
+  
+  // If a logged-in user tries to access the secret path (which shows login), redirect them to the first page of the admin area.
+  if (pathname === adminPath && hasSession) {
+    return NextResponse.redirect(new URL(`${adminPath}/dashboard`, request.url));
+  }
 
-// --- Testimonial Actions ---
+  // Check if the current path starts with the secret admin path
+  const isProtectedRoute = pathname.startsWith(adminPath);
+  
+  if (isProtectedRoute) {
+    // This is a protected route.
+    // We rewrite the URL to map it to the actual /admin folder structure.
+    const newPath = pathname.replace(adminPath, '/admin');
+    const url = new URL(newPath, request.url);
 
-export async function upsertTestimonial(testimonialData: Omit<Testimonial, 'created_at'>) {
-    const supabase = createServiceRoleClient();
-    const { data, error } = await supabase.from('testimonials').upsert(testimonialData, { onConflict: 'id' }).select().single();
-    if (error) {
-        console.error('Error upserting testimonial:', error);
-        return { data: null, error };
+    if (hasSession) {
+      // User is logged in, rewrite to the actual admin page.
+      return NextResponse.rewrite(url);
+    } else {
+      // User is not logged in. Show the login page, but keep the secret URL in the browser.
+      // The login page itself is at /login, but it's only ever shown via this rewrite.
+      return NextResponse.rewrite(new URL('/login', request.url));
     }
-    revalidatePath(`${adminPath}/testimoni`);
-    revalidatePath('/testimoni');
-    if (data.vehicleName) {
-        revalidatePath('/mobil');
-    }
-    return { data, error: null };
+  }
+  
+  // If a non-admin path is requested, just proceed.
+  return NextResponse.next();
 }
 
-
-export async function deleteTestimonial(id: string) {
-    const supabase = createServiceRoleClient();
-    const { error } = await supabase.from('testimonials').delete().eq('id', id);
-    if (error) return { error };
-    revalidatePath(`${adminPath}/testimoni`);
-    revalidatePath('/testimoni');
-    revalidatePath('/mobil');
-    return { error: null };
-}
-
-// --- Gallery Actions ---
-
-export async function addGalleryItem(galleryData: Omit<GalleryItem, 'id' | 'created_at'>) {
-    const supabase = createServiceRoleClient();
-
-    try {
-        if (galleryData.url && galleryData.url.startsWith('data:image')) {
-            galleryData.url = await uploadImageFromDataUri(galleryData.url, 'gallery', `gallery-photo`);
-        }
-    } catch (uploadError) {
-        console.error("Gallery image upload failed:", uploadError);
-        return { data: null, error: { message: (uploadError as Error).message } };
-    }
-
-    const { data, error } = await supabase.from('gallery').insert(galleryData).select().single();
-    if (error) {
-        console.error('Error adding gallery item:', error);
-        return { data: null, error };
-    }
-    revalidatePath(`${adminPath}/testimoni`);
-    revalidatePath('/testimoni');
-    revalidatePath('/mobil');
-    return { data, error: null };
-}
-
-export async function deleteGalleryItem(id: string) {
-    const supabase = createServiceRoleClient();
-    // First, get the path of the object to delete from storage
-    const { data: itemData, error: fetchError } = await supabase.from('gallery').select('url').eq('id', id).single();
-    
-    if (fetchError) {
-        console.error("Error fetching gallery item for deletion:", fetchError);
-        return { error: fetchError };
-    }
-
-    // Delete from DB
-    const { error: deleteDbError } = await supabase.from('gallery').delete().eq('id', id);
-    if (deleteDbError) {
-        console.error("Error deleting gallery item from DB:", deleteDbError);
-        return { error: deleteDbError };
-    }
-
-    // If DB deletion is successful, delete from storage
-    const bucketName = 'mudakarya-bucket';
-    const filePath = itemData.url.substring(itemData.url.indexOf(bucketName) + bucketName.length + 1);
-    const { error: deleteStorageError } = await supabase.storage.from(bucketName).remove([filePath]);
-
-    if (deleteStorageError) {
-        console.error("Error deleting gallery item from Storage:", deleteStorageError);
-        // We don't return an error here because the DB record is already gone, which is the main goal.
-    }
-
-
-    revalidatePath(`${adminPath}/testimoni`);
-    revalidatePath('/testimoni');
-    revalidatePath('/mobil');
-    return { error: null };
-}
-
-
-// --- Feature Actions ---
-
-export async function upsertFeature(featureData: Omit<FeatureItem, 'created_at'>) {
-    const supabase = createServiceRoleClient();
-
-    try {
-        if (featureData.imageUrl && featureData.imageUrl.startsWith('data:image')) {
-             featureData.imageUrl = await uploadImageFromDataUri(featureData.imageUrl, 'features', `feature-${featureData.id}`);
-        }
-    } catch (uploadError) {
-        console.error("Feature image upload failed:", uploadError);
-        return { data: null, error: { message: (uploadError as Error).message } };
-    }
-
-    const { data, error } = await supabase.from('features').upsert(featureData, { onConflict: 'id' }).select().single();
-    if (error) {
-        console.error('Error upserting feature:', error);
-        return { data: null, error };
-    }
-    revalidatePath(`${adminPath}/testimoni`);
-    revalidatePath('/'); // Revalidate home page where features are shown
-    return { data, error: null };
-}
-
-export async function deleteFeature(id: string) {
-    const supabase = createServiceRoleClient();
-
-    const { data: itemData, error: fetchError } = await supabase.from('features').select('imageUrl').eq('id', id).single();
-    if (fetchError) {
-        console.error("Error fetching feature for deletion:", fetchError);
-        return { error: fetchError };
-    }
-
-    const { error } = await supabase.from('features').delete().eq('id', id);
-    if (error) return { error };
-
-    if(itemData.imageUrl) {
-        const bucketName = 'mudakarya-bucket';
-        const filePath = itemData.imageUrl.substring(itemData.imageUrl.indexOf(bucketName) + bucketName.length + 1);
-        await supabase.storage.from(bucketName).remove([filePath]);
-    }
-
-    revalidatePath(`${adminPath}/testimoni`);
-    revalidatePath('/'); // Revalidate home page
-    return { error: null };
-}
+export const config = {
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - and assets in the public folder
+     * Feel free to modify this pattern to include more paths.
+     */
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
+};
