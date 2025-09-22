@@ -124,20 +124,20 @@ export const OrderForm = forwardRef<HTMLDivElement, { variants: Vehicle[] }>(({ 
         if (!selectedVehicle || calculatedDuration <= 0) {
             return { totalCost: 0, discountAmount: 0, baseRentalCost: 0, maticFee: 0, driverFee: 0, fuelFee: 0 };
         }
-        
+
+        // 1. Calculate each cost component separately and with certainty.
         const rental = (selectedVehicle.price || 0) * calculatedDuration;
         const mFee = selectedVehicle.transmission === 'Matic' ? serviceCosts.matic * calculatedDuration : 0;
         const dFee = (service === 'dengan-supir' || service === 'all-include') ? serviceCosts.driver * calculatedDuration : 0;
-        
         const fFee = (service === 'all-include') ? serviceCosts.fuel * calculatedDuration : 0;
 
-        const subtotal = rental + mFee + dFee + fFee;
-
-        const discAmount = selectedVehicle.discountPercentage && selectedVehicle.price
-            ? (rental * selectedVehicle.discountPercentage) / 100 
+        // 2. Calculate discount *only* from the base rental price.
+        const discAmount = selectedVehicle.discountPercentage
+            ? (rental * selectedVehicle.discountPercentage) / 100
             : 0;
-        
-        const total = subtotal - discAmount;
+
+        // 3. Calculate the final total with a clear and precise formula.
+        const total = (rental - discAmount) + mFee + dFee + fFee;
 
         return {
             totalCost: total,
