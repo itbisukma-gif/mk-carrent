@@ -106,42 +106,42 @@ function OrderCard({ order, drivers, onDataChange }: { order: Order, drivers: Dr
     };
 
     return (
-         <Card className="flex flex-col">
-            <CardHeader className='pb-4'>
-                <div className="flex justify-between items-start">
-                    <div>
-                        <CardTitle className="text-lg">{order.customerName}</CardTitle>
-                        <CardDescription className="font-mono text-xs">{order.id}</CardDescription>
-                         <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1.5">
+         Card className="flex flex-col">
+            CardHeader className='pb-4'>
+                div className="flex justify-between items-start">
+                    div>
+                        <CardTitle className="text-lg">{order.customerName}CardTitle>
+                        <CardDescription className="font-mono text-xs">{order.id}CardDescription>
+                         div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1.5">
                             <Clock className="h-3 w-3" />
-                            <span>dibuat {timeSinceCreation}</span>
-                        </div>
-                    </div>
-                     <Badge variant="outline" className={cn("capitalize text-xs", statusInfo.className)}>{statusInfo.label}</Badge>
-                </div>
-                <div className="flex items-center gap-2 pt-3 text-sm text-muted-foreground">
+                            span>dibuat {timeSinceCreation}span>
+                        div>
+                    div>
+                     Badge variant="outline" className={cn("capitalize text-xs", statusInfo.className)}>{statusInfo.label}Badge>
+                div>
+                div className="flex items-center gap-2 pt-3 text-sm text-muted-foreground">
                     <Car className="h-4 w-4" />
-                    <span>{order.carName}</span>
-                </div>
-            </CardHeader>
-            <CardContent className="flex-grow space-y-4">
+                    span>{order.carName}span>
+                div>
+            CardHeader>
+            CardContent className="flex-grow space-y-4">
                  {needsAttention && (
-                    <Alert variant="destructive" className="bg-yellow-50 border-yellow-200 text-yellow-800 [&>svg]:text-yellow-600">
+                    Alert variant="destructive" className="bg-yellow-50 border-yellow-200 text-yellow-800 [&>svg]:text-yellow-600">
                         <AlertTriangle className="h-4 w-4" />
-                        <AlertTitle className="font-semibold">Perlu Perhatian</AlertTitle>
+                        <AlertTitle className="font-semibold">Perlu PerhatianAlertTitle>
                         <AlertDescription className="text-yellow-700">
                             Pesanan ini belum ditanggapi lebih dari 1 jam.
-                        </AlertDescription>
-                    </Alert>
+                        AlertDescription>
+                    Alert>
                 )}
-                <Separator />
-                <div className="space-y-3 text-sm">
-                    <div className="flex justify-between">
-                        <span className="text-muted-foreground">Layanan</span>
-                        <span className="font-medium">{order.service}</span>
-                    </div>
-                     <div className="flex justify-between items-center">
-                        <span className="text-muted-foreground">Driver</span>
+                Separator />
+                div className="space-y-3 text-sm">
+                    div className="flex justify-between">
+                        span className="text-muted-foreground">Layananspan>
+                        span className="font-medium">{order.service}span>
+                    div>
+                     div className="flex justify-between items-center">
+                        span className="text-muted-foreground">Driverspan>
                          {requiresDriver ? (
                             <Select 
                                 value={order.driverId ? `${order.driverId}|${order.driver}` : undefined} 
@@ -149,8 +149,7 @@ function OrderCard({ order, drivers, onDataChange }: { order: Order, drivers: Dr
                                 disabled={order.status === 'disetujui' || order.status === 'selesai' || isPending}
                             >
                                 <SelectTrigger className="w-[180px] h-8 text-xs">
-                                <SelectValue placeholder="Pilih Driver" />
-                                </SelectTrigger>
+                                SelectTrigger>
                                 <SelectContent>
                                     {drivers.map(d => 
                                         <SelectItem 
@@ -160,33 +159,33 @@ function OrderCard({ order, drivers, onDataChange }: { order: Order, drivers: Dr
                                             className="text-xs"
                                         >
                                             {d.name} ({d.status})
-                                        </SelectItem>
+                                        SelectItem>
                                     )}
-                                </SelectContent>
-                            </Select>
+                                SelectContent>
+                            Select>
                         ) : (
-                            <span className="font-medium">-</span>
+                            <span className="font-medium">-span>
                         )}
-                    </div>
-                </div>
-                 <Separator />
-            </CardContent>
-            <CardFooter className="flex-col sm:flex-row gap-2 justify-between items-center">
-                <Dialog>
-                    <DialogTrigger asChild>
+                    div>
+                div>
+                 Separator />
+            CardContent>
+            CardFooter className="flex-col sm:flex-row gap-2 justify-between items-center">
+                Dialog>
+                    DialogTrigger asChild>
                          <Button variant="ghost" size="sm" className="w-full sm:w-auto justify-start text-muted-foreground hover:text-primary">
                             <Eye className="h-4 w-4 mr-2" />
                             Bukti Bayar
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-md">
-                        <DialogHeader>
-                            <DialogTitle>Bukti Pembayaran</DialogTitle>
+                        Button>
+                    DialogTrigger>
+                    DialogContent className="max-w-md">
+                        DialogHeader>
+                            <DialogTitle>Bukti PembayaranDialogTitle>
                             <DialogDescription>
                                 Order ID: {order.id}
-                            </DialogDescription>
-                        </DialogHeader>
-                        <div className="relative mt-4 aspect-video w-full">
+                            DialogDescription>
+                        DialogHeader>
+                        div className="relative mt-4 aspect-video w-full">
                         {order.paymentProof ? (
                            <Image 
                                 src={order.paymentProof} 
@@ -195,77 +194,77 @@ function OrderCard({ order, drivers, onDataChange }: { order: Order, drivers: Dr
                                 className="rounded-md object-contain" 
                             />
                         ) : (
-                            <div className="flex items-center justify-center h-full bg-muted text-muted-foreground rounded-md">
+                            div className="flex items-center justify-center h-full bg-muted text-muted-foreground rounded-md">
                                 Tidak ada bukti bayar
-                            </div>
+                            div>
                         )}
-                        </div>
-                    </DialogContent>
-                </Dialog>
+                        div>
+                    DialogContent>
+                Dialog>
 
-                <div className="flex items-center gap-2">
+                div className="flex items-center gap-2">
                     {order.status === 'disetujui' && (
-                         <>
+                         >
                             <Button size="sm" variant="outline" asChild className="bg-green-500 text-white hover:bg-green-600 hover:text-white border-green-600">
                                 <Link href={whatsAppInvoiceUrl} target="_blank" rel="noopener noreferrer">
                                     <WhatsAppIcon className="h-4 w-4" />
-                                </Link>
-                            </Button>
-                            <AlertDialog>
-                                <AlertDialogTrigger asChild>
+                                Link>
+                            Button>
+                            AlertDialog>
+                                AlertDialogTrigger asChild>
                                     <Button size="sm" variant="default" className='bg-blue-600 hover:bg-blue-700' disabled={isPending}>
                                         {isPending ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : <Send className="h-3 w-3 mr-2" />}
                                         Selesaikan
-                                    </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                        <AlertDialogTitle>Selesaikan Pesanan Ini?</AlertDialogTitle>
+                                    Button>
+                                AlertDialogTrigger>
+                                AlertDialogContent>
+                                    AlertDialogHeader>
+                                        <AlertDialogTitle>Selesaikan Pesanan Ini?AlertDialogTitle>
                                         <AlertDialogDescription>
                                             Tindakan ini akan mengubah status pesanan menjadi "Selesai" dan mengembalikan status mobil dan driver (jika ada) menjadi "Tersedia".
-                                        </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                        <AlertDialogCancel>Batal</AlertDialogCancel>
-                                        <AlertDialogAction onClick={handleSelesaikanPesanan}>Ya, Selesaikan</AlertDialogAction>
-                                    </AlertDialogFooter>
-                                </AlertDialogContent>
-                            </AlertDialog>
-                         </>
+                                        AlertDialogDescription>
+                                    AlertDialogHeader>
+                                    AlertDialogFooter>
+                                        <AlertDialogCancel>BatalAlertDialogCancel>
+                                        <AlertDialogAction onClick={handleSelesaikanPesanan}>Ya, SelesaikanAlertDialogAction>
+                                    AlertDialogFooter>
+                                AlertDialogContent>
+                            AlertDialog>
+                         >
                     )}
                     {order.status === 'selesai' && (
-                        <div className='flex items-center text-sm text-blue-600 font-medium'>
+                        div className='flex items-center text-sm text-blue-600 font-medium'>
                             <CheckCircle className="h-4 w-4 mr-2" />
                             Pesanan Selesai
-                        </div>
+                        div>
                     )}
                      {order.status === 'tidak disetujui' && (
-                        <div className='flex items-center text-sm text-red-600 font-medium'>
+                        div className='flex items-center text-sm text-red-600 font-medium'>
                             <AlertTriangle className="h-4 w-4 mr-2" />
                             Pesanan Ditolak
-                        </div>
+                        div>
                     )}
                     {order.status === 'pending' && (
-                         <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
+                         DropdownMenu>
+                            DropdownMenuTrigger asChild>
                                 <Button variant="default" size="sm" disabled={isPending}>
                                     {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4 mr-2" />}
                                     Verifikasi
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                 <DropdownMenuLabel>Ubah Status Pesanan</DropdownMenuLabel>
-                                 <DropdownMenuSeparator />
+                                Button>
+                            DropdownMenuTrigger>
+                            DropdownMenuContent align="end">
+                                 DropdownMenuLabel>Ubah Status PesananDropdownMenuLabel>
+                                 DropdownMenuSeparator />
                                 <DropdownMenuRadioGroup value={order.status || 'pending'} onValueChange={(value) => handleStatusChange(value as OrderStatus)}>
-                                    <DropdownMenuRadioItem value="disetujui">Disetujui</DropdownMenuRadioItem>
-                                    <DropdownMenuRadioItem value="tidak disetujui">Ditolak</DropdownMenuRadioItem>
-                                </DropdownMenuRadioGroup>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                                    <DropdownMenuRadioItem value="disetujui">DisetujuiDropdownMenuRadioItem>
+                                    <DropdownMenuRadioItem value="tidak disetujui">DitolakDropdownMenuRadioItem>
+                                DropdownMenuRadioGroup>
+                            DropdownMenuContent>
+                        DropdownMenu>
                     )}
-                </div>
-            </CardFooter>
-        </Card>
+                div>
+            CardFooter>
+        Card>
     );
 }
 
@@ -319,55 +318,55 @@ export default function OrdersPage() {
     
     if (isLoading) {
         return (
-            <div className="flex flex-col gap-8">
-                <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
-                    <div>
-                    <h1 className="text-3xl font-bold tracking-tight">List Order</h1>
+            div className="flex flex-col gap-8">
+                div className="flex flex-col sm:flex-row items-start justify-between gap-4">
+                    div>
+                    <h1 className="text-3xl font-bold tracking-tight">List Orderh1>
                     <p className="text-muted-foreground">
                         Kelola order masuk dan status persetujuannya.
-                    </p>
-                    </div>
-                </div>
-                <div className="text-center py-16 flex items-center justify-center gap-2 text-muted-foreground">
+                    p>
+                    div>
+                div>
+                div className="text-center py-16 flex items-center justify-center gap-2 text-muted-foreground">
                     <Loader2 className="h-5 w-5 animate-spin" />
-                    <span>Memuat data pesanan...</span>
-                </div>
-            </div>
+                    span>Memuat data pesanan...span>
+                div>
+            div>
         )
     }
     
   return (
-    <div className="flex flex-col gap-8">
-      <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">List Order</h1>
+    div className="flex flex-col gap-8">
+      div className="flex flex-col sm:flex-row items-start justify-between gap-4">
+        div>
+          <h1 className="text-3xl font-bold tracking-tight">List Orderh1>
           <p className="text-muted-foreground">
             Kelola order masuk dan status persetujuannya.
-          </p>
-        </div>
-      </div>
+          p>
+        div>
+      div>
       
-       <Tabs defaultValue="incoming">
-        <TabsList className="grid w-full grid-cols-3 max-w-lg">
-            <TabsTrigger value="incoming">
+       Tabs defaultValue="incoming">
+        TabsList className="grid w-full grid-cols-3 max-w-lg">
+            TabsTrigger value="incoming">
                 Pesanan Masuk
                  {pendingOrders.length > 0 && (
-                    <Badge className="ml-2 rounded-full h-5 w-5 p-0 flex items-center justify-center">{pendingOrders.length}</Badge>
+                    <Badge className="ml-2 rounded-full h-5 w-5 p-0 flex items-center justify-center">{pendingOrders.length}Badge>
                 )}
-            </TabsTrigger>
-            <TabsTrigger value="on-progress">
+            TabsTrigger>
+            TabsTrigger value="on-progress">
                 On Progress
                 {approvedOrders.length > 0 && (
-                     <Badge className="ml-2 rounded-full h-5 w-5 p-0 flex items-center justify-center">{approvedOrders.length}</Badge>
+                     <Badge className="ml-2 rounded-full h-5 w-5 p-0 flex items-center justify-center">{approvedOrders.length}Badge>
                 )}
-            </TabsTrigger>
-            <TabsTrigger value="completed">
+            TabsTrigger>
+            TabsTrigger value="completed">
                 Selesai
-            </TabsTrigger>
-        </TabsList>
-        <TabsContent value="incoming" className="mt-6">
+            TabsTrigger>
+        TabsList>
+        TabsContent value="incoming" className="mt-6">
            {pendingOrders.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {pendingOrders.map((order) => (
                    <OrderCard 
                     key={order.id} 
@@ -376,17 +375,17 @@ export default function OrdersPage() {
                     onDataChange={fetchOrderData}
                    />
                 ))}
-            </div>
+            div>
             ) : (
-                <div className="flex flex-col items-center justify-center text-center py-16 border-2 border-dashed rounded-lg">
-                    <h3 className="text-xl font-semibold">Tidak Ada Pesanan Masuk</h3>
-                    <p className="text-muted-foreground mt-2 mb-6">Saat ada pesanan baru dengan status "pending", pesanan tersebut akan muncul di sini.</p>
-                </div>
+                div className="flex flex-col items-center justify-center text-center py-16 border-2 border-dashed rounded-lg">
+                    <h3 className="text-xl font-semibold">Tidak Ada Pesanan Masukh3>
+                    <p className="text-muted-foreground mt-2 mb-6">Saat ada pesanan baru dengan status "pending", pesanan tersebut akan muncul di sini.p>
+                div>
             )}
-        </TabsContent>
-         <TabsContent value="on-progress" className="mt-6">
+        TabsContent>
+         TabsContent value="on-progress" className="mt-6">
            {approvedOrders.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {approvedOrders.map((order) => (
                    <OrderCard 
                     key={order.id} 
@@ -395,17 +394,17 @@ export default function OrdersPage() {
                     onDataChange={fetchOrderData}
                    />
                 ))}
-            </div>
+            div>
             ) : (
-                <div className="flex flex-col items-center justify-center text-center py-16 border-2 border-dashed rounded-lg">
-                    <h3 className="text-xl font-semibold">Tidak Ada Pesanan Aktif</h3>
-                    <p className="text-muted-foreground mt-2 mb-6">Pesanan yang telah Anda setujui akan ditampilkan di sini.</p>
-                </div>
+                div className="flex flex-col items-center justify-center text-center py-16 border-2 border-dashed rounded-lg">
+                    <h3 className="text-xl font-semibold">Tidak Ada Pesanan Aktifh3>
+                    <p className="text-muted-foreground mt-2 mb-6">Pesanan yang telah Anda setujui akan ditampilkan di sini.p>
+                div>
             )}
-        </TabsContent>
-         <TabsContent value="completed" className="mt-6">
+        TabsContent>
+         TabsContent value="completed" className="mt-6">
            {completedOrders.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {completedOrders.map((order) => (
                    <OrderCard 
                     key={order.id} 
@@ -414,15 +413,15 @@ export default function OrdersPage() {
                     onDataChange={fetchOrderData}
                    />
                 ))}
-            </div>
+            div>
             ) : (
-                <div className="flex flex-col items-center justify-center text-center py-16 border-2 border-dashed rounded-lg">
-                    <h3 className="text-xl font-semibold">Belum Ada Pesanan Selesai</h3>
-                    <p className="text-muted-foreground mt-2 mb-6">Pesanan yang telah selesai atau ditolak akan muncul di sini.</p>
-                </div>
+                div className="flex flex-col items-center justify-center text-center py-16 border-2 border-dashed rounded-lg">
+                    <h3 className="text-xl font-semibold">Belum Ada Pesanan Selesaih3>
+                    <p className="text-muted-foreground mt-2 mb-6">Pesanan yang telah selesai atau ditolak akan muncul di sini.p>
+                div>
             )}
-        </TabsContent>
-       </Tabs>
-    </div>
+        TabsContent>
+       Tabs>
+    div>
   );
 }

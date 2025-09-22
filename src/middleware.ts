@@ -20,7 +20,7 @@ export async function middleware(request: NextRequest) {
   if (isAccessingAdminArea) {
     if (hasSession) {
       // Rewrite to the internal /admin path if the user has a session
-      const newPath = pathname.replace(adminPath, '/admin');
+      const newPath = pathname.replace(adminPath, '/(admin)');
       return NextResponse.rewrite(new URL(newPath, request.url));
     } else {
       // If no session, show the login page, but keep the secret URL in the browser
@@ -28,9 +28,14 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Prevent direct access to internal /admin folder
-  if (pathname.startsWith('/admin')) {
+  // Prevent direct access to internal admin/auth folders
+  if (pathname.startsWith('/(admin)') || pathname.startsWith('/(auth)')) {
       return NextResponse.rewrite(new URL('/404', request.url));
+  }
+  
+  // All other public routes are handled by the (web) group by default
+  if (pathname === '/' || pathname.startsWith('/mobil') || pathname.startsWith('/testimoni') || pathname.startsWith('/kontak') || pathname.startsWith('/syarat-ketentuan') || pathname.startsWith('/pembayaran') || pathname.startsWith('/konfirmasi') || pathname.startsWith('/invoice')) {
+     return NextResponse.rewrite(new URL(`/(web)${pathname}`, request.url));
   }
   
   return NextResponse.next();

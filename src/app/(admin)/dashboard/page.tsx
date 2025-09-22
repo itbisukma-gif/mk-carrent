@@ -144,27 +144,27 @@ function DriverForm({ driver, onSave, onCancel }: { driver?: Driver | null; onSa
             <div className="max-h-[70vh] overflow-y-auto px-1 pr-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4 px-6">
                     <div className="space-y-2 col-span-1 md:col-span-2">
-                        <Label htmlFor="name">Nama Driver</Label>
+                        <Label htmlFor="name">Nama DriverLabel>
                         <Input id="name" placeholder="cth. Budi Santoso" value={name} onChange={(e) => setName(e.target.value)} disabled={isPending} />
-                    </div>
-                    <div className="space-y-2 col-span-1 md:col-span-2">
-                        <Label htmlFor="address">Alamat</Label>
+                    div>
+                    div className="space-y-2 col-span-1 md:col-span-2">
+                        <Label htmlFor="address">AlamatLabel>
                         <Input id="address" placeholder="cth. Jl. Merdeka No. 10, Jakarta" value={address || ''} onChange={(e) => setAddress(e.target.value)} disabled={isPending}/>
-                    </div>
-                    <div className="space-y-2 col-span-1 md:col-span-2">
-                        <Label htmlFor="phone">Nomor WhatsApp</Label>
+                    div>
+                    div className="space-y-2 col-span-1 md:col-span-2">
+                        <Label htmlFor="phone">Nomor WhatsAppLabel>
                         <Input id="phone" type="tel" placeholder="cth. 081234567890" value={phone || ''} onChange={(e) => setPhone(e.target.value)} disabled={isPending} />
-                    </div>
-                </div>
-            </div>
-             <DialogFooter className="pt-4 border-t px-6 pb-6 bg-background rounded-b-lg">
-                <Button variant="outline" onClick={onCancel} disabled={isPending}>Batal</Button>
+                    div>
+                div>
+            div>
+             DialogFooter className="pt-4 border-t px-6 pb-6 bg-background rounded-b-lg">
+                <Button variant="outline" onClick={onCancel} disabled={isPending}>BatalButton>
                 <Button type="submit" onClick={handleSave} disabled={isPending}>
                     {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                     {isPending ? 'Menyimpan...' : (driver ? 'Simpan Perubahan' : 'Simpan Driver')}
-                </Button>
-            </DialogFooter>
-        </>
+                Button>
+            DialogFooter>
+        >
     )
 }
 
@@ -292,26 +292,26 @@ export default function DashboardPage() {
         const lastWeekRev = payload.find((p: any) => p.dataKey === 'Pendapatan Minggu Lalu');
 
         return (
-        <div className="rounded-lg border bg-background p-2 shadow-sm">
-            <div className="grid grid-cols-2 gap-2">
-            <div className="flex flex-col space-y-1">
-                <span className="text-[0.70rem] uppercase text-muted-foreground">
+        div className="rounded-lg border bg-background p-2 shadow-sm">
+            div className="grid grid-cols-2 gap-2">
+            div className="flex flex-col space-y-1">
+                span className="text-[0.70rem] uppercase text-muted-foreground">
                 Minggu Ini
-                </span>
-                <span className="font-bold text-blue-600">
+                span>
+                span className="font-bold text-blue-600">
                  {weeklyRev ? formatCurrency(weeklyRev.value) : 'N/A'}
-                </span>
-            </div>
-            <div className="flex flex-col space-y-1">
-                <span className="text-[0.70rem] uppercase text-muted-foreground">
+                span>
+            div>
+            div className="flex flex-col space-y-1">
+                span className="text-[0.70rem] uppercase text-muted-foreground">
                 Minggu Lalu
-                </span>
-                <span className="font-bold text-gray-500">
+                span>
+                span className="font-bold text-gray-500">
                 {lastWeekRev ? formatCurrency(lastWeekRev.value) : 'N/A'}
-                </span>
-            </div>
-            </div>
-        </div>
+                span>
+            div>
+            div>
+        div>
         );
     }
 
@@ -319,15 +319,15 @@ export default function DashboardPage() {
  };
 
   return (
-    <div className="flex flex-col gap-8">
-       <div className="grid grid-cols-1 xl:grid-cols-5 gap-8">
-            <Card className="xl:col-span-3">
-                <CardHeader className="flex flex-col items-baseline justify-between gap-4 sm:flex-row">
-                    <div>
-                        <CardTitle>Analisis Pendapatan</CardTitle>
-                        <CardDescription>Perbandingan pendapatan minggu ini dan minggu lalu.</CardDescription>
-                    </div>
-                     <div className={cn("grid gap-2")}>
+    div className="flex flex-col gap-8">
+       div className="grid grid-cols-1 xl:grid-cols-5 gap-8">
+            Card className="xl:col-span-3">
+                CardHeader className="flex flex-col items-baseline justify-between gap-4 sm:flex-row">
+                    div>
+                        <CardTitle>Analisis PendapatanCardTitle>
+                        <CardDescription>Perbandingan pendapatan minggu ini dan minggu lalu.CardDescription>
+                    div>
+                     div className={cn("grid gap-2")}>
                         <Popover>
                             <PopoverTrigger asChild>
                             <Button
@@ -341,33 +341,32 @@ export default function DashboardPage() {
                                 <CalendarIcon className="mr-2 h-4 w-4" />
                                 {date?.from ? (
                                 date.to ? (
-                                    <>
+                                    >
                                     {format(date.from, "LLL dd, y")} -{" "}
                                     {format(date.to, "LLL dd, y")}
-                                    </>
+                                    >
                                 ) : (
                                     format(date.from, "LLL dd, y")
                                 )
                                 ) : (
-                                <span>Pilih tanggal</span>
+                                <span>Pilih tanggalspan>
                                 )}
-                            </Button>
-                            </PopoverTrigger>
+                            Button>
+                            PopoverTrigger>
                             <PopoverContent className="w-auto p-0" align="start">
                             <Calendar
                                 initialFocus
                                 mode="range"
                                 defaultMonth={date?.from}
                                 selected={date}
-                                onSelect={setDate}
                                 numberOfMonths={2}
                             />
-                            </PopoverContent>
-                        </Popover>
-                    </div>
-                </CardHeader>
-                <CardContent>
-                     <ResponsiveContainer width="100%" height={300}>
+                            PopoverContent>
+                        Popover>
+                    div>
+                CardHeader>
+                CardContent>
+                     ResponsiveContainer width="100%" height={300}>
                         <LineChart data={combinedChartData}>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} />
                             <XAxis
@@ -388,184 +387,184 @@ export default function DashboardPage() {
                             <Legend wrapperStyle={{fontSize: "12px"}}/>
                             <Line type="monotone" dataKey="Pendapatan Minggu Ini" stroke="hsl(var(--primary))" strokeWidth={3} dot={{r: 4}} activeDot={{r: 6}} />
                             <Line type="monotone" dataKey="Pendapatan Minggu Lalu" stroke="hsl(var(--muted-foreground))" strokeWidth={2} strokeDasharray="5 5" />
-                        </LineChart>
-                    </ResponsiveContainer>
-                </CardContent>
-            </Card>
+                        LineChart>
+                    ResponsiveContainer>
+                CardContent>
+            Card>
 
-            <Card className="xl:col-span-2">
-                <CardHeader>
-                    <CardTitle>Statistik Operasional</CardTitle>
-                    <CardDescription>Ringkasan status operasional terkini.</CardDescription>
-                </CardHeader>
-                <CardContent className="grid grid-cols-2 gap-4">
-                    <Card className="bg-yellow-50 border-yellow-200">
-                        <CardHeader className="pb-2">
+            Card className="xl:col-span-2">
+                CardHeader>
+                    <CardTitle>Statistik OperasionalCardTitle>
+                    <CardDescription>Ringkasan status operasional terkini.CardDescription>
+                CardHeader>
+                CardContent className="grid grid-cols-2 gap-4">
+                    Card className="bg-yellow-50 border-yellow-200">
+                        CardHeader className="pb-2">
                             <CardDescription className="flex items-center gap-2 text-yellow-700">
                                 <Clock className="h-4 w-4" />
                                 Order Pending
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-3xl font-bold text-yellow-800">{isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : stats.pendingOrders}</p>
-                        </CardContent>
-                    </Card>
-                    <Card className="bg-green-50 border-green-200">
-                        <CardHeader className="pb-2">
+                            CardDescription>
+                        CardHeader>
+                        CardContent>
+                            <p className="text-3xl font-bold text-yellow-800">{isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : stats.pendingOrders}p>
+                        CardContent>
+                    Card>
+                    Card className="bg-green-50 border-green-200">
+                        CardHeader className="pb-2">
                             <CardDescription className="flex items-center gap-2 text-green-700">
                                 <UserCheck className="h-4 w-4" />
                             Driver Tersedia
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-3xl font-bold text-green-800">{isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : stats.availableDrivers}</p>
-                        </CardContent>
-                    </Card>
-                    <Card className="bg-blue-50 border-blue-200">
-                        <CardHeader className="pb-2">
+                            CardDescription>
+                        CardHeader>
+                        CardContent>
+                            <p className="text-3xl font-bold text-green-800">{isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : stats.availableDrivers}p>
+                        CardContent>
+                    Card>
+                    Card className="bg-blue-50 border-blue-200">
+                        CardHeader className="pb-2">
                             <CardDescription className="flex items-center gap-2 text-blue-700">
                                 <Car className="h-4 w-4" />
                                 Unit Siap Jalan
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                             <p className="text-3xl font-bold text-blue-800">{isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : stats.availableUnits}</p>
-                        </CardContent>
-                    </Card>
-                    <Card className="bg-gray-50 border-gray-200">
-                        <CardHeader className="pb-2">
+                            CardDescription>
+                        CardHeader>
+                        CardContent>
+                             <p className="text-3xl font-bold text-blue-800">{isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : stats.availableUnits}p>
+                        CardContent>
+                    Card>
+                    Card className="bg-gray-50 border-gray-200">
+                        CardHeader className="pb-2">
                             <CardDescription className="flex items-center gap-2 text-gray-700">
                                 <CheckCircle className="h-4 w-4" />
                             Order Selesai (Bulan Ini)
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-3xl font-bold text-gray-800">{isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : stats.completedThisMonth}</p>
-                        </CardContent>
-                    </Card>
-                </CardContent>
-            </Card>
-       </div>
+                            CardDescription>
+                        CardHeader>
+                        CardContent>
+                            <p className="text-3xl font-bold text-gray-800">{isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : stats.completedThisMonth}p>
+                        CardContent>
+                    Card>
+                CardContent>
+            Card>
+       div>
 
-      <Card>
-        <CardHeader className="flex items-center justify-between flex-row">
-            <div>
-              <CardTitle>Manajemen Driver</CardTitle>
+      Card>
+        CardHeader className="flex items-center justify-between flex-row">
+            div>
+              <CardTitle>Manajemen DriverCardTitle>
               <CardDescription>
                 Kelola data dan ketersediaan driver.
-              </CardDescription>
-            </div>
-             <Dialog open={isAddDialogOpen} onOpenChange={setAddDialogOpen}>
+              CardDescription>
+            div>
+             Dialog open={isAddDialogOpen} onOpenChange={setAddDialogOpen}>
                 <DialogTrigger asChild>
                     <Button size="sm" onClick={() => setSelectedDriver(null)}>
                         <PlusCircle className="mr-2 h-4 w-4" />
                         Driver Baru
-                    </Button>
-                </DialogTrigger>
+                    Button>
+                DialogTrigger>
                 <DialogContent className="sm:max-w-xl p-0">
-                    <DialogHeader className="p-6 pb-0">
-                        <DialogTitle>Tambahkan Driver Baru</DialogTitle>
-                        <DialogDescription>Isi detail driver baru di bawah ini.</DialogDescription>
-                    </DialogHeader>
+                    DialogHeader className="p-6 pb-0">
+                        <DialogTitle>Tambahkan Driver BaruDialogTitle>
+                        <DialogDescription>Isi detail driver baru di bawah ini.DialogDescription>
+                    DialogHeader>
                     <DriverForm onSave={handleFormSave} onCancel={handleFormCancel} />
-                </DialogContent>
-            </Dialog>
-        </CardHeader>
-        <CardContent>
-          <div className="relative w-full overflow-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nama</TableHead>
-                  <TableHead>Nomor WhatsApp</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Aksi</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+                DialogContent>
+            Dialog>
+        CardHeader>
+        CardContent>
+          div className="relative w-full overflow-auto">
+            Table>
+              TableHeader>
+                TableRow>
+                  TableHead>NamaTableHead>
+                  TableHead>Nomor WhatsAppTableHead>
+                  TableHead>StatusTableHead>
+                  TableHead className="text-right">AksiTableHead>
+                TableRow>
+              TableHeader>
+              TableBody>
                 {isLoading ? (
-                    <TableRow>
-                        <TableCell colSpan={4} className="h-24 text-center">
-                            <div className="flex justify-center items-center gap-2 text-muted-foreground">
+                    TableRow>
+                        TableCell colSpan={4} className="h-24 text-center">
+                            div className="flex justify-center items-center gap-2 text-muted-foreground">
                                 <Loader2 className="h-5 w-5 animate-spin" />
-                                <span>Memuat data driver...</span>
-                            </div>
-                        </TableCell>
-                    </TableRow>
+                                span>Memuat data driver...span>
+                            div>
+                        TableCell>
+                    TableRow>
                 ) : drivers.length > 0 ? (
                     drivers.map((driver) => (
-                    <TableRow key={driver.id}>
-                        <TableCell className="font-medium">{driver.name}</TableCell>
-                        <TableCell>{driver.phone}</TableCell>
-                        <TableCell>
+                    TableRow key={driver.id}>
+                        TableCell className="font-medium">{driver.name}TableCell>
+                        TableCell>{driver.phone}TableCell>
+                        TableCell>
                         <Select value={driver.status} onValueChange={(value: 'Tersedia' | 'Bertugas') => handleStatusChange(driver.id, value)}>
                             <SelectTrigger className={cn("w-[130px] capitalize", 
                                 driver.status === 'Tersedia' ? 'bg-green-100 text-green-800 border-green-200' : 'bg-yellow-100 text-yellow-800 border-yellow-200'
                             )}>
                                 <SelectValue placeholder="Pilih Status" />
-                            </SelectTrigger>
+                            SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="Tersedia">Tersedia</SelectItem>
-                                <SelectItem value="Bertugas">Bertugas</SelectItem>
-                            </SelectContent>
-                        </Select>
-                        </TableCell>
-                        <TableCell className="text-right">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
+                                <SelectItem value="Tersedia">TersediaSelectItem>
+                                <SelectItem value="Bertugas">BertugasSelectItem>
+                            SelectContent>
+                        Select>
+                        TableCell>
+                        TableCell className="text-right">
+                        DropdownMenu>
+                            DropdownMenuTrigger asChild>
                             <Button aria-haspopup="true" size="icon" variant="ghost">
                                 <MoreHorizontal className="h-4 w-4" />
-                                <span className="sr-only">Toggle menu</span>
-                            </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Aksi</DropdownMenuLabel>
-                            <DropdownMenuItem onSelect={() => handleEditClick(driver)}>Edit</DropdownMenuItem>
-                            <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                    <DropdownMenuItem className='text-destructive' onSelect={(e) => e.preventDefault()}>Hapus</DropdownMenuItem>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                        <AlertDialogTitle>Anda Yakin?</AlertDialogTitle>
+                                <span className="sr-only">Toggle menuspan>
+                            Button>
+                            DropdownMenuTrigger>
+                            DropdownMenuContent align="end">
+                            DropdownMenuLabel>AksiDropdownMenuLabel>
+                            DropdownMenuItem onSelect={() => handleEditClick(driver)}>EditDropdownMenuItem>
+                            AlertDialog>
+                                AlertDialogTrigger asChild>
+                                    <DropdownMenuItem className='text-destructive' onSelect={(e) => e.preventDefault()}>HapusDropdownMenuItem>
+                                AlertDialogTrigger>
+                                AlertDialogContent>
+                                    AlertDialogHeader>
+                                        <AlertDialogTitle>Anda Yakin?AlertDialogTitle>
                                         <AlertDialogDescription>
-                                            Tindakan ini akan menghapus data driver <span className="font-bold">{driver.name}</span> secara permanen.
-                                        </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                        <AlertDialogCancel>Batal</AlertDialogCancel>
-                                        <AlertDialogAction onClick={() => handleDeleteDriver(driver.id)} className="bg-destructive hover:bg-destructive/90">Ya, Hapus</AlertDialogAction>
-                                    </AlertDialogFooter>
-                                </AlertDialogContent>
-                            </AlertDialog>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                        </TableCell>
-                    </TableRow>
+                                            Tindakan ini akan menghapus data driver <span className="font-bold">{driver.name}span> secara permanen.
+                                        AlertDialogDescription>
+                                    AlertDialogHeader>
+                                    AlertDialogFooter>
+                                        <AlertDialogCancel>BatalAlertDialogCancel>
+                                        <AlertDialogAction onClick={() => handleDeleteDriver(driver.id)} className="bg-destructive hover:bg-destructive/90">Ya, HapusAlertDialogAction>
+                                    AlertDialogFooter>
+                                AlertDialogContent>
+                            AlertDialog>
+                            DropdownMenuContent>
+                        DropdownMenu>
+                        TableCell>
+                    TableRow>
                     ))
                 ) : (
-                    <TableRow>
-                        <TableCell colSpan={4} className="h-24 text-center">
+                    TableRow>
+                        TableCell colSpan={4} className="h-24 text-center">
                             Belum ada driver yang ditambahkan.
-                        </TableCell>
-                    </TableRow>
+                        TableCell>
+                    TableRow>
                 )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+              TableBody>
+            Table>
+          div>
+        CardContent>
+      Card>
 
-      <Dialog open={isEditDialogOpen} onOpenChange={setEditDialogOpen}>
-         <DialogContent className="sm:max-w-xl p-0">
-            <DialogHeader className="p-6 pb-0">
-                <DialogTitle>Edit Driver</DialogTitle>
-                <DialogDescription>Perbarui detail driver di bawah ini.</DialogDescription>
-            </DialogHeader>
+      Dialog open={isEditDialogOpen} onOpenChange={setEditDialogOpen}>
+         DialogContent className="sm:max-w-xl p-0">
+            DialogHeader className="p-6 pb-0">
+                <DialogTitle>Edit DriverDialogTitle>
+                <DialogDescription>Perbarui detail driver di bawah ini.DialogDescription>
+            DialogHeader>
             <DriverForm driver={selectedDriver} onSave={handleFormSave} onCancel={handleFormCancel} />
-        </DialogContent>
-       </Dialog>
+        DialogContent>
+       Dialog>
       
-    </div>
+    div>
   )
 }

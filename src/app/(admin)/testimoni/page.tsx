@@ -64,52 +64,52 @@ function TestimonialForm({ testimonial, vehicles, onSave, onCancel }: { testimon
 
     return (
         <>
-            <div className="max-h-[70vh] overflow-y-auto px-1 pr-4">
-                <div className="grid gap-6 py-4 px-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="customerName">Nama Pelanggan</Label>
+            div className="max-h-[70vh] overflow-y-auto px-1 pr-4">
+                div className="grid gap-6 py-4 px-6">
+                    div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        div className="space-y-2">
+                            <Label htmlFor="customerName">Nama PelangganLabel>
                             <Input id="customerName" placeholder="cth. Budi Santoso" value={customerName} onChange={e => setCustomerName(e.target.value)} />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="vehicleName">Mobil yang Disewa</Label>
-                             <Select value={vehicleName || ''} onValueChange={setVehicleName}>
+                        div>
+                        div className="space-y-2">
+                            <Label htmlFor="vehicleName">Mobil yang DisewaLabel>
+                             Select value={vehicleName || ''} onValueChange={setVehicleName}>
                                 <SelectTrigger>
                                     <SelectValue placeholder="Pilih mobil..." />
-                                </SelectTrigger>
+                                SelectTrigger>
                                 <SelectContent>
                                     {vehicles.map((vehicle) => (
                                         <SelectItem key={vehicle.id} value={`${vehicle.brand} ${vehicle.name}`}>
                                             {vehicle.brand} {vehicle.name}
-                                        </SelectItem>
+                                        SelectItem>
                                     ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
-                     <div className="space-y-2">
-                        <Label>Rating</Label>
-                        <div className="flex items-center gap-2 rounded-md border p-3">
-                            <p className="text-sm font-medium">Berikan rating (1-5):</p>
+                                SelectContent>
+                            Select>
+                        div>
+                    div>
+                     div className="space-y-2">
+                        <Label>RatingLabel>
+                        div className="flex items-center gap-2 rounded-md border p-3">
+                            <p className="text-sm font-medium">Berikan rating (1-5):p>
                             <LanguageProvider>
                                 <StarRating rating={rating} onRatingChange={setRating} />
-                            </LanguageProvider>
-                        </div>
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="comment">Komentar</Label>
+                            LanguageProvider>
+                        div>
+                    div>
+                    div className="space-y-2">
+                        <Label htmlFor="comment">KomentarLabel>
                         <Textarea id="comment" placeholder="Tulis komentar testimoni di sini..." value={comment || ''} onChange={e => setComment(e.target.value)} />
-                    </div>
-                </div>
-            </div>
-            <DialogFooter className="pt-4 border-t px-6 pb-6 bg-background rounded-b-lg">
-                 <Button variant="outline" onClick={onCancel}>Batal</Button>
+                    div>
+                div>
+            div>
+            DialogFooter className="pt-4 border-t px-6 pb-6 bg-background rounded-b-lg">
+                 Button variant="outline" onClick={onCancel}>BatalButton>
                 <Button type="submit" onClick={handleSave} disabled={isPending}>
                     {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     {testimonial ? "Simpan Perubahan" : "Simpan Testimoni"}
-                </Button>
-            </DialogFooter>
-        </>
+                Button>
+            DialogFooter>
+        >
     )
 }
 
@@ -158,39 +158,39 @@ function FeatureForm({ feature, onSave, onCancel }: { feature?: FeatureItem | nu
     
     return (
         <>
-             <div className="max-h-[70vh] overflow-y-auto px-1 pr-4">
-                <div className="grid gap-6 py-4 px-6">
-                    <div className="space-y-2">
-                        <Label htmlFor="feature-title">Judul Keunggulan</Label>
+             div className="max-h-[70vh] overflow-y-auto px-1 pr-4">
+                div className="grid gap-6 py-4 px-6">
+                    div className="space-y-2">
+                        <Label htmlFor="feature-title">Judul KeunggulanLabel>
                         <Input id="feature-title" placeholder="cth. Unit Selalu Bersih" value={title} onChange={e => setTitle(e.target.value)} />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="feature-description">Deskripsi Singkat</Label>
+                    div>
+                    div className="space-y-2">
+                        <Label htmlFor="feature-description">Deskripsi SingkatLabel>
                         <Textarea id="feature-description" placeholder="Jelaskan keunggulan layanan Anda..." value={description || ''} onChange={e => setDescription(e.target.value)} />
-                    </div>
-                     <div className="space-y-2">
-                        <Label>Foto Ilustrasi</Label>
+                    div>
+                     div className="space-y-2">
+                        <Label>Foto IlustrasiLabel>
                         {previewUrl && (
-                            <div className="relative aspect-video w-full rounded-md overflow-hidden border">
+                            div className="relative aspect-video w-full rounded-md overflow-hidden border">
                                 <Image src={previewUrl} alt="Pratinjau" fill className="object-cover" />
-                            </div>
+                            div>
                         )}
                         <Label htmlFor="feature-upload" className={cn("w-full cursor-pointer", "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50", "border border-input bg-background hover:bg-accent hover:text-accent-foreground", "h-10 px-4 py-2")}>
                             <Upload className="mr-2 h-4 w-4" />
                             {previewUrl ? "Ganti Foto..." : "Pilih File Foto..."}
-                        </Label>
+                        Label>
                         <Input id="feature-upload" type="file" accept="image/*" className="hidden" onChange={handleFileChange}/>
-                    </div>
-                </div>
-            </div>
-             <DialogFooter className="pt-4 border-t px-6 pb-6 bg-background rounded-b-lg">
-                <Button variant="outline" onClick={onCancel}>Batal</Button>
+                    div>
+                div>
+            div>
+             DialogFooter className="pt-4 border-t px-6 pb-6 bg-background rounded-b-lg">
+                <Button variant="outline" onClick={onCancel}>BatalButton>
                 <Button onClick={handleSave} disabled={isPending}>
                     {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     {feature ? "Simpan Perubahan" : "Simpan Keunggulan"}
-                </Button>
-            </DialogFooter>
-        </>
+                Button>
+            DialogFooter>
+        >
     );
 }
 
@@ -271,67 +271,67 @@ function GalleryEditor({ vehicles }: { vehicles: Vehicle[] }) {
     };
 
     return (
-        <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                    <CardTitle>Galeri Foto Pelanggan</CardTitle>
-                    <CardDescription>Kelola foto-foto yang ditampilkan di halaman testimoni.</CardDescription>
-                </div>
-                <Dialog open={isAddPhotoOpen} onOpenChange={(isOpen) => { setAddPhotoOpen(isOpen); if(!isOpen) { setPreviewUrl(null); setSelectedVehicleName(undefined); } }}>
-                    <DialogTrigger asChild>
+        Card>
+            CardHeader className="flex flex-row items-center justify-between">
+                div>
+                    <CardTitle>Galeri Foto PelangganCardTitle>
+                    <CardDescription>Kelola foto-foto yang ditampilkan di halaman testimoni.CardDescription>
+                div>
+                Dialog open={isAddPhotoOpen} onOpenChange={(isOpen) => { setAddPhotoOpen(isOpen); if(!isOpen) { setPreviewUrl(null); setSelectedVehicleName(undefined); } }}>
+                    DialogTrigger asChild>
                         <Button variant="outline">
                             <PlusCircle className="mr-2 h-4 w-4" />
                             Tambah Foto
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>Tambah Foto Baru</DialogTitle>
-                            <DialogDescription>Unggah foto dari pelanggan untuk ditampilkan di galeri.</DialogDescription>
-                        </DialogHeader>
-                        <div className="py-4 space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="vehicleName">Tautkan ke Mobil (Opsional)</Label>
-                                <Select onValueChange={setSelectedVehicleName}>
+                        Button>
+                    DialogTrigger>
+                    DialogContent>
+                        DialogHeader>
+                            <DialogTitle>Tambah Foto BaruDialogTitle>
+                            <DialogDescription>Unggah foto dari pelanggan untuk ditampilkan di galeri.DialogDescription>
+                        DialogHeader>
+                        div className="py-4 space-y-4">
+                            div className="space-y-2">
+                                <Label htmlFor="vehicleName">Tautkan ke Mobil (Opsional)Label>
+                                Select onValueChange={setSelectedVehicleName}>
                                     <SelectTrigger>
                                         <SelectValue placeholder="Pilih mobil..." />
-                                    </SelectTrigger>
+                                    SelectTrigger>
                                     <SelectContent>
                                         {vehicles.map((vehicle) => (
                                             <SelectItem key={vehicle.id} value={`${vehicle.brand} ${vehicle.name}`}>
                                                 {vehicle.brand} {vehicle.name}
-                                            </SelectItem>
+                                            SelectItem>
                                         ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
+                                    SelectContent>
+                                Select>
+                            div>
                             {previewUrl && (
-                                <div className="relative aspect-video w-full rounded-md overflow-hidden border">
+                                div className="relative aspect-video w-full rounded-md overflow-hidden border">
                                     <Image src={previewUrl} alt="Pratinjau Foto" fill className="object-cover" />
-                                </div>
+                                div>
                             )}
-                             <Label htmlFor="photo-upload" className={cn("w-full cursor-pointer", "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50", "border border-input bg-background hover:bg-accent hover:text-accent-foreground", "h-10 px-4 py-2")}>
+                             Label htmlFor="photo-upload" className={cn("w-full cursor-pointer", "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50", "border border-input bg-background hover:bg-accent hover:text-accent-foreground", "h-10 px-4 py-2")}>
                                 <Upload className="mr-2 h-4 w-4" />
                                 {previewUrl ? "Pilih Foto Lain..." : "Pilih File Foto..."}
-                            </Label>
+                            Label>
                             <Input id="photo-upload" type="file" accept="image/*" className="hidden" onChange={handleFileChange}/>
-                        </div>
-                        <DialogFooter>
+                        div>
+                        DialogFooter>
                             <Button onClick={handleAddPhoto} disabled={!previewUrl || isPending}>
                                 {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                 Upload & Simpan
-                            </Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
-            </CardHeader>
-            <CardContent>
+                            Button>
+                        DialogFooter>
+                    DialogContent>
+                Dialog>
+            CardHeader>
+            CardContent>
                 {isLoading ? (
-                    <div className="flex justify-center items-center h-48"><Loader2 className="h-6 w-6 animate-spin"/></div>
+                    div className="flex justify-center items-center h-48"><Loader2 className="h-6 w-6 animate-spin"/>div>
                 ) : gallery.length > 0 ? (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                         {gallery.map((photo) => (
-                             <div key={photo.id} className="relative group aspect-square">
+                             div key={photo.id} className="relative group aspect-square">
                                 <Image
                                     src={photo.url}
                                     alt="Foto galeri pelanggan"
@@ -340,10 +340,10 @@ function GalleryEditor({ vehicles }: { vehicles: Vehicle[] }) {
                                     data-ai-hint="customer photo"
                                 />
                                 {photo.vehicleName && (
-                                    <Badge variant="secondary" className="absolute bottom-1 left-1 text-xs">{photo.vehicleName}</Badge>
+                                    <Badge variant="secondary" className="absolute bottom-1 left-1 text-xs">{photo.vehicleName}Badge>
                                 )}
-                                <AlertDialog>
-                                    <AlertDialogTrigger asChild>
+                                AlertDialog>
+                                    AlertDialogTrigger asChild>
                                         <Button
                                             variant="destructive"
                                             size="icon"
@@ -351,33 +351,33 @@ function GalleryEditor({ vehicles }: { vehicles: Vehicle[] }) {
                                             disabled={isPending}
                                         >
                                             <Trash2 className="h-4 w-4" />
-                                            <span className="sr-only">Hapus foto</span>
-                                        </Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                        <AlertDialogHeader>
-                                            <AlertDialogTitle>Anda Yakin?</AlertDialogTitle>
+                                            <span className="sr-only">Hapus fotospan>
+                                        Button>
+                                    AlertDialogTrigger>
+                                    AlertDialogContent>
+                                        AlertDialogHeader>
+                                            <AlertDialogTitle>Anda Yakin?AlertDialogTitle>
                                             <AlertDialogDescription>
                                                 Tindakan ini akan menghapus foto ini dari galeri secara permanen.
-                                            </AlertDialogDescription>
-                                        </AlertDialogHeader>
-                                        <AlertDialogFooter>
-                                            <AlertDialogCancel>Batal</AlertDialogCancel>
-                                            <AlertDialogAction onClick={() => handleDeletePhoto(photo.id)} className="bg-destructive hover:bg-destructive/90">Ya, Hapus</AlertDialogAction>
-                                        </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                </AlertDialog>
-                             </div>
+                                            AlertDialogDescription>
+                                        AlertDialogHeader>
+                                        AlertDialogFooter>
+                                            <AlertDialogCancel>BatalAlertDialogCancel>
+                                            <AlertDialogAction onClick={() => handleDeletePhoto(photo.id)} className="bg-destructive hover:bg-destructive/90">Ya, HapusAlertDialogAction>
+                                        AlertDialogFooter>
+                                    AlertDialogContent>
+                                AlertDialog>
+                             div>
                         ))}
-                    </div>
+                    div>
                 ) : (
-                    <div className="text-center py-12 border-2 border-dashed rounded-lg">
-                        <h3 className="text-lg font-semibold">Galeri Masih Kosong</h3>
-                        <p className="text-sm text-muted-foreground mt-1">Tambahkan foto pertama Anda.</p>
-                    </div>
+                    div className="text-center py-12 border-2 border-dashed rounded-lg">
+                        <h3 className="text-lg font-semibold">Galeri Masih Kosongh3>
+                        <p className="text-sm text-muted-foreground mt-1">Tambahkan foto pertama Anda.p>
+                    div>
                 )}
-            </CardContent>
-        </Card>
+            CardContent>
+        Card>
     );
 }
 
@@ -440,74 +440,74 @@ function FeatureEditor() {
     };
 
     return (
-        <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                    <CardTitle>Keunggulan Layanan</CardTitle>
-                    <CardDescription>Kelola poin-poin keunggulan yang ditampilkan di halaman utama.</CardDescription>
-                </div>
+        Card>
+            CardHeader className="flex flex-row items-center justify-between">
+                div>
+                    <CardTitle>Keunggulan LayananCardTitle>
+                    <CardDescription>Kelola poin-poin keunggulan yang ditampilkan di halaman utama.CardDescription>
+                div>
                 <Button onClick={handleAddClick} variant="outline">
                     <PlusCircle className="mr-2 h-4 w-4" />
                     Tambah Keunggulan
-                </Button>
-            </CardHeader>
-            <CardContent className="space-y-4">
+                Button>
+            CardHeader>
+            CardContent className="space-y-4">
                 {isLoading ? (
-                     <div className="flex justify-center items-center h-48"><Loader2 className="h-6 w-6 animate-spin"/></div>
+                     div className="flex justify-center items-center h-48"><Loader2 className="h-6 w-6 animate-spin"/>div>
                 ) : features.length > 0 ? features.map(feature => (
-                    <div key={feature.id} className="flex items-center gap-4 border rounded-lg p-3">
+                    div key={feature.id} className="flex items-center gap-4 border rounded-lg p-3">
                         <Image src={feature.imageUrl!} alt={feature.title} width={120} height={80} className="rounded-md object-cover aspect-video bg-muted" />
-                        <div className="flex-grow">
-                            <h4 className="font-bold">{feature.title}</h4>
-                            <p className="text-sm text-muted-foreground">{feature.description}</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                             <Button variant="outline" size="icon" onClick={() => handleEditClick(feature)}>
+                        div className="flex-grow">
+                            <h4 className="font-bold">{feature.title}h4>
+                            <p className="text-sm text-muted-foreground">{feature.description}p>
+                        div>
+                        div className="flex items-center gap-2">
+                             Button variant="outline" size="icon" onClick={() => handleEditClick(feature)}>
                                 <Edit className="h-4 w-4" />
-                            </Button>
-                            <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                    <Button variant="destructive" size="icon" disabled={isPending}><Trash2 className="h-4 w-4" /></Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                        <AlertDialogTitle>Anda Yakin?</AlertDialogTitle>
+                            Button>
+                            AlertDialog>
+                                AlertDialogTrigger asChild>
+                                    <Button variant="destructive" size="icon" disabled={isPending}><Trash2 className="h-4 w-4" />Button>
+                                AlertDialogTrigger>
+                                AlertDialogContent>
+                                    AlertDialogHeader>
+                                        <AlertDialogTitle>Anda Yakin?AlertDialogTitle>
                                         <AlertDialogDescription>
                                             Tindakan ini akan menghapus keunggulan "{feature.title}".
-                                        </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                        <AlertDialogCancel>Batal</AlertDialogCancel>
-                                        <AlertDialogAction onClick={() => handleDelete(feature.id)} className="bg-destructive hover:bg-destructive/90">Ya, Hapus</AlertDialogAction>
-                                    </AlertDialogFooter>
-                                </AlertDialogContent>
-                            </AlertDialog>
-                        </div>
-                    </div>
+                                        AlertDialogDescription>
+                                    AlertDialogHeader>
+                                    AlertDialogFooter>
+                                        <AlertDialogCancel>BatalAlertDialogCancel>
+                                        <AlertDialogAction onClick={() => handleDelete(feature.id)} className="bg-destructive hover:bg-destructive/90">Ya, HapusAlertDialogAction>
+                                    AlertDialogFooter>
+                                AlertDialogContent>
+                            AlertDialog>
+                        div>
+                    div>
                 )) : (
-                     <div className="text-center py-12 border-2 border-dashed rounded-lg">
-                        <h3 className="text-lg font-semibold">Belum Ada Keunggulan</h3>
-                        <p className="text-sm text-muted-foreground mt-1">Tambahkan poin keunggulan pertama Anda.</p>
-                    </div>
+                     div className="text-center py-12 border-2 border-dashed rounded-lg">
+                        <h3 className="text-lg font-semibold">Belum Ada Keunggulanh3>
+                        <p className="text-sm text-muted-foreground mt-1">Tambahkan poin keunggulan pertama Anda.p>
+                    div>
                 )}
-            </CardContent>
+            CardContent>
 
-             <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-                 <DialogContent className="sm:max-w-lg p-0">
-                    <DialogHeader className="p-6 pb-0">
-                        <DialogTitle>{selectedFeature ? "Edit Keunggulan" : "Tambah Keunggulan"}</DialogTitle>
+             Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+                 DialogContent className="sm:max-w-lg p-0">
+                    DialogHeader className="p-6 pb-0">
+                        <DialogTitle>{selectedFeature ? "Edit Keunggulan" : "Tambah Keunggulan"}DialogTitle>
                         <DialogDescription>
                             {selectedFeature ? "Perbarui detail keunggulan di bawah ini." : "Buat poin keunggulan baru untuk ditampilkan di halaman utama."}
-                        </DialogDescription>
-                    </DialogHeader>
+                        DialogDescription>
+                    DialogHeader>
                     <FeatureForm 
                         feature={selectedFeature} 
                         onSave={handleFormSave}
                         onCancel={() => setIsFormOpen(false)}
                     />
-                </DialogContent>
-            </Dialog>
-        </Card>
+                DialogContent>
+            Dialog>
+        Card>
     );
 }
 
@@ -529,7 +529,7 @@ export default function TestimoniPage() {
     if (!supabase) return;
     setIsLoading(true);
     const { data: testimonialsData, error: testimonialsError } = await supabase.from('testimonials').select('*').order('created_at', { ascending: false });
-    const { data: vehiclesData, error: vehiclesError } = await supabase.from('vehicles').select('*');
+    const { data: vehiclesData, error: vehiclesError } = await supabase.from('vehicles').select('name, brand');
     
     if (testimonialsError) toast({ variant: 'destructive', title: 'Gagal memuat testimoni', description: testimonialsError.message });
     else setTestimonials(testimonialsData || []);
@@ -609,125 +609,124 @@ export default function TestimoniPage() {
   const dialogDescription = selectedTestimonial ? "Perbarui detail testimoni di bawah ini." : "Isi detail testimoni baru di bawah ini.";
 
   return (
-    <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Manajemen Testimoni & Keunggulan</h1>
+    div className="flex flex-col gap-8">
+      div>
+        <h1 className="text-3xl font-bold tracking-tight">Manajemen Testimoni & Keunggulanh1>
         <p className="text-muted-foreground">
           Kelola semua testimoni, galeri, dan poin keunggulan dari layanan Anda.
-        </p>
-      </div>
+        p>
+      div>
       
-       <Tabs defaultValue="testimonials">
-            <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="testimonials">Ulasan Pelanggan</TabsTrigger>
-                <TabsTrigger value="gallery">Galeri Foto</TabsTrigger>
-                <TabsTrigger value="features">Kelola Keunggulan</TabsTrigger>
-            </TabsList>
+       Tabs defaultValue="testimonials">
+            TabsList className="grid w-full grid-cols-3">
+                TabsTrigger value="testimonials">Ulasan PelangganTabsTrigger>
+                TabsTrigger value="gallery">Galeri FotoTabsTrigger>
+                TabsTrigger value="features">Kelola KeunggulanTabsTrigger>
+            TabsList>
 
-            <TabsContent value="testimonials" className="mt-6">
-                 <Card>
-                    <CardHeader>
-                        <CardTitle>Daftar Testimoni</CardTitle>
-                        <CardDescription>Berikut adalah semua testimoni yang akan ditampilkan di halaman detail mobil.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
+            TabsContent value="testimonials" className="mt-6">
+                 Card>
+                    CardHeader>
+                        <CardTitle>Daftar TestimoniCardTitle>
+                        <CardDescription>Berikut adalah semua testimoni yang akan ditampilkan di halaman detail mobil.CardDescription>
+                    CardHeader>
+                    CardContent>
+                      div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
                           <Select value={filter} onValueChange={handleFilterChange}>
                               <SelectTrigger className="w-full sm:w-[240px]">
                                   <SelectValue placeholder="Filter berdasarkan mobil" />
-                              </SelectTrigger>
+                              SelectTrigger>
                               <SelectContent>
-                                  <SelectItem value="all">Tampilkan Semua Mobil</SelectItem>
+                                  <SelectItem value="all">Tampilkan Semua MobilSelectItem>
                                   {vehicles.map((vehicle) => (
                                       <SelectItem key={vehicle.id} value={`${vehicle.brand} ${vehicle.name}`}>
                                           {vehicle.brand} {vehicle.name}
-                                      </SelectItem>
+                                      SelectItem>
                                   ))}
-                              </SelectContent>
-                          </Select>
+                              SelectContent>
+                          Select>
                           <Button onClick={handleAddClick} className="w-full sm:w-auto">
                               <PlusCircle className="mr-2 h-4 w-4" />
                               Tambah Testimoni
-                          </Button>
-                      </div>
+                          Button>
+                      div>
                       {isLoading ? (
-                        <div className="flex justify-center items-center h-48"><Loader2 className="h-6 w-6 animate-spin"/></div>
+                        div className="flex justify-center items-center h-48"><Loader2 className="h-6 w-6 animate-spin"/>div>
                       ) : (
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Nama Pelanggan</TableHead>
-                            <TableHead>Mobil yang Disewa</TableHead>
-                            <TableHead>Komentar</TableHead>
-                            <TableHead className="text-center">Rating</TableHead>
-                            <TableHead className="text-right">Aksi</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
+                      Table>
+                        TableHeader>
+                          TableRow>
+                            TableHead>Nama PelangganTableHead>
+                            TableHead>Mobil yang DisewaTableHead>
+                            TableHead>KomentarTableHead>
+                            TableHead className="text-center">RatingTableHead>
+                            TableHead className="text-right">AksiTableHead>
+                          TableRow>
+                        TableHeader>
+                        TableBody>
                           {currentItems.length > 0 ? (
                             currentItems.map((item) => (
-                                <TableRow key={item.id}>
-                                <TableCell className="font-medium">{item.customerName}</TableCell>
-                                <TableCell>{item.vehicleName}</TableCell>
-                                <TableCell className="max-w-xs truncate italic text-muted-foreground">"{item.comment}"</TableCell>
-                                <TableCell className="text-center">
-                                    <div className="flex items-center justify-center gap-1">
+                                TableRow key={item.id}>
+                                TableCell className="font-medium">{item.customerName}TableCell>
+                                TableCell>{item.vehicleName}TableCell>
+                                TableCell className="max-w-xs truncate italic text-muted-foreground">"{item.comment}"TableCell>
+                                TableCell className="text-center">
+                                    div className="flex items-center justify-center gap-1">
                                         <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" /> 
-                                        <span className="font-semibold">{item.rating}</span>
-                                    </div>
-                                </TableCell>
-                                <TableCell className="text-right">
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
+                                        <span className="font-semibold">{item.rating}span>
+                                    div>
+                                TableCell>
+                                TableCell className="text-right">
+                                    DropdownMenu>
+                                        DropdownMenuTrigger asChild>
                                         <Button aria-haspopup="true" size="icon" variant="ghost">
                                             <MoreHorizontal className="h-4 w-4" />
-                                            <span className="sr-only">Toggle menu</span>
-                                        </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end">
-                                        <DropdownMenuLabel>Aksi</DropdownMenuLabel>
-                                        <DropdownMenuItem onSelect={() => handleEditClick(item)}>Edit</DropdownMenuItem>
-                                        <AlertDialog>
-                                            <AlertDialogTrigger asChild>
-                                                <DropdownMenuItem className='text-destructive' onSelect={(e) => e.preventDefault()}>Hapus</DropdownMenuItem>
-                                            </AlertDialogTrigger>
-                                            <AlertDialogContent>
-                                                <AlertDialogHeader>
-                                                    <AlertDialogTitle>Anda Yakin?</AlertDialogTitle>
+                                            <span className="sr-only">Toggle menuspan>
+                                        Button>
+                                        DropdownMenuTrigger>
+                                        DropdownMenuContent align="end">
+                                        DropdownMenuLabel>AksiDropdownMenuLabel>
+                                        DropdownMenuItem onSelect={() => handleEditClick(item)}>EditDropdownMenuItem>
+                                        AlertDialog>
+                                            AlertDialogTrigger asChild>
+                                                <DropdownMenuItem className='text-destructive' onSelect={(e) => e.preventDefault()}>HapusDropdownMenuItem>
+                                            AlertDialogTrigger>
+                                            AlertDialogContent>
+                                                AlertDialogHeader>
+                                                    <AlertDialogTitle>Anda Yakin?AlertDialogTitle>
                                                     <AlertDialogDescription>
-                                                        Tindakan ini akan menghapus testimoni dari <span className="font-bold">{item.customerName}</span> secara permanen.
-                                                    </AlertDialogDescription>
-                                                </AlertDialogHeader>
-                                                <AlertDialogFooter>
-                                                    <AlertDialogCancel>Batal</AlertDialogCancel>
+                                                        Tindakan ini akan menghapus testimoni dari <span className="font-bold">{item.customerName}span> secara permanen.
+                                                    AlertDialogDescription>
+                                                AlertDialogHeader>
+                                                AlertDialogFooter>
+                                                    <AlertDialogCancel>BatalAlertDialogCancel>
                                                     <AlertDialogAction onClick={() => handleDelete(item.id)} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90">
                                                         {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                                                        Ya, Hapus
-                                                    </AlertDialogAction>
-                                                </AlertDialogFooter>
-                                            </AlertDialogContent>
-                                        </AlertDialog>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                </TableCell>
-                                </TableRow>
+                                                        Ya, HapusAlertDialogAction>
+                                                AlertDialogFooter>
+                                            AlertDialogContent>
+                                        AlertDialog>
+                                        DropdownMenuContent>
+                                    DropdownMenu>
+                                TableCell>
+                                TableRow>
                             ))
                           ) : (
-                            <TableRow>
+                            TableRow>
                                 <TableCell colSpan={5} className="h-24 text-center">
                                     Belum ada testimoni.
-                                </TableCell>
-                            </TableRow>
+                                TableCell>
+                            TableRow>
                           )}
-                        </TableBody>
-                      </Table>
+                        TableBody>
+                      Table>
                       )}
-                    </CardContent>
-                     <CardFooter className="flex items-center justify-end space-x-4 py-4">
-                        <span className="text-sm text-muted-foreground">
+                    CardContent>
+                     CardFooter className="flex items-center justify-end space-x-4 py-4">
+                        span className="text-sm text-muted-foreground">
                             Halaman {currentPage} dari {totalPages > 0 ? totalPages : 1}
-                        </span>
-                        <div className="space-x-2">
+                        span>
+                        div className="space-x-2">
                             <Button
                                 variant="outline"
                                 size="sm"
@@ -735,7 +734,7 @@ export default function TestimoniPage() {
                                 disabled={currentPage === 1}
                             >
                                 Sebelumnya
-                            </Button>
+                            Button>
                             <Button
                                 variant="outline"
                                 size="sm"
@@ -743,36 +742,36 @@ export default function TestimoniPage() {
                                 disabled={currentPage === totalPages || totalPages === 0}
                             >
                                 Berikutnya
-                            </Button>
-                        </div>
-                    </CardFooter>
-                  </Card>
-            </TabsContent>
+                            Button>
+                        div>
+                    CardFooter>
+                  Card>
+            TabsContent>
 
-             <TabsContent value="gallery" className="mt-6">
+             TabsContent value="gallery" className="mt-6">
                 <GalleryEditor vehicles={vehicles} />
-            </TabsContent>
+            TabsContent>
 
-             <TabsContent value="features" className="mt-6">
+             TabsContent value="features" className="mt-6">
                 <FeatureEditor />
-            </TabsContent>
+            TabsContent>
 
-       </Tabs>
+       Tabs>
       
-       <Dialog open={isFormOpen} onOpenChange={setFormOpen}>
-         <DialogContent className="sm:max-w-xl p-0">
-            <DialogHeader className="p-6 pb-0">
-                <DialogTitle>{dialogTitle}</DialogTitle>
-                <DialogDescription>{dialogDescription}</DialogDescription>
-            </DialogHeader>
+       Dialog open={isFormOpen} onOpenChange={setFormOpen}>
+         DialogContent className="sm:max-w-xl p-0">
+            DialogHeader className="p-6 pb-0">
+                <DialogTitle>{dialogTitle}DialogTitle>
+                <DialogDescription>{dialogDescription}DialogDescription>
+            DialogHeader>
             <TestimonialForm 
                 testimonial={selectedTestimonial}
                 vehicles={vehicles}
                 onSave={handleFormSave}
                 onCancel={() => setFormOpen(false)}
             />
-        </DialogContent>
-       </Dialog>
-    </div>
+        DialogContent>
+       Dialog>
+    div>
   );
 }

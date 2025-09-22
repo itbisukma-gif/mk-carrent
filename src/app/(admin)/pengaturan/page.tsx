@@ -143,55 +143,55 @@ export default function PengaturanPage() {
 
   if (isLoading || !contactInfo || !terms) {
       return (
-        <div className="flex flex-col gap-8">
-             <div>
-                <h1 className="text-3xl font-bold tracking-tight">Pengaturan</h1>
-                <p className="text-muted-foreground">Kelola informasi website dan akun Anda.</p>
-            </div>
-            <div className="flex justify-center items-center h-64">
+        div className="flex flex-col gap-8">
+             div>
+                <h1 className="text-3xl font-bold tracking-tight">Pengaturanh1>
+                <p className="text-muted-foreground">Kelola informasi website dan akun Anda.p>
+            div>
+            div className="flex justify-center items-center h-64">
                 <Loader2 className="h-8 w-8 animate-spin" />
-            </div>
-        </div>
+            div>
+        div>
       )
   }
 
   return (
-    <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Pengaturan</h1>
+    div className="flex flex-col gap-8">
+      div>
+        <h1 className="text-3xl font-bold tracking-tight">Pengaturanh1>
         <p className="text-muted-foreground">
           Kelola informasi website dan akun Anda.
-        </p>
-      </div>
+        p>
+      div>
 
-      <Tabs defaultValue="kontak" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 max-w-md">
-            <TabsTrigger value="kontak">Kontak & Media Sosial</TabsTrigger>
-            <TabsTrigger value="sk">Syarat & Ketentuan</TabsTrigger>
-        </TabsList>
-        <TabsContent value="kontak" className="mt-6">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Informasi Kontak & Alamat</CardTitle>
-                    <CardDescription>Perbarui detail yang ditampilkan di halaman Kontak.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                    <div className="space-y-2">
-                        <Label htmlFor="address">Alamat Kantor</Label>
+      Tabs defaultValue="kontak" className="w-full">
+        TabsList className="grid w-full grid-cols-2 max-w-md">
+            TabsTrigger value="kontak">Kontak & Media SosialTabsTrigger>
+            TabsTrigger value="sk">Syarat & KetentuanTabsTrigger>
+        TabsList>
+        TabsContent value="kontak" className="mt-6">
+            Card>
+                CardHeader>
+                    <CardTitle>Informasi Kontak & AlamatCardTitle>
+                    <CardDescription>Perbarui detail yang ditampilkan di halaman Kontak.CardDescription>
+                CardHeader>
+                CardContent className="space-y-6">
+                    div className="space-y-2">
+                        <Label htmlFor="address">Alamat KantorLabel>
                         <Input id="address" value={contactInfo.address} onChange={(e) => handleContactChange('address', e.target.value)} />
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                            <Label htmlFor="email">Email</Label>
+                    div>
+                    div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        div className="space-y-2">
+                            <Label htmlFor="email">EmailLabel>
                             <Input id="email" type="email" value={contactInfo.email} onChange={(e) => handleContactChange('email', e.target.value)} />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="whatsapp">WhatsApp</Label>
+                        div>
+                        div className="space-y-2">
+                            <Label htmlFor="whatsapp">WhatsAppLabel>
                             <Input id="whatsapp" value={contactInfo.whatsapp} onChange={(e) => handleContactChange('whatsapp', e.target.value)} />
-                        </div>
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="maps">Embed URL Google Maps</Label>
+                        div>
+                    div>
+                    div className="space-y-2">
+                        <Label htmlFor="maps">Embed URL Google MapsLabel>
                         <Textarea 
                             id="maps" 
                             rows={4} 
@@ -199,12 +199,12 @@ export default function PengaturanPage() {
                             onChange={(e) => handleContactChange('maps', e.target.value)}
                             placeholder="Contoh: https://www.google.com/maps/embed?pb=..."
                         />
-                         <p className="text-xs text-muted-foreground">{'Buka Google Maps > Cari lokasi > Share > Pilih tab \'Embed a map\' > Salin HANYA URL (src) dari dalam kode iframe.'}</p>
-                    </div>
+                         <p className="text-xs text-muted-foreground">{'Buka Google Maps > Cari lokasi > Share > Pilih tab \'Embed a map\' > Salin HANYA URL (src) dari dalam kode iframe.'}p>
+                    div>
                      {contactInfo.maps && contactInfo.maps.startsWith('https://') && (
-                        <div className="space-y-2">
-                            <Label>Pratinjau Peta</Label>
-                            <div className="aspect-video w-full overflow-hidden rounded-lg border">
+                        div className="space-y-2">
+                            <Label>Pratinjau PetaLabel>
+                            div className="aspect-video w-full overflow-hidden rounded-lg border">
                                 <iframe
                                     key={contactInfo.maps} // Re-render iframe when URL changes
                                     src={contactInfo.maps}
@@ -214,33 +214,33 @@ export default function PengaturanPage() {
                                     allowFullScreen={true}
                                     loading="lazy"
                                     referrerPolicy="no-referrer-when-downgrade"
-                                ></iframe>
-                            </div>
-                        </div>
+                                >iframe>
+                            div>
+                        div>
                     )}
-                </CardContent>
-            </Card>
-            <Card className="mt-6">
-                <CardHeader>
-                    <CardTitle>Tautan Media Sosial</CardTitle>
-                    <CardDescription>Kelola tautan profil media sosial Anda.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
+                CardContent>
+            Card>
+            Card className="mt-6">
+                CardHeader>
+                    <CardTitle>Tautan Media SosialCardTitle>
+                    <CardDescription>Kelola tautan profil media sosial Anda.CardDescription>
+                CardHeader>
+                CardContent className="space-y-4">
                     {socialLinks.map((link, index) => (
-                        <div key={index} className="flex items-center gap-2">
+                        div key={index} className="flex items-center gap-2">
                             <Select
                                 value={link.platform}
                                 onValueChange={(value) => handleSocialLinkChange(index, 'platform', value)}
                             >
                                 <SelectTrigger className="w-[180px]">
                                     <SelectValue placeholder="Pilih Platform" />
-                                </SelectTrigger>
+                                SelectTrigger>
                                 <SelectContent>
                                     {socialPlatforms.map(p => (
-                                        <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                                        <SelectItem key={p.value} value={p.value}>{p.label}SelectItem>
                                     ))}
-                                </SelectContent>
-                            </Select>
+                                SelectContent>
+                            Select>
                             <Input 
                                 value={link.url}
                                 onChange={(e) => handleSocialLinkChange(index, 'url', e.target.value)}
@@ -249,46 +249,46 @@ export default function PengaturanPage() {
                             />
                             <Button variant="ghost" size="icon" onClick={() => removeSocialLink(index)} aria-label="Hapus tautan">
                                 <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                        </div>
+                            Button>
+                        div>
                     ))}
-                     <Button variant="outline" size="sm" onClick={addSocialLink} className="mt-4">
+                     Button variant="outline" size="sm" onClick={addSocialLink} className="mt-4">
                         <PlusCircle className="mr-2 h-4 w-4" />
                         Tambah Tautan
-                    </Button>
-                </CardContent>
-            </Card>
+                    Button>
+                CardContent>
+            Card>
             <Button onClick={() => handleSaveChanges('Kontak')} className="mt-6" disabled={isSaving}>
                  {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Simpan Perubahan Kontak & Medsos
-            </Button>
-        </TabsContent>
-        <TabsContent value="sk" className="mt-6">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Syarat & Ketentuan</CardTitle>
-                    <CardDescription>Atur poin-poin syarat dan ketentuan sewa.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                    <div className="space-y-2">
-                        <Label>Persyaratan Umum</Label>
+            Button>
+        TabsContent>
+        TabsContent value="sk" className="mt-6">
+            Card>
+                CardHeader>
+                    <CardTitle>Syarat & KetentuanCardTitle>
+                    <CardDescription>Atur poin-poin syarat dan ketentuan sewa.CardDescription>
+                CardHeader>
+                CardContent className="space-y-6">
+                    div className="space-y-2">
+                        <Label>Persyaratan UmumLabel>
                         <Textarea rows={8} value={terms.general} onChange={(e) => handleTermsChange('general', e.target.value)} />
-                        <p className="text-xs text-muted-foreground">Setiap baris akan menjadi satu poin persyaratan.</p>
-                    </div>
-                     <div className="space-y-2">
-                        <Label>Metode Pembayaran</Label>
+                        <p className="text-xs text-muted-foreground">Setiap baris akan menjadi satu poin persyaratan.p>
+                    div>
+                     div className="space-y-2">
+                        <Label>Metode PembayaranLabel>
                          <Textarea rows={4} value={terms.payment} onChange={(e) => handleTermsChange('payment', e.target.value)} />
-                        <p className="text-xs text-muted-foreground">Setiap baris akan menjadi satu poin metode pembayaran.</p>
-                    </div>
+                        <p className="text-xs text-muted-foreground">Setiap baris akan menjadi satu poin metode pembayaran.p>
+                    div>
                     <Button onClick={() => handleSaveChanges('S&K')} disabled={isSaving}>
                         {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Simpan Perubahan S&K
-                    </Button>
-                </CardContent>
-            </Card>
-        </TabsContent>
-      </Tabs>
+                    Button>
+                CardContent>
+            Card>
+        TabsContent>
+      Tabs>
 
-    </div>
+    div>
   );
 }

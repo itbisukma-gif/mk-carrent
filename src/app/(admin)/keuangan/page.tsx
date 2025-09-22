@@ -201,47 +201,47 @@ export default function KeuanganPage() {
 
 
   return (
-    <div className="flex flex-col gap-8">
-      <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Keuangan</h1>
+    div className="flex flex-col gap-8">
+      div className="flex flex-col sm:flex-row items-start justify-between gap-4">
+        div>
+          <h1 className="text-3xl font-bold tracking-tight">Keuanganh1>
           <p className="text-muted-foreground">
             Kelola harga, metode pembayaran, dan laporan keuangan.
-          </p>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-            <Dialog open={isPricesOpen} onOpenChange={setIsPricesOpen}>
-                <DialogTrigger asChild>
-                    <Button variant="outline" className="w-full">Harga Layanan</Button>
-                </DialogTrigger>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Pengaturan Harga Layanan</DialogTitle>
+          p>
+        div>
+        div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            Dialog open={isPricesOpen} onOpenChange={setIsPricesOpen}>
+                DialogTrigger asChild>
+                    <Button variant="outline" className="w-full">Harga LayananButton>
+                DialogTrigger>
+                DialogContent>
+                    DialogHeader>
+                        <DialogTitle>Pengaturan Harga LayananDialogTitle>
                         <DialogDescription>
                             Atur biaya tambahan untuk layanan per hari.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4">
-                        <div className="grid grid-cols-3 items-center gap-4">
-                            <Label htmlFor="driver-price" className="text-right">Harga Supir</Label>
+                        DialogDescription>
+                    DialogHeader>
+                    div className="space-y-4 py-4">
+                        div className="grid grid-cols-3 items-center gap-4">
+                            <Label htmlFor="driver-price" className="text-right">Harga SupirLabel>
                             <Input 
                                 id="driver-price" 
                                 type="number" 
                                 value={serviceCosts.driver} 
                                 onChange={(e) => setServiceCosts(prev => ({...prev, driver: Number(e.target.value)}))}
                                 className="col-span-2" />
-                        </div>
-                        <div className="grid grid-cols-3 items-center gap-4">
-                            <Label htmlFor="matic-price" className="text-right">Biaya Matic</Label>
+                        div>
+                        div className="grid grid-cols-3 items-center gap-4">
+                            <Label htmlFor="matic-price" className="text-right">Biaya MaticLabel>
                              <Input 
                                 id="matic-price" 
                                 type="number" 
                                 value={serviceCosts.matic} 
                                 onChange={(e) => setServiceCosts(prev => ({...prev, matic: Number(e.target.value)}))}
                                 className="col-span-2" />
-                        </div>
-                        <div className="grid grid-cols-3 items-center gap-4">
-                            <Label htmlFor="fuel-price" className="text-right">Harga BBM</Label>
+                        div>
+                        div className="grid grid-cols-3 items-center gap-4">
+                            <Label htmlFor="fuel-price" className="text-right">Harga BBMLabel>
                              <Input 
                                 id="fuel-price" 
                                 type="number" 
@@ -249,37 +249,37 @@ export default function KeuanganPage() {
                                 onChange={(e) => setServiceCosts(prev => ({...prev, fuel: Number(e.target.value)}))}
                                 className="col-span-2"
                              />
-                        </div>
-                        <p className='text-xs text-muted-foreground text-center pt-2'>Harga BBM hanya akan ditambahkan untuk layanan "All Include".</p>
-                    </div>
-                    <DialogFooter>
-                        <Button type="submit" onClick={handleSavePrices}>Simpan Harga</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+                        div>
+                        <p className='text-xs text-muted-foreground text-center pt-2'>Harga BBM hanya akan ditambahkan untuk layanan "All Include".p>
+                    div>
+                    DialogFooter>
+                        <Button type="submit" onClick={handleSavePrices}>Simpan HargaButton>
+                    DialogFooter>
+                DialogContent>
+            Dialog>
 
-            <Dialog open={isPaymentsOpen} onOpenChange={setIsPaymentsOpen}>
-                <DialogTrigger asChild>
-                    <Button className="w-full">Jenis Pembayaran</Button>
-                </DialogTrigger>
-                 <DialogContent className="sm:max-w-2xl">
-                    <DialogHeader>
-                        <DialogTitle>Pengaturan Jenis Pembayaran</DialogTitle>
-                        <DialogDescription>Kelola rekening bank dan kode QRIS untuk menerima pembayaran.</DialogDescription>
-                    </DialogHeader>
-                    <Tabs defaultValue="bank">
-                        <TabsList className="grid w-full grid-cols-2">
-                            <TabsTrigger value="bank">Transfer Bank</TabsTrigger>
-                            <TabsTrigger value="qris">QRIS</TabsTrigger>
-                        </TabsList>
-                        <TabsContent value="bank" className="mt-6">
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>Tambah Rekening</CardTitle>
-                                    <CardDescription>Tambahkan rekening bank baru untuk opsi pembayaran.</CardDescription>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            Dialog open={isPaymentsOpen} onOpenChange={setIsPaymentsOpen}>
+                DialogTrigger asChild>
+                    <Button className="w-full">Jenis PembayaranButton>
+                DialogTrigger>
+                 DialogContent className="sm:max-w-2xl">
+                    DialogHeader>
+                        <DialogTitle>Pengaturan Jenis PembayaranDialogTitle>
+                        <DialogDescription>Kelola rekening bank dan kode QRIS untuk menerima pembayaran.DialogDescription>
+                    DialogHeader>
+                    Tabs defaultValue="bank">
+                        TabsList className="grid w-full grid-cols-2">
+                            TabsTrigger value="bank">Transfer BankTabsTrigger>
+                            TabsTrigger value="qris">QRISTabsTrigger>
+                        TabsList>
+                        TabsContent value="bank" className="mt-6">
+                            Card>
+                                CardHeader>
+                                    <CardTitle>Tambah RekeningCardTitle>
+                                    <CardDescription>Tambahkan rekening bank baru untuk opsi pembayaran.CardDescription>
+                                CardHeader>
+                                CardContent className="space-y-4">
+                                    div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                         <Combobox
                                             items={bankList as ComboboxItem[]}
                                             searchPlaceholder="Cari bank..."
@@ -289,183 +289,183 @@ export default function KeuanganPage() {
                                         />
                                         <Input placeholder="Nomor Rekening" value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} />
                                         <Input placeholder="Atas Nama" value={accountName} onChange={(e) => setAccountName(e.target.value)} />
-                                    </div>
-                                    <Button onClick={handleAddAccount}>Tambah Rekening</Button>
-                                    <div className="space-y-4 pt-6">
-                                        <h4 className="font-medium text-lg">Daftar Rekening</h4>
+                                    div>
+                                    <Button onClick={handleAddAccount}>Tambah RekeningButton>
+                                    div className="space-y-4 pt-6">
+                                        <h4 className="font-medium text-lg">Daftar Rekeningh4>
                                         {bankAccounts.length > 0 ? bankAccounts.map(acc => (
-                                            <div key={acc.accountNumber} className="rounded-md border p-4 flex items-center justify-between">
-                                                <div className="flex items-center gap-4">
-                                                <div className="relative h-8 w-12">
+                                            div key={acc.accountNumber} className="rounded-md border p-4 flex items-center justify-between">
+                                                div className="flex items-center gap-4">
+                                                div className="relative h-8 w-12">
                                                     <Image src={acc.logoUrl} alt={`${acc.bankName} logo`} fill className="object-contain" />
-                                                </div>
-                                                <div>
-                                                        <p className="font-semibold text-base">{acc.bankName} - {acc.accountNumber}</p>
-                                                        <p className="text-sm text-muted-foreground">a.n. {acc.accountName}</p>
-                                                </div>
-                                                </div>
-                                                <AlertDialog>
-                                                    <AlertDialogTrigger asChild>
-                                                        <Button variant="ghost" size="icon"><Trash2 className="h-4 w-4 text-destructive"/></Button>
-                                                    </AlertDialogTrigger>
-                                                    <AlertDialogContent>
-                                                        <AlertDialogHeader>
-                                                            <AlertDialogTitle>Anda Yakin?</AlertDialogTitle>
+                                                div>
+                                                div>
+                                                        <p className="font-semibold text-base">{acc.bankName} - {acc.accountNumber}p>
+                                                        <p className="text-sm text-muted-foreground">a.n. {acc.accountName}p>
+                                                div>
+                                                div>
+                                                AlertDialog>
+                                                    AlertDialogTrigger asChild>
+                                                        <Button variant="ghost" size="icon"><Trash2 className="h-4 w-4 text-destructive"/>Button>
+                                                    AlertDialogTrigger>
+                                                    AlertDialogContent>
+                                                        AlertDialogHeader>
+                                                            <AlertDialogTitle>Anda Yakin?AlertDialogTitle>
                                                             <AlertDialogDescription>
                                                                 Tindakan ini akan menghapus rekening {acc.bankName} a.n. {acc.accountName} secara permanen.
-                                                            </AlertDialogDescription>
-                                                        </AlertDialogHeader>
-                                                        <AlertDialogFooter>
-                                                            <AlertDialogCancel>Batal</AlertDialogCancel>
-                                                            <AlertDialogAction onClick={() => handleDeleteAccount(acc)} className="bg-destructive hover:bg-destructive/90">Ya, Hapus</AlertDialogAction>
-                                                        </AlertDialogFooter>
-                                                    </AlertDialogContent>
-                                                </AlertDialog>
-                                            </div>
+                                                            AlertDialogDescription>
+                                                        AlertDialogHeader>
+                                                        AlertDialogFooter>
+                                                            <AlertDialogCancel>BatalAlertDialogCancel>
+                                                            <AlertDialogAction onClick={() => handleDeleteAccount(acc)} className="bg-destructive hover:bg-destructive/90">Ya, HapusAlertDialogAction>
+                                                        AlertDialogFooter>
+                                                    AlertDialogContent>
+                                                AlertDialog>
+                                            div>
                                         )) : (
-                                             <p className="text-sm text-muted-foreground text-center py-4">Belum ada rekening bank yang ditambahkan.</p>
+                                             p className="text-sm text-muted-foreground text-center py-4">Belum ada rekening bank yang ditambahkan.p>
                                         )}
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </TabsContent>
-                        <TabsContent value="qris" className="mt-6">
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>Kelola Kode QRIS</CardTitle>
-                                    <CardDescription>Atur kode QRIS yang aktif untuk pembayaran.</CardDescription>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                     <Dialog open={isQrisUploadOpen} onOpenChange={setQrisUploadOpen}>
-                                        <DialogTrigger asChild>
-                                             <Button variant="outline">Upload Kode QR Baru</Button>
-                                        </DialogTrigger>
-                                        <DialogContent>
-                                            <DialogHeader>
-                                                <DialogTitle>Upload Kode QRIS</DialogTitle>
-                                                <DialogDescription>Unggah gambar kode QRIS baru yang akan digunakan untuk pembayaran.</DialogDescription>
-                                            </DialogHeader>
-                                            <div className="py-4 space-y-4">
+                                    div>
+                                CardContent>
+                            Card>
+                        TabsContent>
+                        TabsContent value="qris" className="mt-6">
+                            Card>
+                                CardHeader>
+                                    <CardTitle>Kelola Kode QRISCardTitle>
+                                    <CardDescription>Atur kode QRIS yang aktif untuk pembayaran.CardDescription>
+                                CardHeader>
+                                CardContent className="space-y-4">
+                                     Dialog open={isQrisUploadOpen} onOpenChange={setQrisUploadOpen}>
+                                        DialogTrigger asChild>
+                                             <Button variant="outline">Upload Kode QR BaruButton>
+                                        DialogTrigger>
+                                        DialogContent>
+                                            DialogHeader>
+                                                <DialogTitle>Upload Kode QRISDialogTitle>
+                                                <DialogDescription>Unggah gambar kode QRIS baru yang akan digunakan untuk pembayaran.DialogDescription>
+                                            DialogHeader>
+                                            div className="py-4 space-y-4">
                                                  {previewUrl && (
-                                                    <div className="relative aspect-square w-full max-w-sm mx-auto rounded-md overflow-hidden border">
+                                                    div className="relative aspect-square w-full max-w-sm mx-auto rounded-md overflow-hidden border">
                                                         <Image
                                                             src={previewUrl}
                                                             alt="Pratinjau QRIS"
                                                             fill
                                                             className="object-contain"
                                                         />
-                                                    </div>
+                                                    div>
                                                 )}
                                                 <Label htmlFor="qris-upload" className={cn("w-full cursor-pointer", "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50", "border border-input bg-background hover:bg-accent hover:text-accent-foreground", "h-10 px-4 py-2")}>
                                                     <Upload className="mr-2 h-4 w-4" />
                                                     {previewUrl ? 'Ganti File...' : 'Pilih File Gambar QRIS...'}
-                                                </Label>
+                                                Label>
                                                 <Input id="qris-upload" type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
-                                            </div>
-                                            <DialogFooter>
-                                                <Button variant="outline" onClick={() => setQrisUploadOpen(false)}>Batal</Button>
-                                                <Button onClick={handleQrisSave} disabled={!previewUrl}>Upload &amp; Simpan</Button>
-                                            </DialogFooter>
-                                        </DialogContent>
-                                     </Dialog>
+                                            div>
+                                            DialogFooter>
+                                                <Button variant="outline" onClick={() => setQrisUploadOpen(false)}>BatalButton>
+                                                <Button onClick={handleQrisSave} disabled={!previewUrl}>Upload &amp; SimpanButton>
+                                            DialogFooter>
+                                        DialogContent>
+                                     Dialog>
                                     
-                                    <div className="space-y-4 pt-6">
-                                        <h4 className="font-medium text-lg">QRIS Aktif</h4>
-                                        <div className="relative w-48 h-48 border rounded-md p-2">
+                                    div className="space-y-4 pt-6">
+                                        <h4 className="font-medium text-lg">QRIS Aktifh4>
+                                        div className="relative w-48 h-48 border rounded-md p-2">
                                             <Image src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=Example" alt="QRIS Code" fill className="object-contain" data-ai-hint="qr code"/>
-                                            <AlertDialog>
-                                                <AlertDialogTrigger asChild>
-                                                    <Button variant="destructive" size="icon" className="absolute -top-3 -right-3 h-8 w-8 rounded-full"><Trash2 className="h-4 w-4"/></Button>
-                                                </AlertDialogTrigger>
-                                                <AlertDialogContent>
-                                                    <AlertDialogHeader>
-                                                        <AlertDialogTitle>Hapus QRIS Aktif?</AlertDialogTitle>
+                                            AlertDialog>
+                                                AlertDialogTrigger asChild>
+                                                    <Button variant="destructive" size="icon" className="absolute -top-3 -right-3 h-8 w-8 rounded-full"><Trash2 className="h-4 w-4"/>Button>
+                                                AlertDialogTrigger>
+                                                AlertDialogContent>
+                                                    AlertDialogHeader>
+                                                        <AlertDialogTitle>Hapus QRIS Aktif?AlertDialogTitle>
                                                         <AlertDialogDescription>
                                                             Tindakan ini akan menonaktifkan pembayaran melalui QRIS hingga Anda mengunggah kode yang baru.
-                                                        </AlertDialogDescription>
-                                                    </AlertDialogHeader>
-                                                    <AlertDialogFooter>
-                                                        <AlertDialogCancel>Batal</AlertDialogCancel>
-                                                        <AlertDialogAction className="bg-destructive hover:bg-destructive/90">Ya, Hapus</AlertDialogAction>
-                                                    </AlertDialogFooter>
-                                                </AlertDialogContent>
-                                            </AlertDialog>
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </TabsContent>
-                    </Tabs>
-                </DialogContent>
-            </Dialog>
-        </div>
-      </div>
+                                                        AlertDialogDescription>
+                                                    AlertDialogHeader>
+                                                    AlertDialogFooter>
+                                                        <AlertDialogCancel>BatalAlertDialogCancel>
+                                                        <AlertDialogAction className="bg-destructive hover:bg-destructive/90">Ya, HapusAlertDialogAction>
+                                                    AlertDialogFooter>
+                                                AlertDialogContent>
+                                            AlertDialog>
+                                        div>
+                                    div>
+                                CardContent>
+                            Card>
+                        TabsContent>
+                    Tabs>
+                DialogContent>
+            Dialog>
+        div>
+      div>
 
-       <Card>
-        <CardHeader>
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-            <div>
-                <CardTitle>Laporan Keuangan</CardTitle>
-                <CardDescription>Ringkasan transaksi berdasarkan data order.</CardDescription>
-            </div>
+       Card>
+        CardHeader>
+          div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            div>
+                <CardTitle>Laporan KeuanganCardTitle>
+                <CardDescription>Ringkasan transaksi berdasarkan data order.CardDescription>
+            div>
             <Button variant="outline" className="w-full md:w-auto" onClick={handleDownloadXLSX} disabled={financialReport.length === 0}>
                 <Download className="mr-2 h-4 w-4" />
                 Download Laporan (XLSX)
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>No.</TableHead>
-                <TableHead>No. Order</TableHead>
-                <TableHead>Unit Disewa</TableHead>
-                <TableHead>Layanan</TableHead>
-                <TableHead>Jenis Pembayaran</TableHead>
-                <TableHead>Total Pemasukan</TableHead>
-                <TableHead className="text-center">Invoice</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+            Button>
+          div>
+        CardHeader>
+        CardContent>
+          Table>
+            TableHeader>
+              TableRow>
+                TableHead>No.TableHead>
+                TableHead>No. OrderTableHead>
+                TableHead>Unit DisewaTableHead>
+                TableHead>LayananTableHead>
+                TableHead>Jenis PembayaranTableHead>
+                TableHead>Total PemasukanTableHead>
+                TableHead className="text-center">InvoiceTableHead>
+              TableRow>
+            TableHeader>
+            TableBody>
               {isLoading ? (
-                <TableRow>
-                    <TableCell colSpan={7} className="h-24 text-center">
-                       <div className="flex justify-center items-center gap-2 text-muted-foreground">
+                TableRow>
+                    TableCell colSpan={7} className="h-24 text-center">
+                       div className="flex justify-center items-center gap-2 text-muted-foreground">
                             <Loader2 className="h-5 w-5 animate-spin" />
-                            <span>Memuat laporan...</span>
-                        </div>
-                    </TableCell>
-                </TableRow>
+                            span>Memuat laporan...span>
+                        div>
+                    TableCell>
+                TableRow>
               ) : financialReport.length > 0 ? (
                 financialReport.map((item) => (
-                    <TableRow key={item.no}>
-                    <TableCell>{item.no}</TableCell>
-                    <TableCell>{item.orderNo}</TableCell>
-                    <TableCell>{item.unit}</TableCell>
-                    <TableCell>{item.service}</TableCell>
-                    <TableCell>{item.payment}</TableCell>
-                    <TableCell className="font-medium">{formatCurrency(item.total || 0)}</TableCell>
-                    <TableCell className="text-center">
+                    TableRow key={item.no}>
+                    TableCell>{item.no}TableCell>
+                    TableCell>{item.orderNo}TableCell>
+                    TableCell>{item.unit}TableCell>
+                    TableCell>{item.service}TableCell>
+                    TableCell>{item.payment}TableCell>
+                    TableCell className="font-medium">{formatCurrency(item.total || 0)}TableCell>
+                    TableCell className="text-center">
                         <Button variant="outline" size="sm" asChild disabled={item.status !== 'disetujui'}>
                         <Link href={`/invoice/${item.orderNo}`} target="_blank">
                             <FileText className="h-4 w-4" />
-                        </Link>
-                        </Button>
-                    </TableCell>
-                    </TableRow>
+                        Link>
+                        Button>
+                    TableCell>
+                    TableRow>
                 ))
               ) : (
-                <TableRow>
-                    <TableCell colSpan={7} className="h-24 text-center">
+                TableRow>
+                    TableCell colSpan={7} className="h-24 text-center">
                         Belum ada data keuangan.
-                    </TableCell>
-                </TableRow>
+                    TableCell>
+                TableRow>
               )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-    </div>
+            TableBody>
+          Table>
+        CardContent>
+      Card>
+    div>
   );
 }

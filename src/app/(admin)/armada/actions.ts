@@ -1,9 +1,8 @@
 'use server';
 
-import { createServiceRoleClient } from '@/utils/supabase/server';
+import { createServiceRoleClient, uploadImageFromDataUri } from '@/utils/supabase/server';
 import type { Vehicle } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
-import { uploadImageFromDataUri } from '@/utils/supabase/server';
 
 const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || '/admin';
 
@@ -108,3 +107,4 @@ export async function updateVehicleStatus(vehicleId: string, status: 'tersedia' 
 
     return { error: null };
 }
+
