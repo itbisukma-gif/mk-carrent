@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, ChangeEvent, useMemo, useEffect, useTransition } from 'react';
@@ -587,9 +588,9 @@ export default function TestimoniPage() {
     setFormOpen(true);
   };
 
-  const handleDelete = (testimonial: Testimonial) => {
+  const handleDelete = (testimonialId: string) => {
     startDeleteTransition(async () => {
-        const result = await deleteTestimonial(testimonial.id);
+        const result = await deleteTestimonial(testimonialId);
         if (result.error) {
             toast({ variant: "destructive", title: "Gagal menghapus", description: result.error.message });
         } else {
@@ -700,7 +701,7 @@ export default function TestimoniPage() {
                                                 </AlertDialogHeader>
                                                 <AlertDialogFooter>
                                                     <AlertDialogCancel>Batal</AlertDialogCancel>
-                                                    <AlertDialogAction onClick={() => handleDelete(item)} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90">
+                                                    <AlertDialogAction onClick={() => handleDelete(item.id)} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90">
                                                         {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                                                         Ya, Hapus
                                                     </AlertDialogAction>
@@ -776,3 +777,5 @@ export default function TestimoniPage() {
     </div>
   );
 }
+
+    
