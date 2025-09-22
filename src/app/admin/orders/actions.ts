@@ -25,8 +25,8 @@ export async function updateOrderStatusAction(orderId: string, status: OrderStat
     
     // Update related statuses
     if (status === 'disetujui') {
-        await updateVehicleStatus(vehicleId, 'disewa');
-    } else if (status === 'tidak disetujui' || status === 'selesai') {
+        await updateVehicleStatus(vehicleId, 'dipesan'); // Change to 'dipesan' (booked) when approved
+    } else if (status === 'selesai' || status === 'tidak disetujui') {
         await updateVehicleStatus(vehicleId, 'tersedia');
         if (driverId) {
             await updateDriverStatus(driverId, 'Tersedia');
@@ -34,6 +34,8 @@ export async function updateOrderStatusAction(orderId: string, status: OrderStat
     }
     
     revalidatePath(`/admin/orders`);
+    revalidatePath(`/admin/armada`);
+    revalidatePath(`/admin/dashboard`);
 
     return { data, error };
 }

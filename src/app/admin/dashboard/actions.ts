@@ -5,6 +5,8 @@ import { createServiceRoleClient } from '@/utils/supabase/server';
 import type { Driver } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
 
+const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || '/admin';
+
 export async function upsertDriver(driverData: Omit<Driver, 'created_at'>) {
     const supabase = createServiceRoleClient();
     const { data, error } = await supabase
@@ -18,7 +20,7 @@ export async function upsertDriver(driverData: Omit<Driver, 'created_at'>) {
         return { data: null, error };
     }
 
-    revalidatePath(`/admin/dashboard`);
+    revalidatePath(`${adminPath}/dashboard`);
     
     return { data, error: null };
 }
@@ -37,7 +39,7 @@ export async function deleteDriver(driverId: string) {
         return { error };
     }
 
-    revalidatePath(`/admin/dashboard`);
+    revalidatePath(`${adminPath}/dashboard`);
 
     return { error: null };
 }
@@ -55,8 +57,8 @@ export async function updateDriverStatus(driverId: string, status: 'Tersedia' | 
         return { error };
     }
     
-    revalidatePath(`/admin/dashboard`);
-    revalidatePath(`/admin/orders`);
+    revalidatePath(`${adminPath}/dashboard`);
+    revalidatePath(`${adminPath}/orders`);
 
     return { error: null };
 }

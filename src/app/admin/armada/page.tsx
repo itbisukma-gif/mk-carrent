@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Vehicle } from "@/lib/types";
-import { MoreVertical, PlusCircle, Trash2, Upload, Loader2, Sparkles, CheckCircle, Clock, Car } from "lucide-react";
+import { MoreVertical, PlusCircle, Trash2, Upload, Loader2, CheckCircle, Clock, Car } from "lucide-react";
 import Image from "next/image";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -181,14 +181,14 @@ function VehicleForm({ vehicle, onSave, onCancel }: { vehicle?: Vehicle | null; 
                 transmission: 'Manual',
                 fuel: 'Bensin',
                 year: '',
+                price: '',
                 rating: 5,
                 dataAiHint: '',
+                discountPercentage: '',
                 photo: '',
                 unitType: 'biasa', 
                 stock: '', 
-                status: 'tersedia',
-                price: '',
-                discountPercentage: ''
+                status: 'tersedia'
             }
     });
     

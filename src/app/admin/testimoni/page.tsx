@@ -22,7 +22,7 @@ import { LanguageProvider } from '@/app/language-provider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { createClient } from '@/utils/supabase/client';
-import { upsertTestimonial, deleteTestimonial, addGalleryItem, deleteGalleryItem, upsertFeature, deleteFeature } from './actions';
+import { upsertTestimonial, deleteTestimonial, addGalleryItem, deleteGalleryItem, upsertFeature, deleteFeature } from '../actions';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 export const dynamic = 'force-dynamic';

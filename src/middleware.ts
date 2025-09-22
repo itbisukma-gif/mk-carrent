@@ -4,25 +4,25 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
   // Get the secret admin path from environment variables. Default to /admin if not set.
-  const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || '/admin';
+  const adminAlias = process.env.NEXT_PUBLIC_ADMIN_PATH || '/mk-portal';
   const sessionCookie = request.cookies.get("session");
   const hasSession = !!sessionCookie;
 
-  // Handle logout: clear cookie and redirect to the secret admin path (which will show the login page)
+  // Handle logout: clear cookie and redirect to the secret admin login page
   if (pathname === "/logout") {
-    const response = NextResponse.redirect(new URL(adminPath, request.url));
+    const response = NextResponse.redirect(new URL(adminAlias, request.url));
     response.cookies.set("session", "", { expires: new Date(0), path: '/' });
     return response;
   }
   
   // Check if the user is trying to access the secret admin area
-  const isAccessingAdminArea = pathname.startsWith(adminPath);
+  const isAccessingAdminArea = pathname.startsWith(adminAlias);
   
   if (isAccessingAdminArea) {
     if (hasSession) {
       // User has a session, rewrite the URL from the secret path to the actual /admin path
       // e.g., /mk-portal/orders -> /admin/orders
-      const newPath = pathname.replace(adminPath, '/admin');
+      const newPath = pathname.replace(adminAlias, '/admin');
       return NextResponse.rewrite(new URL(newPath, request.url));
     } else {
       // User does not have a session, rewrite to the login page
@@ -31,7 +31,7 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Prevent direct access to the internal /admin URL structure
+  // Prevent direct access to the internal /admin URL structure if it's not through the alias
   if (pathname.startsWith('/admin')) {
       return NextResponse.rewrite(new URL('/404', request.url));
   }
