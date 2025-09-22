@@ -287,6 +287,7 @@ function GalleryEditor({ vehicles }: { vehicles: Vehicle[] }) {
                     <DialogContent>
                         <DialogHeader>
                             <DialogTitle>Tambah Foto Baru</DialogTitle>
+                            <DialogDescription>Unggah foto dari pelanggan untuk ditampilkan di galeri.</DialogDescription>
                         </DialogHeader>
                         <div className="py-4 space-y-4">
                             <div className="space-y-2">
@@ -495,6 +496,9 @@ function FeatureEditor() {
                  <DialogContent className="sm:max-w-lg p-0">
                     <DialogHeader className="p-6 pb-0">
                         <DialogTitle>{selectedFeature ? "Edit Keunggulan" : "Tambah Keunggulan"}</DialogTitle>
+                        <DialogDescription>
+                            {selectedFeature ? "Perbarui detail keunggulan di bawah ini." : "Buat poin keunggulan baru untuk ditampilkan di halaman utama."}
+                        </DialogDescription>
                     </DialogHeader>
                     <FeatureForm 
                         feature={selectedFeature} 

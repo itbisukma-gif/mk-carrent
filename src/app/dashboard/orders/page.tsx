@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useEffect, useTransition } from 'react';
@@ -7,15 +8,14 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { Send, Eye, Share, CheckCircle, Car, ShieldCheck, Clock, AlertTriangle, Loader2 } from "lucide-react";
-import Link from "next/link";
+import { Send, Eye, CheckCircle, Car, ShieldCheck, Clock, AlertTriangle, Loader2 } from "lucide-react";
 import type { Driver, Order, OrderStatus } from '@/lib/types';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { formatDistanceToNow, differenceInHours } from 'date-fns';
@@ -129,22 +129,14 @@ function OrderCard({ order, drivers, onDataChange }: { order: Order, drivers: Dr
         handleStatusChange('selesai');
     };
 
-    const invoiceUrl = useMemo(() => {
-        // Since we don't have start/end dates in the order object,
-        // we can't reliably add them here for now.
-        // The link will still work, just without the period displayed on the invoice page.
-        return `/invoice/${order.id}`;
-    }, [order.id]);
-
     const whatsAppInvoiceUrl = useMemo(() => {
-        if (!order.customerPhone || typeof window === 'undefined') return '#';
+        if (!isClient || !order.customerPhone) return '#';
 
         const domain = window.location.origin;
         const shareableInvoiceUrl = `${domain}/invoice/${order.id}/share`;
         
         const message = `Halo ${order.customerName}, terima kasih telah memesan di MudaKarya CarRent. Pembayaran Anda telah kami konfirmasi. Berikut adalah rincian invoice untuk pesanan Anda: ${shareableInvoiceUrl}`;
         
-        // Basic phone number cleaning and formatting for Indonesia
         let formattedPhone = order.customerPhone.replace(/\D/g, '');
         if (formattedPhone.startsWith('0')) {
             formattedPhone = '62' + formattedPhone.substring(1);
@@ -153,7 +145,7 @@ function OrderCard({ order, drivers, onDataChange }: { order: Order, drivers: Dr
         }
 
         return `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`;
-    }, [order.id, order.customerName, order.customerPhone]);
+    }, [isClient, order.id, order.customerName, order.customerPhone]);
 
     return (
          <Card className="flex flex-col">
@@ -476,3 +468,4 @@ export default function OrdersPage() {
     </div>
   );
 }
+
