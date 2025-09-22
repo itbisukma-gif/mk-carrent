@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useEffect, Suspense } from 'react';
@@ -109,7 +110,7 @@ function VehicleDetailContent() {
     const formatCurrency = (value: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(value);
 
     const hasDiscount = vehicle && vehicle.discountPercentage && vehicle.discountPercentage > 0;
-    const discountedPrice = (hasDiscount && vehicle?.price)
+    const discountedPrice = (hasDiscount && vehicle && vehicle.price && vehicle.discountPercentage)
         ? vehicle.price * (1 - vehicle.discountPercentage / 100)
         : vehicle?.price;
 
