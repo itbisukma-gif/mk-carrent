@@ -58,7 +58,6 @@ import {
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { orders as initialOrders } from '@/lib/data' // Keep dummy chart data
 import type { Driver, Vehicle, Order } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { useToast } from '@/hooks/use-toast'
@@ -77,14 +76,6 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 
 export const dynamic = 'force-dynamic';
 
-// Function to generate mock data for comparison
-const generatePreviousWeekData = (baseData: typeof initialChartData) => {
-    return baseData.map(dayData => ({
-        ...dayData,
-        revenue: Math.floor(dayData.revenue * (Math.random() * 0.4 + 0.7)) // 70% to 110% of current week's revenue
-    }));
-};
-
 const initialChartData = [
   { date: 'Sen', revenue: 2100000 },
   { date: 'Sel', revenue: 2500000 },
@@ -94,6 +85,14 @@ const initialChartData = [
   { date: 'Sab', revenue: 5300000 },
   { date: 'Min', revenue: 4800000 },
 ];
+
+// Function to generate mock data for comparison
+const generatePreviousWeekData = (baseData: typeof initialChartData) => {
+    return baseData.map(dayData => ({
+        ...dayData,
+        revenue: Math.floor(dayData.revenue * (Math.random() * 0.4 + 0.7)) // 70% to 110% of current week's revenue
+    }));
+};
 
 const previousWeekData = generatePreviousWeekData(initialChartData);
 

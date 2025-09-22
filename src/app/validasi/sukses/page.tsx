@@ -5,7 +5,7 @@ import { CheckCircle2, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
 export default function ValidasiSuksesPage() {
-    const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || '/admin';
+    const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || 'admin';
     return (
         <Card className="w-full max-w-md text-center shadow-lg">
             <CardHeader>

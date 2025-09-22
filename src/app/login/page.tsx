@@ -22,7 +22,7 @@ export default function LoginPage() {
     e.preventDefault();
     setIsLoading(true);
 
-    const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || '/admin';
+    const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || 'admin';
 
     // Simulate authentication
     if (email === 'admin@example.com' && password === 'password') {
@@ -37,7 +37,7 @@ export default function LoginPage() {
 
       // Redirect to the dashboard. Using window.location.href to force a full page reload
       // which ensures the middleware picks up the new cookie.
-      window.location.href = adminPath;
+      window.location.href = `/${adminPath}/dashboard`;
 
     } else {
       toast({
@@ -50,7 +50,6 @@ export default function LoginPage() {
   };
 
   return (
-     <div className="flex items-center justify-center min-h-screen bg-muted/40">
         <Card className="w-full max-w-sm">
           <form onSubmit={handleLogin}>
             <CardHeader className="text-center">
@@ -95,6 +94,5 @@ export default function LoginPage() {
             </CardFooter>
           </form>
         </Card>
-     </div>
   );
 }

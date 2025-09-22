@@ -11,9 +11,7 @@ import { StarRating } from '@/components/star-rating';
 import { Badge } from '@/components/ui/badge';
 import { createClient } from '@/utils/supabase/client';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { WebHeader } from '@/components/layout/web-header';
-import { WebFooter } from '@/components/layout/web-footer';
-import { LanguageProvider } from '@/app/language-provider';
+
 
 export const dynamic = 'force-dynamic';
 
@@ -137,7 +135,7 @@ function Gallery() {
     )
 }
 
-function TestimoniPageContent() {
+export default function TestimoniPage() {
     const { dictionary } = useLanguage();
     return (
         <div className="container py-12 md:py-16">
@@ -154,17 +152,5 @@ function TestimoniPageContent() {
                 </TabsContent>
             </Tabs>
         </div>
-    )
-}
-
-export default function TestimoniPage() {
-    return (
-        <LanguageProvider>
-            <WebHeader />
-            <main className="flex-1">
-                <TestimoniPageContent />
-            </main>
-            <WebFooter />
-        </LanguageProvider>
     )
 }

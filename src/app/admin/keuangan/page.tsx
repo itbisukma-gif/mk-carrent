@@ -46,7 +46,7 @@ export default function KeuanganPage() {
   const [selectedBank, setSelectedBank] = useState<string>("");
   const [accountNumber, setAccountNumber] = useState("");
   const [accountName, setAccountName] = useState("");
-  const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || '/admin';
+  const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || 'admin';
 
   useEffect(() => {
     const supabaseClient = createClient();

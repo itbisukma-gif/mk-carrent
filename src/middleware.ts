@@ -7,30 +7,44 @@ export async function middleware(request: NextRequest) {
   const sessionCookie = request.cookies.get("session");
   const hasSession = !!sessionCookie;
 
-  // Handle logout: clear cookie and redirect to the public home page
+  // 1. Handle logout: clear cookie and redirect to the public home page
   if (pathname === "/logout") {
-    const response = NextResponse.redirect(new URL("/", request.url));
+    const response = NextResponse.redirect(new URL("/login", request.url));
     response.cookies.set("session", "", { expires: new Date(0), path: '/' });
     return response;
   }
   
-  // If user tries to access a path under the secret admin path
+  // 2. Protect the internal `/admin` routes
+  if (pathname.startsWith('/admin')) {
+      if (!hasSession) {
+          // If no session, redirect to the main login page.
+          return NextResponse.redirect(new URL('/login', request.url));
+      }
+      // If the user has a session but tries to access /admin directly,
+      // redirect them to the masked public path for consistency.
+      const maskedPath = pathname.replace('/admin', `/${adminPath}`);
+      return NextResponse.redirect(new URL(maskedPath, request.url));
+  }
+
+  // 3. Handle the public-facing secret admin path
   if (pathname.startsWith(`/${adminPath}`)) {
       if (hasSession) {
-          // Valid session, rewrite to internal /admin route but keep URL
+          // Valid session, rewrite to the internal /admin route but keep the URL masked.
           const internalPath = pathname.replace(`/${adminPath}`, '/admin');
           return NextResponse.rewrite(new URL(internalPath, request.url));
       }
-       // No session, redirect to the main login page
-      return NextResponse.redirect(new URL('/login', request.url));
-  }
-
-  // If user somehow tries to access the internal /admin path directly
-  if (pathname.startsWith('/admin')) {
-      // Redirect them away to avoid showing a 404 or the raw internal page
+       // No session, redirect to the main login page.
       return NextResponse.redirect(new URL('/login', request.url));
   }
   
+  // 4. Handle login page
+  if (pathname === '/login') {
+    if (hasSession) {
+        // If user is already logged in, redirect them to the admin dashboard
+        return NextResponse.redirect(new URL(`/${adminPath}/dashboard`, request.url));
+    }
+  }
+
   return NextResponse.next();
 }
 

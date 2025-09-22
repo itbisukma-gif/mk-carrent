@@ -6,7 +6,7 @@ import { updateVehicleStatus } from '../armada/actions';
 import type { OrderStatus } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
 
-const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || '/admin';
+const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || 'admin';
 
 
 export async function updateOrderStatusAction(orderId: string, status: OrderStatus, vehicleId: string, driverId?: string | null) {

@@ -5,7 +5,7 @@ import type { Promotion, Vehicle } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
 import { upsertVehicle, type VehicleFormData } from '../armada/actions';
 
-const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || '/admin';
+const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || 'admin';
 
 export async function upsertPromotion(promoData: Omit<Promotion, 'created_at'>, vehicles: Vehicle[], discount?: number) {
     const supabase = createServiceRoleClient();

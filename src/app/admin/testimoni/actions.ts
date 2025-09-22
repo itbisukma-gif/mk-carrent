@@ -4,7 +4,7 @@ import { createServiceRoleClient, uploadImageFromDataUri } from '@/utils/supabas
 import type { Testimonial, GalleryItem, FeatureItem } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
 
-const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || '/admin';
+const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || 'admin';
 
 
 // --- Testimonial Actions ---
