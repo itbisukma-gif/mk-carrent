@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function LoginPage() {
     const [email, setEmail] = useState('admin@example.com');
@@ -16,6 +16,7 @@ export default function LoginPage() {
     const [isLoading, setIsLoading] = useState(false);
     const { toast } = useToast();
     const router = useRouter();
+    const searchParams = useSearchParams();
     const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || '/admin';
 
     const handleLogin = async (e: React.FormEvent) => {
@@ -40,10 +41,9 @@ export default function LoginPage() {
                 description: "Anda akan diarahkan ke dashboard.",
             });
             
-            // Redirect to dashboard or intended page
-            router.push(result.redirectTo || adminPath);
+            const redirectTo = searchParams.get('redirect_to') || adminPath;
+            router.push(redirectTo);
             router.refresh();
-
 
         } catch (error) {
             toast({

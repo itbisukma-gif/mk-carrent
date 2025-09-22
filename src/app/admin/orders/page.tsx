@@ -1,7 +1,8 @@
 
+
 'use client'
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useCallback } from "react"
 import { MoreHorizontal, Loader2, UserPlus } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -55,7 +56,7 @@ import { createClient } from '@/utils/supabase/client'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Order, OrderStatus, Driver } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
-import { updateOrderStatusAction, updateOrderDriverAction } from "@/app/admin/orders/actions"
+import { updateOrderStatusAction, updateOrderDriverAction } from "./actions"
 import Link from "next/link"
 
 
@@ -120,7 +121,7 @@ export default function OrdersPage() {
     const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
     const { toast } = useToast();
 
-    const fetchOrders = async () => {
+    const fetchOrders = useCallback(async () => {
         if (!supabase) return;
         setIsLoading(true);
         const { data: ordersData, error: ordersError } = await supabase
@@ -146,7 +147,7 @@ export default function OrdersPage() {
         }
         
         setIsLoading(false);
-    }
+    }, [supabase, toast]);
     
     useEffect(() => {
         const client = createClient();
@@ -157,7 +158,7 @@ export default function OrdersPage() {
         if (supabase) {
             fetchOrders();
         }
-    }, [supabase]);
+    }, [supabase, fetchOrders]);
 
     const filteredOrders = useMemo(() => ({
         pending: orders.filter(o => o.status === 'pending'),

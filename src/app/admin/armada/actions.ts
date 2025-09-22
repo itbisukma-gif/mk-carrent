@@ -1,3 +1,4 @@
+
 'use server';
 
 import { createServiceRoleClient, uploadImageFromDataUri } from '@/utils/supabase/server';
@@ -10,6 +11,7 @@ export async function upsertVehicle(vehicleData: Vehicle) {
     const supabase = createServiceRoleClient();
 
     try {
+        // Only upload a new image if the photo is a new data URI
         if (vehicleData.photo && vehicleData.photo.startsWith('data:image')) {
             vehicleData.photo = await uploadImageFromDataUri(vehicleData.photo, 'vehicles', `vehicle-${vehicleData.id}`);
         }

@@ -1,3 +1,4 @@
+
 'use server';
 
 import { createServiceRoleClient, uploadImageFromDataUri } from '@/utils/supabase/server';
@@ -24,7 +25,9 @@ export async function upsertTestimonial(testimonialData: Omit<Testimonial, 'crea
     revalidatePath(`${adminPath}/testimoni`);
     revalidatePath('/testimoni');
     if (data.vehicleName) {
-        revalidatePath(`/mobil/${data.id}`);
+        // This is a bit broad, but ensures detail pages with reviews are updated.
+        // A more targeted approach might involve finding the specific vehicle ID.
+        revalidatePath('/mobil');
     }
     return { data, error: null };
 }
