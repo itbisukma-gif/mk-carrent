@@ -1,4 +1,5 @@
 
+
 'use client'
 
 import { Suspense, useEffect, useState, ChangeEvent, useMemo, SVGProps } from "react";
@@ -24,6 +25,7 @@ import { useToast } from "@/hooks/use-toast";
 import { WhatsAppIcon } from "@/components/icons";
 import { createClient } from '@/utils/supabase/client';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { updateVehicleStatus } from "@/app/dashboard/armada/actions";
 
 export const dynamic = 'force-dynamic';
 
@@ -205,7 +207,6 @@ function UploadProof({ onUpload, orderId }: { onUpload: (proofUrl: string) => vo
 }
 
 function KonfirmasiComponent() {
-    const { dictionary, language } = useLanguage();
     const router = useRouter();
     const searchParams = useSearchParams();
     const { toast } = useToast();
@@ -215,7 +216,6 @@ function KonfirmasiComponent() {
     const [driver, setDriver] = useState<Driver | null>(null);
     const [uploadSuccess, setUploadSuccess] = useState(false);
     
-    // Get all params from URL
     const paymentMethod = searchParams.get('paymentMethod');
     const total = searchParams.get('total');
     const vehicleId = searchParams.get('vehicleId');
@@ -230,7 +230,6 @@ function KonfirmasiComponent() {
 
     const showDriverContact = driver && (service === 'dengan-supir' || service === 'all-include');
 
-    
     const [orderId, setOrderId] = useState('');
     const [selectedBankId, setSelectedBankId] = useState<string | undefined>(undefined);
 
@@ -238,10 +237,8 @@ function KonfirmasiComponent() {
         return bankAccounts.find(bank => bank.accountNumber === selectedBankId);
     }, [selectedBankId]);
 
-
     useEffect(() => {
         setSupabase(createClient());
-        // This should only run on the client-side to avoid hydration mismatch
         const randomOrderId = `ORD-${Math.floor(Math.random() * 90000) + 10000}`;
         setOrderId(randomOrderId);
     }, []);
@@ -262,12 +259,14 @@ function KonfirmasiComponent() {
         fetchVehicleAndDriver();
     }, [vehicleId, driverId, supabase]);
 
-    const rentalPeriod = useMemo(() => {
+    const { rentalPeriod, dictionary } = useLanguage();
+
+    const formattedRentalPeriod = useMemo(() => {
         if (startDateStr && endDateStr) {
             try {
                 const start = parseISO(startDateStr);
                 const end = parseISO(endDateStr);
-                const locale = language === 'id' ? id : undefined;
+                const locale = id; // Always use Indonesian locale for server-generated strings
                 return `${format(start, 'd LLL yy', { locale })} - ${format(end, 'd LLL yy', { locale })}`;
             } catch (error) {
                 console.error("Error parsing date strings:", error);
@@ -276,7 +275,7 @@ function KonfirmasiComponent() {
         }
         const days = searchParams.get('days') || '1';
         return `${days} ${dictionary.confirmation.days}`;
-    }, [startDateStr, endDateStr, searchParams, dictionary, language]);
+    }, [startDateStr, endDateStr, searchParams, dictionary]);
 
     if (!vehicleId || !total || !service || !paymentMethod || !customerName || !customerPhone) {
         return (
@@ -306,7 +305,9 @@ function KonfirmasiComponent() {
     const formatCurrency = (value: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(value);
     
     const handleUploadSuccess = async (proofUrl: string) => {
-        if (!supabase) return;
+        if (!supabase || !vehicleId) return;
+
+        // 1. Create the new order
         const newOrder: Omit<Order, 'created_at'> = {
             id: orderId,
             customerName: customerName,
@@ -317,23 +318,33 @@ function KonfirmasiComponent() {
             transmission: vehicle.transmission,
             service: service.replace('-', ' '),
             driver: driver ? driver.name : null,
-            driverId: driver ? driver.id : null,
-            vehicleId: vehicle.id,
+            driverId: driverId,
+            vehicleId: vehicleId,
             paymentProof: proofUrl,
             status: 'pending',
             paymentMethod: paymentMethod === 'bank' ? 'Transfer Bank' : 'QRIS',
             total: Number(total),
         };
 
-        const { error } = await supabase.from('orders').insert(newOrder);
+        const { error: insertError } = await supabase.from('orders').insert(newOrder);
 
-        if (error) {
-            console.error('Error creating order in Supabase:', error);
-            toast({ variant: 'destructive', title: 'Gagal Membuat Pesanan', description: error.message });
-        } else {
-            console.log('New order added to Supabase:', newOrder);
-            setUploadSuccess(true);
+        if (insertError) {
+            console.error('Error creating order in Supabase:', insertError);
+            toast({ variant: 'destructive', title: 'Gagal Membuat Pesanan', description: insertError.message });
+            return;
         }
+
+        // 2. Update vehicle status to 'dipesan'
+        const { error: vehicleStatusError } = await updateVehicleStatus(vehicleId, 'dipesan');
+        if (vehicleStatusError) {
+            // This is not a critical failure for the user, but should be logged.
+            // We'll show a toast for admins to check, but let the user proceed.
+             toast({ variant: 'destructive', title: 'Gagal Memperbarui Status Mobil', description: `Order ${orderId} dibuat, tapi status mobil gagal diubah. Harap perbarui manual.` });
+        }
+
+
+        console.log('New order added to Supabase:', newOrder);
+        setUploadSuccess(true);
     };
 
     if (uploadSuccess) {
@@ -359,7 +370,7 @@ function KonfirmasiComponent() {
                             </div>
                              <div className="flex justify-between">
                                 <span className="text-muted-foreground">{dictionary.confirmation.rentalPeriod}:</span>
-                                <span className="font-semibold">{rentalPeriod}</span>
+                                <span className="font-semibold">{formattedRentalPeriod}</span>
                             </div>
                             {driver && (
                                 <div className="flex justify-between">
@@ -458,7 +469,7 @@ function KonfirmasiComponent() {
                             </div>
                              <div className="flex justify-between">
                                 <span className="text-sm text-muted-foreground">{dictionary.confirmation.rentalPeriod}:</span>
-                                <span className="font-semibold text-sm">{rentalPeriod}</span>
+                                <span className="font-semibold text-sm">{formattedRentalPeriod}</span>
                             </div>
                              <div className="flex justify-between">
                                 <span className="text-sm text-muted-foreground">{dictionary.confirmation.service}:</span>
@@ -565,9 +576,8 @@ function KonfirmasiComponent() {
 }
 
 export default function KonfirmasiPage() {
-    const { dictionary } = useLanguage();
     return (
-        <Suspense fallback={<div className="flex h-screen items-center justify-center">{dictionary.loading}...</div>}>
+        <Suspense fallback={<div className="flex h-screen items-center justify-center">Memuat...</div>}>
             <KonfirmasiComponent />
         </Suspense>
     )

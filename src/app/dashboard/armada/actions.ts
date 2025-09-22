@@ -64,3 +64,22 @@ export async function deleteVehicle(vehicleId: string) {
 
     return { error: null };
 }
+
+export async function updateVehicleStatus(vehicleId: string, status: 'tersedia' | 'dipesan' | 'disewa') {
+    const supabase = createServiceRoleClient();
+
+    const { error } = await supabase
+        .from('vehicles')
+        .update({ status })
+        .eq('id', vehicleId);
+    
+    if (error) {
+        console.error('Error updating vehicle status:', error);
+        return { error };
+    }
+
+    revalidatePath('/dashboard/armada');
+    revalidatePath('/dashboard/orders');
+
+    return { error: null };
+}

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useTransition, useEffect, useCallback } from "react";
@@ -10,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Vehicle } from "@/lib/types";
-import { MoreVertical, PlusCircle, Trash2, Upload, Loader2, Sparkles } from "lucide-react";
+import { MoreVertical, PlusCircle, Trash2, Upload, Loader2, Sparkles, CheckCircle, Clock, Car } from "lucide-react";
 import Image from "next/image";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -38,6 +39,20 @@ function VehicleCard({ vehicle, onEdit, onDelete }: { vehicle: Vehicle, onEdit: 
         if (price === null) return 'N/A';
         return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(price);
     }
+    
+    const getStatusInfo = (status: Vehicle['status']) => {
+        switch (status) {
+            case 'disewa':
+                return { text: 'Disewa', icon: Car, className: 'bg-blue-100 text-blue-800' };
+            case 'dipesan':
+                return { text: 'Dipesan', icon: Clock, className: 'bg-yellow-100 text-yellow-800' };
+            case 'tersedia':
+            default:
+                return { text: 'Tersedia', icon: CheckCircle, className: 'bg-green-100 text-green-800' };
+        }
+    };
+    const statusInfo = getStatusInfo(vehicle.status);
+
 
     return (
         <Card className="overflow-hidden flex flex-col group">
@@ -98,14 +113,19 @@ function VehicleCard({ vehicle, onEdit, onDelete }: { vehicle: Vehicle, onEdit: 
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
-                 {isSpecialUnit && (
-                    <Badge 
-                        variant={vehicle.stock && vehicle.stock > 0 ? "default" : "secondary"} 
-                        className="absolute bottom-2 left-2"
-                    >
-                        Stok: {vehicle.stock}
+                 <div className="absolute bottom-2 left-2 flex items-center gap-2">
+                    <Badge variant="outline" className={cn("text-xs py-1", statusInfo.className)}>
+                        <statusInfo.icon className="h-3 w-3 mr-1.5"/>
+                        {statusInfo.text}
                     </Badge>
-                )}
+                     {isSpecialUnit && (
+                        <Badge 
+                            variant={vehicle.stock && vehicle.stock > 0 ? "default" : "secondary"}
+                        >
+                            Stok: {vehicle.stock}
+                        </Badge>
+                    )}
+                </div>
             </CardHeader>
             <CardContent className="p-4 flex-grow">
                 <div>
@@ -142,7 +162,7 @@ function VehicleForm({ vehicle, onSave, onCancel }: { vehicle?: Vehicle | null; 
     const { toast } = useToast();
     const [isPending, startTransition] = useTransition();
     const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<Vehicle>({
-        defaultValues: vehicle || { id: crypto.randomUUID(), code: '', unitType: 'biasa', stock: 0 }
+        defaultValues: vehicle || { id: crypto.randomUUID(), code: '', unitType: 'biasa', stock: 0, status: 'tersedia' }
     });
     
     const [previewUrl, setPreviewUrl] = useState<string | null>(vehicle?.photo || null);
@@ -155,16 +175,14 @@ function VehicleForm({ vehicle, onSave, onCancel }: { vehicle?: Vehicle | null; 
     const { logoUrl } = useVehicleLogo(brand);
 
     useEffect(() => {
-        // This is to handle editing, setting the initial preview URL.
         if (vehicle?.photo) {
             setPreviewUrl(vehicle.photo);
             setValue('photo', vehicle.photo);
         }
     }, [vehicle, setValue]);
 
-    // Autofill logic when adding a new vehicle variant
     useEffect(() => {
-        if (!debouncedName || vehicle) return; // Don't run on edit or if name is empty
+        if (!debouncedName || vehicle) return;
         
         const fetchExistingVariant = async () => {
             const supabase = createClient();
@@ -220,8 +238,9 @@ function VehicleForm({ vehicle, onSave, onCancel }: { vehicle?: Vehicle | null; 
                 year: data.year ? Number(data.year) : null,
                 passengers: data.passengers ? Number(data.passengers) : null,
                 stock: data.unitType === 'khusus' ? Number(data.stock) : null,
-                rating: data.rating || 5, // Ensure rating is not null
+                rating: data.rating || 5,
                 discountPercentage: data.discountPercentage || null,
+                status: data.status || 'tersedia',
             };
 
             const result = await upsertVehicle(vehicleData);
@@ -246,7 +265,6 @@ function VehicleForm({ vehicle, onSave, onCancel }: { vehicle?: Vehicle | null; 
         <form onSubmit={handleSubmit(onSubmit)}>
             <div className="max-h-[70vh] overflow-y-auto pr-4 px-1">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 py-4 px-6">
-                    {/* Image Upload Column */}
                     <div className="lg:col-span-1 space-y-2">
                         <Label>Foto Mobil</Label>
                         <div className="mt-2 flex flex-col items-center gap-4">
@@ -285,7 +303,6 @@ function VehicleForm({ vehicle, onSave, onCancel }: { vehicle?: Vehicle | null; 
                         </div>
                     </div>
 
-                    {/* Form Fields Column */}
                     <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
                          <div className="md:col-span-2 grid grid-cols-2 gap-4">
                              <div className="space-y-2">

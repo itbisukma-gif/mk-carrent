@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect, useTransition } from 'react';
@@ -21,6 +22,7 @@ import { formatDistanceToNow, differenceInHours } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { createClient } from '@/utils/supabase/client';
 import { updateDriverStatus } from '../actions';
+import { updateVehicleStatus } from '../armada/actions';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 export const dynamic = 'force-dynamic';
@@ -85,10 +87,22 @@ function OrderCard({ order, drivers, onDataChange }: { order: Order, drivers: Dr
             const { error } = await updateOrderStatus(order.id, newStatus);
             if (error) {
                 toast({ variant: 'destructive', title: 'Gagal Memperbarui Status', description: error.message });
-            } else {
-                toast({ title: 'Status Diperbarui', description: `Status pesanan ${order.id} telah diubah.` });
-                onDataChange();
+                return;
             }
+
+            // Update vehicle status based on new order status
+            if (newStatus === 'disetujui') {
+                await updateVehicleStatus(order.vehicleId, 'disewa');
+            } else if (newStatus === 'tidak disetujui') {
+                await updateVehicleStatus(order.vehicleId, 'tersedia');
+                 // If a driver was assigned, free them up
+                if (order.driverId) {
+                    await updateDriverStatus(order.driverId, 'Tersedia');
+                }
+            }
+
+            toast({ title: 'Status Diperbarui', description: `Status pesanan ${order.id} telah diubah.` });
+            onDataChange();
         });
     };
 
@@ -125,12 +139,11 @@ function OrderCard({ order, drivers, onDataChange }: { order: Order, drivers: Dr
         startTransition(async () => {
              // If a driver was assigned, set their status back to 'Tersedia'
             if (order.driverId) {
-                const { error: driverError } = await updateDriverStatus(order.driverId, 'Tersedia');
-                if (driverError) {
-                    toast({ variant: 'destructive', title: 'Gagal Memperbarui Status Driver', description: driverError.message });
-                    // Continue even if this fails, as finishing the order is more important
-                }
+                await updateDriverStatus(order.driverId, 'Tersedia');
             }
+            
+            // Set vehicle status back to 'tersedia'
+            await updateVehicleStatus(order.vehicleId, 'tersedia');
             
             const { error: orderError } = await updateOrderStatus(order.id, 'selesai');
             if (orderError) {
@@ -260,7 +273,7 @@ function OrderCard({ order, drivers, onDataChange }: { order: Order, drivers: Dr
                                     <AlertDialogHeader>
                                         <AlertDialogTitle>Selesaikan Pesanan Ini?</AlertDialogTitle>
                                         <AlertDialogDescription>
-                                            Tindakan ini akan mengubah status pesanan menjadi "Selesai" dan mengembalikan status driver (jika ada) menjadi "Tersedia".
+                                            Tindakan ini akan mengubah status pesanan menjadi "Selesai" dan mengembalikan status mobil dan driver (jika ada) menjadi "Tersedia".
                                         </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>

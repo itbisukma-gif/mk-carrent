@@ -1,4 +1,5 @@
 
+
 export type Driver = {
   id: string;
   created_at?: string;
@@ -26,6 +27,7 @@ export type Vehicle = {
   photo: string;
   unitType: 'biasa' | 'khusus' | null;
   stock: number | null;
+  status: 'tersedia' | 'dipesan' | 'disewa' | null;
 }
 
 export type Testimonial = {
@@ -77,8 +79,8 @@ export type Order = {
   paymentMethod: 'QRIS' | 'Transfer Bank' | null;
   total: number | null;
   created_at: string; // ISO 8601 date string
-  driverId?: string | null;
-  vehicleId?: string | null;
+  driverId: string | null;
+  vehicleId: string;
 };
     
 export type ContactInfo = {
@@ -108,3 +110,4 @@ export type Promotion = {
     imageUrl: string;
     vehicleId?: string | null;
 };
+
