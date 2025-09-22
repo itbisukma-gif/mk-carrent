@@ -32,7 +32,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Prevent direct access to the internal /admin URL structure if it's not through the alias
-  if (pathname.startsWith('/admin')) {
+  if (pathname.startsWith('/admin') && !isAccessingAdminArea) {
       return NextResponse.rewrite(new URL('/404', request.url));
   }
   
