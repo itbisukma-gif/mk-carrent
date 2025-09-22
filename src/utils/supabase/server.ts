@@ -81,7 +81,7 @@ export const uploadImageFromDataUri = async (dataUri: string, folder: string, fi
     const fileExtension = mimeType.split('/')[1];
     const buffer = Buffer.from(base64Data, 'base64');
     
-    // Sanitize the file name prefix by removing problematic characters, specifically the dashes from UUIDs.
+    // Sanitize the file name prefix by removing problematic characters like dashes.
     const sanitizedPrefix = fileNamePrefix.replace(/-/g, "");
     const fileName = `${sanitizedPrefix}${Date.now()}.${fileExtension}`;
     const filePath = `${folder}/${fileName}`;
@@ -90,7 +90,7 @@ export const uploadImageFromDataUri = async (dataUri: string, folder: string, fi
         .from('mudakarya-bucket')
         .upload(filePath, buffer, {
             contentType: mimeType,
-            upsert: true,
+            upsert: true, // Use upsert to handle potential name collisions, though unlikely with timestamp
         });
 
     if (uploadError) {

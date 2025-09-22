@@ -1,9 +1,8 @@
 'use server';
 
-import { createServiceRoleClient } from '@/utils/supabase/server';
+import { createServiceRoleClient, uploadImageFromDataUri } from '@/utils/supabase/server';
 import type { Promotion, Vehicle } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
-import { uploadImageFromDataUri } from '@/utils/supabase/server';
 import { upsertVehicle, type VehicleFormData } from '../armada/actions';
 
 const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || '/admin';
@@ -11,13 +10,13 @@ const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || '/admin';
 export async function upsertPromotion(promoData: Omit<Promotion, 'created_at'>, vehicles: Vehicle[], discount?: number) {
     const supabase = createServiceRoleClient();
     
-    try {
-        if (promoData.imageUrl && promoData.imageUrl.startsWith('data:image')) {
+    if (promoData.imageUrl && promoData.imageUrl.startsWith('data:image')) {
+        try {
             promoData.imageUrl = await uploadImageFromDataUri(promoData.imageUrl, 'promotions', `promo-${promoData.id}`);
+        } catch (uploadError) {
+            console.error("Promotion image upload failed:", uploadError);
+            return { data: null, error: { message: (uploadError as Error).message } };
         }
-    } catch (uploadError) {
-        console.error("Promotion image upload failed:", uploadError);
-        return { data: null, error: { message: (uploadError as Error).message } };
     }
     
     const { data, error } = await supabase.from('promotions').upsert(promoData, { onConflict: 'id' }).select().single();
@@ -43,7 +42,7 @@ export async function upsertPromotion(promoData: Omit<Promotion, 'created_at'>, 
         }
     }
 
-    revalidatePath(`${adminPath}/promosi`);
+    revalidatePath(`/${adminPath}/promosi`);
     revalidatePath('/'); // Revalidate home page where promotions are shown
     return { data, error: null };
 }
@@ -65,9 +64,14 @@ export async function deletePromotion(promo: Promotion, vehicles: Vehicle[]) {
     }
 
     if(itemData.imageUrl) {
-        const bucketName = 'mudakarya-bucket';
-        const filePath = itemData.imageUrl.substring(itemData.imageUrl.indexOf(bucketName) + bucketName.length + 1);
-        await supabase.storage.from(bucketName).remove([filePath]);
+        try {
+            const bucketName = 'mudakarya-bucket';
+            const urlParts = itemData.imageUrl.split('/');
+            const filePath = urlParts.slice(urlParts.indexOf(bucketName) + 1).join('/');
+            await supabase.storage.from(bucketName).remove([filePath]);
+        } catch(storageError) {
+            console.error("Error deleting from storage, but continuing:", storageError);
+        }
     }
     
     // Also remove discount from vehicle if it was linked
@@ -87,7 +91,7 @@ export async function deletePromotion(promo: Promotion, vehicles: Vehicle[]) {
         }
     }
 
-    revalidatePath(`${adminPath}/promosi`);
+    revalidatePath(`/${adminPath}/promosi`);
     revalidatePath('/'); // Revalidate home page
     return { error: null };
 }
