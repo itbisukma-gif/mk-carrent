@@ -18,7 +18,6 @@ import { cn } from '@/lib/utils';
 import type { Promotion, Vehicle } from '@/lib/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { createClient } from '@/utils/supabase/client';
-import { upsertVehicle } from '../armada/actions';
 import { upsertPromotion, deletePromotion } from './actions';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
@@ -56,7 +55,7 @@ function PromotionForm({ promotion, vehicles, onSave, onCancel }: { promotion?: 
                 return;
             }
 
-            const newId = promotion?.id || `promo-${Date.now()}`;
+            const newId = promotion?.id || crypto.randomUUID();
             
             const promoData: Omit<Promotion, 'created_at'> = {
                 id: newId,
@@ -66,30 +65,12 @@ function PromotionForm({ promotion, vehicles, onSave, onCancel }: { promotion?: 
                 vehicleId: vehicleId === 'none' ? undefined : vehicleId,
             };
 
-            const { error: promoError } = await upsertPromotion(promoData);
+            const { error: promoError } = await upsertPromotion(promoData, vehicles, discount);
             if (promoError) {
                 toast({ variant: 'destructive', title: 'Gagal Menyimpan Promosi', description: promoError.message });
                 return;
             }
-
-            // Apply discount to the selected vehicle
-            if (vehicleId && vehicleId !== 'none') {
-                const vehicleToUpdate = vehicles.find(v => v.id === vehicleId);
-                if (vehicleToUpdate) {
-                    const updatedVehicle: Vehicle = { ...vehicleToUpdate, discountPercentage: discount || null };
-                    await upsertVehicle(updatedVehicle);
-                }
-            }
             
-            // Remove discount from old vehicle if it was changed
-            if (promotion?.vehicleId && promotion.vehicleId !== vehicleId) {
-                 const oldVehicle = vehicles.find(v => v.id === promotion.vehicleId);
-                 if(oldVehicle) {
-                    const updatedOldVehicle: Vehicle = { ...oldVehicle, discountPercentage: null };
-                    await upsertVehicle(updatedOldVehicle);
-                 }
-            }
-
             toast({ title: "Promosi Disimpan" });
             onSave();
         });
@@ -233,19 +214,10 @@ export default function PromosiPage() {
 
     const handleDelete = (promo: Promotion) => {
         startDeleteTransition(async () => {
-            const { error } = await deletePromotion(promo.id);
+            const { error } = await deletePromotion(promo, vehicles);
             if (error) {
                 toast({ variant: 'destructive', title: 'Gagal menghapus promosi', description: error.message });
                 return;
-            }
-
-            // Also remove discount from vehicle if it was linked
-            if (promo.vehicleId) {
-                const vehicleToUpdate = vehicles.find(v => v.id === promo.vehicleId);
-                if(vehicleToUpdate) {
-                    const updatedVehicle = { ...vehicleToUpdate, discountPercentage: null };
-                    await upsertVehicle(updatedVehicle);
-                }
             }
 
             toast({ title: "Promosi Dihapus" });

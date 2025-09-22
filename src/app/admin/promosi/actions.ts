@@ -2,12 +2,13 @@
 'use server';
 
 import { createServiceRoleClient, uploadImageFromDataUri } from '@/utils/supabase/server';
-import type { Promotion } from '@/lib/types';
+import type { Promotion, Vehicle } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
+import { upsertVehicle, type VehicleFormData } from '../armada/actions';
 
 const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || '/admin';
 
-export async function upsertPromotion(promoData: Omit<Promotion, 'created_at'>) {
+export async function upsertPromotion(promoData: Omit<Promotion, 'created_at'>, vehicles: Vehicle[], discount?: number) {
     const supabase = createServiceRoleClient();
     
     try {
@@ -24,21 +25,32 @@ export async function upsertPromotion(promoData: Omit<Promotion, 'created_at'>) 
         console.error('Error upserting promotion:', error);
         return { data: null, error };
     }
+
+    // Apply discount to the selected vehicle
+    if (promoData.vehicleId && promoData.vehicleId !== 'none') {
+        const vehicleToUpdate = vehicles.find(v => v.id === promoData.vehicleId);
+        if (vehicleToUpdate) {
+            const updatedVehicle: VehicleFormData = { ...vehicleToUpdate, price: vehicleToUpdate.price || 0, discountPercentage: discount || null };
+            await upsertVehicle(updatedVehicle);
+        }
+    }
+
     revalidatePath(`${adminPath}/promosi`);
     revalidatePath('/'); // Revalidate home page where promotions are shown
     return { data, error: null };
 }
 
-export async function deletePromotion(promoId: string) {
+
+export async function deletePromotion(promo: Promotion, vehicles: Vehicle[]) {
     const supabase = createServiceRoleClient();
 
-    const { data: itemData, error: fetchError } = await supabase.from('promotions').select('imageUrl').eq('id', promoId).single();
+    const { data: itemData, error: fetchError } = await supabase.from('promotions').select('imageUrl').eq('id', promo.id).single();
     if (fetchError) {
         console.error("Error fetching promotion for deletion:", fetchError);
         return { error: fetchError };
     }
 
-    const { error } = await supabase.from('promotions').delete().eq('id', promoId);
+    const { error } = await supabase.from('promotions').delete().eq('id', promo.id);
     if (error) {
         console.error('Error deleting promotion:', error);
         return { error };
@@ -48,6 +60,15 @@ export async function deletePromotion(promoId: string) {
         const bucketName = 'mudakarya-bucket';
         const filePath = itemData.imageUrl.substring(itemData.imageUrl.indexOf(bucketName) + bucketName.length + 1);
         await supabase.storage.from(bucketName).remove([filePath]);
+    }
+    
+    // Also remove discount from vehicle if it was linked
+    if (promo.vehicleId) {
+        const vehicleToUpdate = vehicles.find(v => v.id === promo.vehicleId);
+        if(vehicleToUpdate) {
+            const updatedVehicle: VehicleFormData = { ...vehicleToUpdate, price: vehicleToUpdate.price || 0, discountPercentage: null };
+            await upsertVehicle(updatedVehicle);
+        }
     }
 
     revalidatePath(`${adminPath}/promosi`);
