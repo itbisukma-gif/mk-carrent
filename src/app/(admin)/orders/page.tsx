@@ -1,344 +1,218 @@
-
 'use client';
 
-import { useState, useMemo, useEffect, useTransition } from 'react';
+import { useState, ChangeEvent, useMemo, useEffect, useTransition } from 'react';
+import Image from 'next/image';
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import Image from "next/image";
-import { cn } from "@/lib/utils";
-import { Send, Eye, CheckCircle, Car, ShieldCheck, Clock, AlertTriangle, Loader2 } from "lucide-react";
-import type { Driver, Order, OrderStatus } from '@/lib/types';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Textarea } from '@/components/ui/textarea';
+import { MoreHorizontal, PlusCircle, Star, Trash2, Upload, Edit, Loader2 } from "lucide-react";
+import type { Testimonial, GalleryItem, FeatureItem, Vehicle } from '@/lib/types';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { useToast } from '@/hooks/use-toast';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useToast } from "@/hooks/use-toast";
+import { cn } from '@/lib/utils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { StarRating } from '@/components/star-rating';
+import { LanguageProvider } from '@/app/language-provider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { formatDistanceToNow, differenceInHours } from 'date-fns';
-import { id } from 'date-fns/locale';
+import { Badge } from '@/components/ui/badge';
 import { createClient } from '@/utils/supabase/client';
-import { updateDriverStatus } from '../dashboard/actions';
-import { updateVehicleStatus } from '../armada/actions';
+import { upsertTestimonial, deleteTestimonial, addGalleryItem, deleteGalleryItem, upsertFeature, deleteFeature } from './actions';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { WhatsAppIcon } from '@/components/icons';
 
-async function updateOrderStatus(orderId: string, status: OrderStatus) {
-    const supabase = createClient();
-    const { data, error } = await supabase
-        .from('orders')
-        .update({ status })
-        .eq('id', orderId);
-    return { data, error };
-}
+export const dynamic = 'force-dynamic';
 
-async function updateOrderDriver(orderId: string, driverName: string, driverId: string) {
-    const supabase = createClient();
-    const { data, error } = await supabase
-        .from('orders')
-        .update({ driver: driverName, driverId: driverId })
-        .eq('id', orderId);
-    return { data, error };
-}
-
-
-const getStatusInfo = (status: OrderStatus | null) => {
-    switch (status) {
-        case 'disetujui':
-            return { label: 'Disetujui', className: 'bg-green-100 text-green-800 border-green-200 hover:bg-green-100' };
-        case 'pending':
-            return { label: 'Pending', className: 'bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-100' };
-        case 'tidak disetujui':
-            return { label: 'Ditolak', className: 'bg-red-100 text-red-800 border-red-200 hover:bg-red-100' };
-        case 'selesai':
-            return { label: 'Selesai', className: 'bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-100' };
-        default:
-            return { label: 'Unknown', className: 'bg-secondary text-secondary-foreground hover:bg-secondary' };
-    }
-}
-
-function OrderCard({ order, drivers, onDataChange }: { order: Order, drivers: Driver[], onDataChange: () => void }) {
+function TestimonialForm({ testimonial, vehicles, onSave, onCancel }: { testimonial?: Testimonial | null, vehicles: Vehicle[], onSave: () => void, onCancel: () => void }) {
     const { toast } = useToast();
-    const [isClient, setIsClient] = useState(false);
     const [isPending, startTransition] = useTransition();
-
-    useEffect(() => {
-        setIsClient(true);
-    }, []);
-
-    const whatsAppInvoiceUrl = useMemo(() => {
-        if (typeof window === 'undefined' || !order.customerPhone) return '#';
-
-        const domain = window.location.origin;
-        const shareableInvoiceUrl = `${domain}/invoice/${order.id}/share`;
-        
-        const message = `Halo ${order.customerName}, terima kasih telah memesan di MudaKarya CarRent. Pembayaran Anda telah kami konfirmasi. Berikut adalah rincian invoice untuk pesanan Anda: ${shareableInvoiceUrl}`;
-        
-        let formattedPhone = order.customerPhone.replace(/\D/g, '');
-        if (formattedPhone.startsWith('0')) {
-            formattedPhone = '62' + formattedPhone.substring(1);
-        } else if (!formattedPhone.startsWith('62')) {
-            formattedPhone = '62' + formattedPhone;
-        }
-
-        return `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`;
-    }, [order.id, order.customerName, order.customerPhone]);
-
-    const statusInfo = getStatusInfo(order.status);
-    const requiresDriver = order.service?.toLowerCase().includes("supir") || order.service?.toLowerCase().includes("all");
-
-    const orderDate = new Date(order.created_at);
-    const timeSinceCreation = isClient ? formatDistanceToNow(orderDate, { addSuffix: true, locale: id }) : '...';
-    const hoursSinceCreation = isClient ? differenceInHours(new Date(), orderDate) : 0;
-    const needsAttention = order.status === 'pending' && hoursSinceCreation > 1;
-
-    const handleStatusChange = (newStatus: OrderStatus) => {
-        startTransition(async () => {
-            const { error } = await updateOrderStatus(order.id, newStatus);
-            if (error) {
-                toast({ variant: 'destructive', title: 'Gagal Memperbarui Status', description: error.message });
-                return;
-            }
-
-            if (newStatus === 'disetujui') {
-                await updateVehicleStatus(order.vehicleId, 'disewa');
-            } else if (newStatus === 'tidak disetujui' || newStatus === 'selesai') {
-                await updateVehicleStatus(order.vehicleId, 'tersedia');
-                if (order.driverId) {
-                    await updateDriverStatus(order.driverId, 'Tersedia');
-                }
-            }
-
-            toast({ title: 'Status Diperbarui', description: `Status pesanan ${order.id} telah diubah.` });
-            onDataChange();
-        });
-    };
-
-    const handleDriverChange = (driverValue: string) => {
-        const [driverId, driverName] = driverValue.split('|');
-        if (!driverId || !driverName) return;
-
-        startTransition(async () => {
-            if (order.driverId) {
-                await updateDriverStatus(order.driverId, 'Tersedia');
-            }
-
-            const { error: orderError } = await updateOrderDriver(order.id, driverName, driverId);
-            if (orderError) {
-                toast({ variant: 'destructive', title: 'Gagal Menugaskan Driver', description: orderError.message });
-                return;
-            }
-
-            const { error: driverError } = await updateDriverStatus(driverId, 'Bertugas');
-            if (driverError) {
-                toast({ variant: 'destructive', title: 'Gagal Memperbarui Status Driver', description: driverError.message });
-            } else {
-                toast({ title: "Driver Ditugaskan", description: `${driverName} telah ditugaskan ke pesanan ${order.id}.` });
-            }
-
-            onDataChange();
-        });
-    };
     
-    const handleSelesaikanPesanan = () => {
-        handleStatusChange('selesai');
+    // Form state
+    const [customerName, setCustomerName] = useState(testimonial?.customerName || '');
+    const [vehicleName, setVehicleName] = useState(testimonial?.vehicleName || '');
+    const [rating, setRating] = useState(testimonial?.rating || 0);
+    const [comment, setComment] = useState(testimonial?.comment || '');
+
+
+    const handleSave = () => {
+        startTransition(async () => {
+            if (!customerName || rating === 0) {
+                toast({ variant: 'destructive', title: 'Form Tidak Lengkap', description: 'Nama pelanggan dan rating wajib diisi.' });
+                return;
+            }
+
+            const dataToSave: Omit<Testimonial, 'created_at'> = {
+                id: testimonial?.id || crypto.randomUUID(),
+                customerName,
+                vehicleName: vehicleName || null,
+                rating,
+                comment: comment || null,
+            };
+
+            const result = await upsertTestimonial(dataToSave);
+            if (result.error) {
+                toast({ variant: "destructive", title: "Gagal Menyimpan", description: result.error.message });
+            } else {
+                toast({ title: testimonial ? "Testimoni Diperbarui" : "Testimoni Ditambahkan" });
+                onSave();
+            }
+        });
     };
 
     return (
-         <Card className="flex flex-col">
-            <CardHeader className='pb-4'>
-                <div className="flex justify-between items-start">
-                    <div>
-                        <CardTitle className="text-lg">{order.customerName}</CardTitle>
-                        <CardDescription className="font-mono text-xs">{order.id}</CardDescription>
-                         <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1.5">
-                            <Clock className="h-3 w-3" />
-                            <span>dibuat {timeSinceCreation}</span>
+        <>
+            <div className="max-h-[70vh] overflow-y-auto px-1 pr-4">
+                <div className="grid gap-6 py-4 px-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="customerName">Nama Pelanggan</Label>
+                            <Input id="customerName" placeholder="cth. Budi Santoso" value={customerName} onChange={e => setCustomerName(e.target.value)} />
                         </div>
-                    </div>
-                     <Badge variant="outline" className={cn("capitalize text-xs", statusInfo.className)}>{statusInfo.label}</Badge>
-                </div>
-                <div className="flex items-center gap-2 pt-3 text-sm text-muted-foreground">
-                    <Car className="h-4 w-4" />
-                    <span>{order.carName}</span>
-                </div>
-            </CardHeader>
-            <CardContent className="flex-grow space-y-4">
-                 {needsAttention && (
-                    <Alert variant="destructive" className="bg-yellow-50 border-yellow-200 text-yellow-800 [&>svg]:text-yellow-600">
-                        <AlertTriangle className="h-4 w-4" />
-                        <AlertTitle className="font-semibold">Perlu Perhatian</AlertTitle>
-                        <AlertDescription className="text-yellow-700">
-                            Pesanan ini belum ditanggapi lebih dari 1 jam.
-                        </AlertDescription>
-                    </Alert>
-                )}
-                <Separator />
-                <div className="space-y-3 text-sm">
-                    <div className="flex justify-between">
-                        <span className="text-muted-foreground">Layanan</span>
-                        <span className="font-medium">{order.service}</span>
-                    </div>
-                     <div className="flex justify-between items-center">
-                        <span className="text-muted-foreground">Driver</span>
-                         {requiresDriver ? (
-                            <Select 
-                                value={order.driverId ? `${order.driverId}|${order.driver}` : undefined} 
-                                onValueChange={handleDriverChange}
-                                disabled={order.status === 'disetujui' || order.status === 'selesai' || isPending}
-                            >
-                                <SelectTrigger className="w-[180px] h-8 text-xs">
-                                <SelectValue placeholder="Pilih Driver" />
+                        <div className="space-y-2">
+                            <Label htmlFor="vehicleName">Mobil yang Disewa</Label>
+                             <Select value={vehicleName || ''} onValueChange={setVehicleName}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Pilih mobil..." />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {drivers.map(d => 
-                                        <SelectItem 
-                                            key={d.id} 
-                                            value={`${d.id}|${d.name}`}
-                                            disabled={d.status === 'Bertugas' && order.driver !== d.name}
-                                            className="text-xs"
-                                        >
-                                            {d.name} ({d.status})
+                                    {vehicles.map((vehicle) => (
+                                        <SelectItem key={vehicle.id} value={`${vehicle.brand} ${vehicle.name}`}>
+                                            {vehicle.brand} {vehicle.name}
                                         </SelectItem>
-                                    )}
+                                    ))}
                                 </SelectContent>
                             </Select>
-                        ) : (
-                            <span className="font-medium">-</span>
-                        )}
+                        </div>
+                    </div>
+                     <div className="space-y-2">
+                        <Label>Rating</Label>
+                        <div className="flex items-center gap-2 rounded-md border p-3">
+                            <p className="text-sm font-medium">Berikan rating (1-5):</p>
+                            <LanguageProvider>
+                                <StarRating rating={rating} onRatingChange={setRating} />
+                            </LanguageProvider>
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="comment">Komentar</Label>
+                        <Textarea id="comment" placeholder="Tulis komentar testimoni di sini..." value={comment || ''} onChange={e => setComment(e.target.value)} />
                     </div>
                 </div>
-                 <Separator />
-            </CardContent>
-            <CardFooter className="flex-col sm:flex-row gap-2 justify-between items-center">
-                <Dialog>
-                    <DialogTrigger asChild>
-                         <Button variant="ghost" size="sm" className="w-full sm:w-auto justify-start text-muted-foreground hover:text-primary">
-                            <Eye className="h-4 w-4 mr-2" />
-                            Bukti Bayar
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-md">
-                        <DialogHeader>
-                            <DialogTitle>Bukti Pembayaran</DialogTitle>
-                            <DialogDescription>
-                                Order ID: {order.id}
-                            </DialogDescription>
-                        </DialogHeader>
-                        <div className="relative mt-4 aspect-video w-full">
-                        {order.paymentProof ? (
-                           <Image 
-                                src={order.paymentProof} 
-                                alt="Bukti Pembayaran" 
-                                fill
-                                className="rounded-md object-contain" 
-                            />
-                        ) : (
-                            <div className="flex items-center justify-center h-full bg-muted text-muted-foreground rounded-md">
-                                Tidak ada bukti bayar
+            </div>
+            <DialogFooter className="pt-4 border-t px-6 pb-6 bg-background rounded-b-lg">
+                 <Button variant="outline" onClick={onCancel}>Batal</Button>
+                <Button type="submit" onClick={handleSave} disabled={isPending}>
+                    {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {testimonial ? "Simpan Perubahan" : "Simpan Testimoni"}
+                </Button>
+            </DialogFooter>
+        </>
+    )
+}
+
+function FeatureForm({ feature, onSave, onCancel }: { feature?: FeatureItem | null, onSave: () => void, onCancel: () => void }) {
+    const { toast } = useToast();
+    const [isPending, startTransition] = useTransition();
+
+    const [title, setTitle] = useState(feature?.title || '');
+    const [description, setDescription] = useState(feature?.description || '');
+    const [previewUrl, setPreviewUrl] = useState<string | null>(feature?.imageUrl || null);
+    
+    const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => setPreviewUrl(reader.result as string);
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleSave = () => {
+        startTransition(async () => {
+            if (!title || !description || !previewUrl) {
+                toast({ variant: 'destructive', title: 'Formulir tidak lengkap' });
+                return;
+            }
+
+            const newFeature: Omit<FeatureItem, 'created_at'> = {
+                id: feature?.id || crypto.randomUUID(),
+                title,
+                description,
+                imageUrl: previewUrl,
+                dataAiHint: feature?.dataAiHint || 'feature illustration'
+            };
+
+            const result = await upsertFeature(newFeature);
+
+            if (result.error) {
+                 toast({ variant: "destructive", title: "Gagal Menyimpan", description: result.error.message });
+            } else {
+                 toast({ title: "Keunggulan Disimpan", description: `Keunggulan "${result.data?.title}" telah disimpan.` });
+                 onSave();
+            }
+        });
+    };
+    
+    return (
+        <>
+             <div className="max-h-[70vh] overflow-y-auto px-1 pr-4">
+                <div className="grid gap-6 py-4 px-6">
+                    <div className="space-y-2">
+                        <Label htmlFor="feature-title">Judul Keunggulan</Label>
+                        <Input id="feature-title" placeholder="cth. Unit Selalu Bersih" value={title} onChange={e => setTitle(e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="feature-description">Deskripsi Singkat</Label>
+                        <Textarea id="feature-description" placeholder="Jelaskan keunggulan layanan Anda..." value={description || ''} onChange={e => setDescription(e.target.value)} />
+                    </div>
+                     <div className="space-y-2">
+                        <Label>Foto Ilustrasi</Label>
+                        {previewUrl && (
+                            <div className="relative aspect-video w-full rounded-md overflow-hidden border">
+                                <Image src={previewUrl} alt="Pratinjau" fill className="object-cover" />
                             </div>
                         )}
-                        </div>
-                    </DialogContent>
-                </Dialog>
-
-                <div className="flex items-center gap-2">
-                    {order.status === 'disetujui' && (
-                         <>
-                            <Button size="sm" variant="outline" asChild className="bg-green-500 text-white hover:bg-green-600 hover:text-white border-green-600">
-                                <a href={whatsAppInvoiceUrl} target="_blank" rel="noopener noreferrer">
-                                    <WhatsAppIcon className="h-4 w-4" />
-                                </a>
-                            </Button>
-                            <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                    <Button size="sm" variant="default" className='bg-blue-600 hover:bg-blue-700' disabled={isPending}>
-                                        {isPending ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : <Send className="h-3 w-3 mr-2" />}
-                                        Selesaikan
-                                    </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                        <AlertDialogTitle>Selesaikan Pesanan Ini?</AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                            Tindakan ini akan mengubah status pesanan menjadi "Selesai" dan mengembalikan status mobil dan driver (jika ada) menjadi "Tersedia".
-                                        </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                        <AlertDialogCancel>Batal</AlertDialogCancel>
-                                        <AlertDialogAction onClick={handleSelesaikanPesanan}>Ya, Selesaikan</AlertDialogAction>
-                                    </AlertDialogFooter>
-                                </AlertDialogContent>
-                            </AlertDialog>
-                         </>
-                    )}
-                    {order.status === 'selesai' && (
-                        <div className='flex items-center text-sm text-blue-600 font-medium'>
-                            <CheckCircle className="h-4 w-4 mr-2" />
-                            Pesanan Selesai
-                        </div>
-                    )}
-                     {order.status === 'tidak disetujui' && (
-                        <div className='flex items-center text-sm text-red-600 font-medium'>
-                            <AlertTriangle className="h-4 w-4 mr-2" />
-                            Pesanan Ditolak
-                        </div>
-                    )}
-                    {order.status === 'pending' && (
-                         <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="default" size="sm" disabled={isPending}>
-                                    {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4 mr-2" />}
-                                    Verifikasi
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                 <DropdownMenuLabel>Ubah Status Pesanan</DropdownMenuLabel>
-                                 <DropdownMenuSeparator />
-                                <DropdownMenuRadioGroup value={order.status || 'pending'} onValueChange={(value) => handleStatusChange(value as OrderStatus)}>
-                                    <DropdownMenuRadioItem value="disetujui">Disetujui</DropdownMenuRadioItem>
-                                    <DropdownMenuRadioItem value="tidak disetujui">Ditolak</DropdownMenuRadioItem>
-                                </DropdownMenuRadioGroup>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    )}
+                        <Label htmlFor="feature-upload" className={cn("w-full cursor-pointer", "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50", "border border-input bg-background hover:bg-accent hover:text-accent-foreground", "h-10 px-4 py-2")}>
+                            <Upload className="mr-2 h-4 w-4" />
+                            {previewUrl ? "Ganti Foto..." : "Pilih File Foto..."}
+                        </Label>
+                        <Input id="feature-upload" type="file" accept="image/*" className="hidden" onChange={handleFileChange}/>
+                    </div>
                 </div>
-            </CardFooter>
-        </Card>
+            </div>
+             <DialogFooter className="pt-4 border-t px-6 pb-6 bg-background rounded-b-lg">
+                <Button variant="outline" onClick={onCancel}>Batal</Button>
+                <Button onClick={handleSave} disabled={isPending}>
+                    {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {feature ? "Simpan Perubahan" : "Simpan Keunggulan"}
+                </Button>
+            </DialogFooter>
+        </>
     );
 }
 
-
-export default function OrdersPage() {
-    const [orders, setOrders] = useState<Order[]>([]);
-    const [drivers, setDrivers] = useState<Driver[]>([]);
+function GalleryEditor({ vehicles }: { vehicles: Vehicle[] }) {
+    const [gallery, setGallery] = useState<GalleryItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [isAddPhotoOpen, setAddPhotoOpen] = useState(false);
     const { toast } = useToast();
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const [selectedVehicleName, setSelectedVehicleName] = useState<string | undefined>(undefined);
+    const [isPending, startTransition] = useTransition();
     const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
 
-    const fetchOrderData = async () => {
+    const fetchGallery = async () => {
         if (!supabase) return;
         setIsLoading(true);
-        const { data: orderData, error: orderError } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
-        const { data: driverData, error: driverError } = await supabase.from('drivers').select('*');
-
-        if (orderError) {
-            toast({ variant: 'destructive', title: 'Gagal mengambil data pesanan', description: orderError.message });
-        } else {
-            setOrders(orderData || []);
-        }
-
-        if (driverError) {
-            toast({ variant: 'destructive', title: 'Gagal mengambil data driver', description: driverError.message });
-        } else {
-            setDrivers(driverData || []);
-        }
-
+        const { data, error } = await supabase.from('gallery').select('*').order('created_at', { ascending: false });
+        if (error) toast({ variant: 'destructive', title: 'Gagal memuat galeri', description: error.message });
+        else setGallery(data || []);
         setIsLoading(false);
     }
-    
+
     useEffect(() => {
         const supabaseClient = createClient();
         setSupabase(supabaseClient);
@@ -346,124 +220,559 @@ export default function OrdersPage() {
 
     useEffect(() => {
         if (supabase) {
-            fetchOrderData();
+            fetchGallery();
         }
     }, [supabase]);
 
-    const { pendingOrders, approvedOrders, completedOrders } = useMemo(() => {
-        return {
-            pendingOrders: orders.filter(o => o.status === 'pending'),
-            approvedOrders: orders.filter(o => o.status === 'disetujui'),
-            completedOrders: orders.filter(o => o.status === 'selesai' || o.status === 'tidak disetujui'),
+    const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => setPreviewUrl(reader.result as string);
+            reader.readAsDataURL(file);
         }
-    }, [orders]);
-    
-    if (isLoading) {
-        return (
-            <div className="flex flex-col gap-8">
-                <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
-                    <div>
-                    <h1 className="text-3xl font-bold tracking-tight">List Order</h1>
-                    <p className="text-muted-foreground">
-                        Kelola order masuk dan status persetujuannya.
-                    </p>
+    };
+
+    const handleAddPhoto = () => {
+        startTransition(async () => {
+            if (!previewUrl) {
+                toast({ variant: 'destructive', title: 'Tidak ada foto dipilih' });
+                return;
+            }
+
+            const newPhotoData: Omit<GalleryItem, 'id' | 'created_at'> = {
+                url: previewUrl,
+                vehicleName: selectedVehicleName,
+            };
+            
+            const result = await addGalleryItem(newPhotoData);
+            if (result.error) {
+                toast({ variant: 'destructive', title: 'Gagal menambah foto', description: result.error.message });
+            } else {
+                toast({ title: "Foto Ditambahkan", description: "Foto baru telah ditambahkan ke galeri." });
+                setAddPhotoOpen(false);
+                setPreviewUrl(null);
+                setSelectedVehicleName(undefined);
+                fetchGallery(); // refetch
+            }
+        });
+    };
+
+    const handleDeletePhoto = (photoId: string) => {
+        startTransition(async () => {
+             const result = await deleteGalleryItem(photoId);
+              if (result.error) {
+                toast({ variant: 'destructive', title: 'Gagal menghapus foto', description: result.error.message });
+            } else {
+                toast({ variant: "destructive", title: "Foto Dihapus" });
+                fetchGallery(); // refetch
+            }
+        });
+    };
+
+    return (
+        <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                    <CardTitle>Galeri Foto Pelanggan</CardTitle>
+                    <CardDescription>Kelola foto-foto yang ditampilkan di halaman testimoni.</CardDescription>
+                </div>
+                <Dialog open={isAddPhotoOpen} onOpenChange={(isOpen) => { setAddPhotoOpen(isOpen); if(!isOpen) { setPreviewUrl(null); setSelectedVehicleName(undefined); } }}>
+                    <DialogTrigger asChild>
+                        <Button variant="outline">
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            Tambah Foto
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Tambah Foto Baru</DialogTitle>
+                            <DialogDescription>Unggah foto dari pelanggan untuk ditampilkan di galeri.</DialogDescription>
+                        </DialogHeader>
+                        <div className="py-4 space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="vehicleName">Tautkan ke Mobil (Opsional)</Label>
+                                <Select onValueChange={setSelectedVehicleName}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Pilih mobil..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {vehicles.map((vehicle) => (
+                                            <SelectItem key={vehicle.id} value={`${vehicle.brand} ${vehicle.name}`}>
+                                                {vehicle.brand} {vehicle.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            {previewUrl && (
+                                <div className="relative aspect-video w-full rounded-md overflow-hidden border">
+                                    <Image src={previewUrl} alt="Pratinjau Foto" fill className="object-cover" />
+                                </div>
+                            )}
+                             <Label htmlFor="photo-upload" className={cn("w-full cursor-pointer", "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50", "border border-input bg-background hover:bg-accent hover:text-accent-foreground", "h-10 px-4 py-2")}>
+                                <Upload className="mr-2 h-4 w-4" />
+                                {previewUrl ? "Pilih Foto Lain..." : "Pilih File Foto..."}
+                            </Label>
+                            <Input id="photo-upload" type="file" accept="image/*" className="hidden" onChange={handleFileChange}/>
+                        </div>
+                        <DialogFooter>
+                            <Button onClick={handleAddPhoto} disabled={!previewUrl || isPending}>
+                                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                Upload & Simpan
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+            </CardHeader>
+            <CardContent>
+                {isLoading ? (
+                    <div className="flex justify-center items-center h-48"><Loader2 className="h-6 w-6 animate-spin"/></div>
+                ) : gallery.length > 0 ? (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                        {gallery.map((photo) => (
+                             <div key={photo.id} className="relative group aspect-square">
+                                <Image
+                                    src={photo.url}
+                                    alt="Foto galeri pelanggan"
+                                    fill
+                                    className="object-cover rounded-lg border"
+                                    data-ai-hint="customer photo"
+                                />
+                                {photo.vehicleName && (
+                                    <Badge variant="secondary" className="absolute bottom-1 left-1 text-xs">{photo.vehicleName}</Badge>
+                                )}
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button
+                                            variant="destructive"
+                                            size="icon"
+                                            className="absolute top-1 right-1 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                                            disabled={isPending}
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                            <span className="sr-only">Hapus foto</span>
+                                        </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>Anda Yakin?</AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                                Tindakan ini akan menghapus foto ini dari galeri secara permanen.
+                                            </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Batal</AlertDialogCancel>
+                                            <AlertDialogAction onClick={() => handleDeletePhoto(photo.id)} className="bg-destructive hover:bg-destructive/90">Ya, Hapus</AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                             </div>
+                        ))}
                     </div>
-                </div>
-                <div className="text-center py-16 flex items-center justify-center gap-2 text-muted-foreground">
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                    <span>Memuat data pesanan...</span>
-                </div>
-            </div>
-        )
+                ) : (
+                    <div className="text-center py-12 border-2 border-dashed rounded-lg">
+                        <h3 className="text-lg font-semibold">Galeri Masih Kosong</h3>
+                        <p className="text-sm text-muted-foreground mt-1">Tambahkan foto pertama Anda.</p>
+                    </div>
+                )}
+            </CardContent>
+        </Card>
+    );
+}
+
+function FeatureEditor() {
+    const [features, setFeatures] = useState<FeatureItem[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isFormOpen, setIsFormOpen] = useState(false);
+    const [selectedFeature, setSelectedFeature] = useState<FeatureItem | null>(null);
+    const { toast } = useToast();
+    const [isPending, startTransition] = useTransition();
+    const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
+
+    const fetchFeatures = async () => {
+        if (!supabase) return;
+        setIsLoading(true);
+        const { data, error } = await supabase.from('features').select('*').order('created_at', { ascending: false });
+        if (error) toast({ variant: 'destructive', title: 'Gagal memuat keunggulan', description: error.message });
+        else setFeatures(data || []);
+        setIsLoading(false);
     }
+
+    useEffect(() => {
+        const supabaseClient = createClient();
+        setSupabase(supabaseClient);
+    }, []);
+
+    useEffect(() => {
+        if (supabase) {
+            fetchFeatures();
+        }
+    }, [supabase]);
+
+
+    const handleAddClick = () => {
+        setSelectedFeature(null);
+        setIsFormOpen(true);
+    };
+
+    const handleEditClick = (feature: FeatureItem) => {
+        setSelectedFeature(feature);
+        setIsFormOpen(true);
+    };
+
+    const handleFormSave = () => {
+        setIsFormOpen(false);
+        setSelectedFeature(null);
+        fetchFeatures(); // refetch
+    };
+
+    const handleDelete = (featureId: string) => {
+        startTransition(async () => {
+            const result = await deleteFeature(featureId);
+            if (result.error) {
+                 toast({ variant: "destructive", title: "Gagal Menghapus", description: result.error.message });
+            } else {
+                toast({ variant: "destructive", title: "Keunggulan Dihapus" });
+                fetchFeatures(); // refetch
+            }
+        });
+    };
+
+    return (
+        <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                    <CardTitle>Keunggulan Layanan</CardTitle>
+                    <CardDescription>Kelola poin-poin keunggulan yang ditampilkan di halaman utama.</CardDescription>
+                </div>
+                <Button onClick={handleAddClick} variant="outline">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Tambah Keunggulan
+                </Button>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                {isLoading ? (
+                     <div className="flex justify-center items-center h-48"><Loader2 className="h-6 w-6 animate-spin"/></div>
+                ) : features.length > 0 ? features.map(feature => (
+                    <div key={feature.id} className="flex items-center gap-4 border rounded-lg p-3">
+                        <Image src={feature.imageUrl!} alt={feature.title} width={120} height={80} className="rounded-md object-cover aspect-video bg-muted" />
+                        <div className="flex-grow">
+                            <h4 className="font-bold">{feature.title}</h4>
+                            <p className="text-sm text-muted-foreground">{feature.description}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                             <Button variant="outline" size="icon" onClick={() => handleEditClick(feature)}>
+                                <Edit className="h-4 w-4" />
+                            </Button>
+                            <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <Button variant="destructive" size="icon" disabled={isPending}><Trash2 className="h-4 w-4" /></Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>Anda Yakin?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            Tindakan ini akan menghapus keunggulan "{feature.title}".
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>Batal</AlertDialogCancel>
+                                        <AlertDialogAction onClick={() => handleDelete(feature.id)} className="bg-destructive hover:bg-destructive/90">Ya, Hapus</AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
+                        </div>
+                    </div>
+                )) : (
+                     <div className="text-center py-12 border-2 border-dashed rounded-lg">
+                        <h3 className="text-lg font-semibold">Belum Ada Keunggulan</h3>
+                        <p className="text-sm text-muted-foreground mt-1">Tambahkan poin keunggulan pertama Anda.</p>
+                    </div>
+                )}
+            </CardContent>
+
+             <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+                 <DialogContent className="sm:max-w-lg p-0">
+                    <DialogHeader className="p-6 pb-0">
+                        <DialogTitle>{selectedFeature ? "Edit Keunggulan" : "Tambah Keunggulan"}</DialogTitle>
+                        <DialogDescription>
+                            {selectedFeature ? "Perbarui detail keunggulan di bawah ini." : "Buat poin keunggulan baru untuk ditampilkan di halaman utama."}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <FeatureForm 
+                        feature={selectedFeature} 
+                        onSave={handleFormSave}
+                        onCancel={() => setIsFormOpen(false)}
+                    />
+                </DialogContent>
+            </Dialog>
+        </Card>
+    );
+}
+
+export default function TestimoniPage() {
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isFormOpen, setFormOpen] = useState(false);
+  const [selectedTestimonial, setSelectedTestimonial] = useState<Testimonial | null>(null);
+  const { toast } = useToast();
+  const [isDeleting, startDeleteTransition] = useTransition();
+  const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
+
+  const [filter, setFilter] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
+  const fetchData = async () => {
+    if (!supabase) return;
+    setIsLoading(true);
+    const { data: testimonialsData, error: testimonialsError } = await supabase.from('testimonials').select('*').order('created_at', { ascending: false });
+    const { data: vehiclesData, error: vehiclesError } = await supabase.from('vehicles').select('*');
     
+    if (testimonialsError) toast({ variant: 'destructive', title: 'Gagal memuat testimoni', description: testimonialsError.message });
+    else setTestimonials(testimonialsData || []);
+    
+    if (vehiclesError) toast({ variant: 'destructive', title: 'Gagal memuat kendaraan', description: vehiclesError.message });
+    else setVehicles(vehiclesData || []);
+    
+    setIsLoading(false);
+  }
+
+  useEffect(() => {
+    const supabaseClient = createClient();
+    setSupabase(supabaseClient);
+  }, []);
+
+  useEffect(() => {
+    if (supabase) {
+        fetchData();
+    }
+  }, [supabase]);
+
+  const filteredTestimonials = useMemo(() => {
+    if (filter === 'all') {
+      return testimonials;
+    }
+    return testimonials.filter(t => t.vehicleName === filter);
+  }, [testimonials, filter]);
+
+  const totalPages = Math.ceil(filteredTestimonials.length / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredTestimonials.slice(indexOfFirstItem, indexOfLastItem);
+  
+  const handleFilterChange = (value: string) => {
+    setFilter(value);
+    setCurrentPage(1); // Reset to first page on filter change
+  };
+
+
+  const handleNextPage = () => {
+    setCurrentPage(prev => Math.min(prev + 1, totalPages));
+  };
+
+  const handlePrevPage = () => {
+    setCurrentPage(prev => Math.max(prev - 1, 1));
+  };
+
+  const handleEditClick = (testimonial: Testimonial) => {
+    setSelectedTestimonial(testimonial);
+    setFormOpen(true);
+  };
+  
+  const handleAddClick = () => {
+    setSelectedTestimonial(null);
+    setFormOpen(true);
+  };
+
+  const handleDelete = (testimonial: Testimonial) => {
+    startDeleteTransition(async () => {
+        const result = await deleteTestimonial(testimonial.id);
+        if (result.error) {
+            toast({ variant: "destructive", title: "Gagal menghapus", description: result.error.message });
+        } else {
+            toast({ variant: "destructive", title: "Testimoni Dihapus" });
+            fetchData();
+        }
+    });
+  };
+  
+  const handleFormSave = () => {
+    setFormOpen(false);
+    setSelectedTestimonial(null);
+    fetchData(); // refetch
+  };
+
+  const dialogTitle = selectedTestimonial ? "Edit Testimoni" : "Tambahkan Testimoni Baru";
+  const dialogDescription = selectedTestimonial ? "Perbarui detail testimoni di bawah ini." : "Isi detail testimoni baru di bawah ini.";
+
   return (
     <div className="flex flex-col gap-8">
-      <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">List Order</h1>
-          <p className="text-muted-foreground">
-            Kelola order masuk dan status persetujuannya.
-          </p>
-        </div>
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Manajemen Testimoni & Keunggulan</h1>
+        <p className="text-muted-foreground">
+          Kelola semua testimoni, galeri, dan poin keunggulan dari layanan Anda.
+        </p>
       </div>
       
-       <Tabs defaultValue="incoming">
-        <TabsList className="grid w-full grid-cols-3 max-w-lg">
-            <TabsTrigger value="incoming">
-                Pesanan Masuk
-                 {pendingOrders.length > 0 && (
-                    <Badge className="ml-2 rounded-full h-5 w-5 p-0 flex items-center justify-center">{pendingOrders.length}</Badge>
-                )}
-            </TabsTrigger>
-            <TabsTrigger value="on-progress">
-                On Progress
-                {approvedOrders.length > 0 && (
-                     <Badge className="ml-2 rounded-full h-5 w-5 p-0 flex items-center justify-center">{approvedOrders.length}</Badge>
-                )}
-            </TabsTrigger>
-            <TabsTrigger value="completed">
-                Selesai
-            </TabsTrigger>
-        </TabsList>
-        <TabsContent value="incoming" className="mt-6">
-           {pendingOrders.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {pendingOrders.map((order) => (
-                   <OrderCard 
-                    key={order.id} 
-                    order={order}
-                    drivers={drivers}
-                    onDataChange={fetchOrderData}
-                   />
-                ))}
-            </div>
-            ) : (
-                <div className="flex flex-col items-center justify-center text-center py-16 border-2 border-dashed rounded-lg">
-                    <h3 className="text-xl font-semibold">Tidak Ada Pesanan Masuk</h3>
-                    <p className="text-muted-foreground mt-2 mb-6">Saat ada pesanan baru dengan status "pending", pesanan tersebut akan muncul di sini.</p>
-                </div>
-            )}
-        </TabsContent>
-         <TabsContent value="on-progress" className="mt-6">
-           {approvedOrders.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {approvedOrders.map((order) => (
-                   <OrderCard 
-                    key={order.id} 
-                    order={order}
-                    drivers={drivers}
-                    onDataChange={fetchOrderData}
-                   />
-                ))}
-            </div>
-            ) : (
-                <div className="flex flex-col items-center justify-center text-center py-16 border-2 border-dashed rounded-lg">
-                    <h3 className="text-xl font-semibold">Tidak Ada Pesanan Aktif</h3>
-                    <p className="text-muted-foreground mt-2 mb-6">Pesanan yang telah Anda setujui akan ditampilkan di sini.</p>
-                </div>
-            )}
-        </TabsContent>
-         <TabsContent value="completed" className="mt-6">
-           {completedOrders.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {completedOrders.map((order) => (
-                   <OrderCard 
-                    key={order.id} 
-                    order={order}
-                    drivers={drivers}
-                    onDataChange={fetchOrderData}
-                   />
-                ))}
-            </div>
-            ) : (
-                <div className="flex flex-col items-center justify-center text-center py-16 border-2 border-dashed rounded-lg">
-                    <h3 className="text-xl font-semibold">Belum Ada Pesanan Selesai</h3>
-                    <p className="text-muted-foreground mt-2 mb-6">Pesanan yang telah selesai atau ditolak akan muncul di sini.</p>
-                </div>
-            )}
-        </TabsContent>
+       <Tabs defaultValue="testimonials">
+            <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="testimonials">Ulasan Pelanggan</TabsTrigger>
+                <TabsTrigger value="gallery">Galeri Foto</TabsTrigger>
+                <TabsTrigger value="features">Kelola Keunggulan</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="testimonials" className="mt-6">
+                 <Card>
+                    <CardHeader>
+                        <CardTitle>Daftar Testimoni</CardTitle>
+                        <CardDescription>Berikut adalah semua testimoni yang akan ditampilkan di halaman detail mobil.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
+                          <Select value={filter} onValueChange={handleFilterChange}>
+                              <SelectTrigger className="w-full sm:w-[240px]">
+                                  <SelectValue placeholder="Filter berdasarkan mobil" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                  <SelectItem value="all">Tampilkan Semua Mobil</SelectItem>
+                                  {vehicles.map((vehicle) => (
+                                      <SelectItem key={vehicle.id} value={`${vehicle.brand} ${vehicle.name}`}>
+                                          {vehicle.brand} {vehicle.name}
+                                      </SelectItem>
+                                  ))}
+                              </SelectContent>
+                          </Select>
+                          <Button onClick={handleAddClick} className="w-full sm:w-auto">
+                              <PlusCircle className="mr-2 h-4 w-4" />
+                              Tambah Testimoni
+                          </Button>
+                      </div>
+                      {isLoading ? (
+                        <div className="flex justify-center items-center h-48"><Loader2 className="h-6 w-6 animate-spin"/></div>
+                      ) : (
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Nama Pelanggan</TableHead>
+                            <TableHead>Mobil yang Disewa</TableHead>
+                            <TableHead>Komentar</TableHead>
+                            <TableHead className="text-center">Rating</TableHead>
+                            <TableHead className="text-right">Aksi</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {currentItems.length > 0 ? (
+                            currentItems.map((item) => (
+                                <TableRow key={item.id}>
+                                <TableCell className="font-medium">{item.customerName}</TableCell>
+                                <TableCell>{item.vehicleName}</TableCell>
+                                <TableCell className="max-w-xs truncate italic text-muted-foreground">"{item.comment}"</TableCell>
+                                <TableCell className="text-center">
+                                    <div className="flex items-center justify-center gap-1">
+                                        <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" /> 
+                                        <span className="font-semibold">{item.rating}</span>
+                                    </div>
+                                </TableCell>
+                                <TableCell className="text-right">
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                        <Button aria-haspopup="true" size="icon" variant="ghost">
+                                            <MoreHorizontal className="h-4 w-4" />
+                                            <span className="sr-only">Toggle menu</span>
+                                        </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                        <DropdownMenuLabel>Aksi</DropdownMenuLabel>
+                                        <DropdownMenuItem onSelect={() => handleEditClick(item)}>Edit</DropdownMenuItem>
+                                        <AlertDialog>
+                                            <AlertDialogTrigger asChild>
+                                                <DropdownMenuItem className='text-destructive' onSelect={(e) => e.preventDefault()}>Hapus</DropdownMenuItem>
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent>
+                                                <AlertDialogHeader>
+                                                    <AlertDialogTitle>Anda Yakin?</AlertDialogTitle>
+                                                    <AlertDialogDescription>
+                                                        Tindakan ini akan menghapus testimoni dari <span className="font-bold">{item.customerName}</span> secara permanen.
+                                                    </AlertDialogDescription>
+                                                </AlertDialogHeader>
+                                                <AlertDialogFooter>
+                                                    <AlertDialogCancel>Batal</AlertDialogCancel>
+                                                    <AlertDialogAction onClick={() => handleDelete(item)} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90">
+                                                        {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                                                        Ya, Hapus
+                                                    </AlertDialogAction>
+                                                </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                        </AlertDialog>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </TableCell>
+                                </TableRow>
+                            ))
+                          ) : (
+                            <TableRow>
+                                <TableCell colSpan={5} className="h-24 text-center">
+                                    Belum ada testimoni.
+                                </TableCell>
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      </Table>
+                      )}
+                    </CardContent>
+                     <CardFooter className="flex items-center justify-end space-x-4 py-4">
+                        <span className="text-sm text-muted-foreground">
+                            Halaman {currentPage} dari {totalPages > 0 ? totalPages : 1}
+                        </span>
+                        <div className="space-x-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handlePrevPage}
+                                disabled={currentPage === 1}
+                            >
+                                Sebelumnya
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleNextPage}
+                                disabled={currentPage === totalPages || totalPages === 0}
+                            >
+                                Berikutnya
+                            </Button>
+                        </div>
+                    </CardFooter>
+                  </Card>
+            </TabsContent>
+
+             <TabsContent value="gallery" className="mt-6">
+                <GalleryEditor vehicles={vehicles} />
+            </TabsContent>
+
+             <TabsContent value="features" className="mt-6">
+                <FeatureEditor />
+            </TabsContent>
+
        </Tabs>
+      
+       <Dialog open={isFormOpen} onOpenChange={setFormOpen}>
+         <DialogContent className="sm:max-w-xl p-0">
+            <DialogHeader className="p-6 pb-0">
+                <DialogTitle>{dialogTitle}</DialogTitle>
+                <DialogDescription>{dialogDescription}</DialogDescription>
+            </DialogHeader>
+            <TestimonialForm 
+                testimonial={selectedTestimonial}
+                vehicles={vehicles}
+                onSave={handleFormSave}
+                onCancel={() => setFormOpen(false)}
+            />
+        </DialogContent>
+       </Dialog>
     </div>
   );
 }

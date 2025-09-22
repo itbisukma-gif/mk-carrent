@@ -18,17 +18,22 @@ export async function middleware(request: NextRequest) {
     return response;
   }
   
-  // If a logged-in user tries to access the secret path (which shows login), redirect them to the first page of the admin area.
-  if (pathname === adminPath && hasSession) {
-    return NextResponse.redirect(new URL(`${adminPath}/dashboard`, request.url));
+  const isAccessingSecretPath = pathname.startsWith(adminPath);
+  const isAccessingInternalAdminPath = pathname.startsWith('/admin');
+
+  // If a logged-in user tries to access the secret path (which would show login if they were logged out), redirect them to the first page of the admin area.
+  if (isAccessingSecretPath && hasSession && pathname === adminPath) {
+     return NextResponse.redirect(new URL(`${adminPath}/dashboard`, request.url));
   }
 
-  // Check if the current path starts with the secret admin path
-  const isProtectedRoute = pathname.startsWith(adminPath);
-  
-  if (isProtectedRoute) {
-    // This is a protected route.
-    // We rewrite the URL to map it to the actual /admin folder structure.
+  // If a user tries to access the internal /admin path directly, block it.
+  if (isAccessingInternalAdminPath && !isAccessingSecretPath) {
+      return new NextResponse('Not Found', { status: 404 });
+  }
+
+  // If the current path starts with the secret admin path
+  if (isAccessingSecretPath) {
+    // Rewrite the URL to map it to the actual /admin folder structure.
     const newPath = pathname.replace(adminPath, '/admin');
     const url = new URL(newPath, request.url);
 
@@ -37,7 +42,6 @@ export async function middleware(request: NextRequest) {
       return NextResponse.rewrite(url);
     } else {
       // User is not logged in. Show the login page, but keep the secret URL in the browser.
-      // The login page itself is at /login, but it's only ever shown via this rewrite.
       return NextResponse.rewrite(new URL('/login', request.url));
     }
   }

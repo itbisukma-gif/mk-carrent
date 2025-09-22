@@ -20,28 +20,9 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { formatDistanceToNow, differenceInHours } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { createClient } from '@/utils/supabase/client';
-import { updateDriverStatus } from '../dashboard/actions';
-import { updateVehicleStatus } from '../armada/actions';
+import { updateOrderStatusAction, updateOrderDriverAction } from './actions';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { WhatsAppIcon } from '@/components/icons';
-
-async function updateOrderStatus(orderId: string, status: OrderStatus) {
-    const supabase = createClient();
-    const { data, error } = await supabase
-        .from('orders')
-        .update({ status })
-        .eq('id', orderId);
-    return { data, error };
-}
-
-async function updateOrderDriver(orderId: string, driverName: string, driverId: string) {
-    const supabase = createClient();
-    const { data, error } = await supabase
-        .from('orders')
-        .update({ driver: driverName, driverId: driverId })
-        .eq('id', orderId);
-    return { data, error };
-}
 
 
 const getStatusInfo = (status: OrderStatus | null) => {
@@ -63,19 +44,11 @@ function OrderCard({ order, drivers, onDataChange }: { order: Order, drivers: Dr
     const { toast } = useToast();
     const [isClient, setIsClient] = useState(false);
     const [isPending, startTransition] = useTransition();
-    
+
     useEffect(() => {
         setIsClient(true);
     }, []);
-
-    const statusInfo = getStatusInfo(order.status);
-    const requiresDriver = order.service?.toLowerCase().includes("supir") || order.service?.toLowerCase().includes("all");
-
-    const orderDate = new Date(order.created_at);
-    const timeSinceCreation = isClient ? formatDistanceToNow(orderDate, { addSuffix: true, locale: id }) : '...';
-    const hoursSinceCreation = isClient ? differenceInHours(new Date(), orderDate) : 0;
-    const needsAttention = order.status === 'pending' && hoursSinceCreation > 1;
-
+    
     const whatsAppInvoiceUrl = useMemo(() => {
         if (typeof window === 'undefined' || !order.customerPhone) return '#';
 
@@ -94,24 +67,21 @@ function OrderCard({ order, drivers, onDataChange }: { order: Order, drivers: Dr
         return `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`;
     }, [order.id, order.customerName, order.customerPhone]);
 
+    const statusInfo = getStatusInfo(order.status);
+    const requiresDriver = order.service?.toLowerCase().includes("supir") || order.service?.toLowerCase().includes("all");
+
+    const orderDate = new Date(order.created_at);
+    const timeSinceCreation = isClient ? formatDistanceToNow(orderDate, { addSuffix: true, locale: id }) : '...';
+    const hoursSinceCreation = isClient ? differenceInHours(new Date(), orderDate) : 0;
+    const needsAttention = order.status === 'pending' && hoursSinceCreation > 1;
 
     const handleStatusChange = (newStatus: OrderStatus) => {
         startTransition(async () => {
-            const { error } = await updateOrderStatus(order.id, newStatus);
+            const { error } = await updateOrderStatusAction(order.id, newStatus, order.vehicleId, order.driverId);
             if (error) {
                 toast({ variant: 'destructive', title: 'Gagal Memperbarui Status', description: error.message });
                 return;
             }
-
-            if (newStatus === 'disetujui') {
-                await updateVehicleStatus(order.vehicleId, 'disewa');
-            } else if (newStatus === 'tidak disetujui' || newStatus === 'selesai') {
-                await updateVehicleStatus(order.vehicleId, 'tersedia');
-                if (order.driverId) {
-                    await updateDriverStatus(order.driverId, 'Tersedia');
-                }
-            }
-
             toast({ title: 'Status Diperbarui', description: `Status pesanan ${order.id} telah diubah.` });
             onDataChange();
         });
@@ -122,23 +92,12 @@ function OrderCard({ order, drivers, onDataChange }: { order: Order, drivers: Dr
         if (!driverId || !driverName) return;
 
         startTransition(async () => {
-            if (order.driverId) {
-                await updateDriverStatus(order.driverId, 'Tersedia');
-            }
-
-            const { error: orderError } = await updateOrderDriver(order.id, driverName, driverId);
-            if (orderError) {
-                toast({ variant: 'destructive', title: 'Gagal Menugaskan Driver', description: orderError.message });
-                return;
-            }
-
-            const { error: driverError } = await updateDriverStatus(driverId, 'Bertugas');
-            if (driverError) {
-                toast({ variant: 'destructive', title: 'Gagal Memperbarui Status Driver', description: driverError.message });
+            const { error } = await updateOrderDriverAction(order.id, driverName, driverId, order.driverId);
+             if (error) {
+                toast({ variant: 'destructive', title: 'Gagal Menugaskan Driver', description: error.message });
             } else {
                 toast({ title: "Driver Ditugaskan", description: `${driverName} telah ditugaskan ke pesanan ${order.id}.` });
             }
-
             onDataChange();
         });
     };
