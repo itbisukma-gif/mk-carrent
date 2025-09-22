@@ -18,7 +18,7 @@ import { cn } from '@/lib/utils';
 import type { Promotion, Vehicle } from '@/lib/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { createClient } from '@/utils/supabase/client';
-import { upsertPromotion, deletePromotion } from '../actions';
+import { upsertPromotion, deletePromotion } from './actions';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 
