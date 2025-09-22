@@ -1,7 +1,7 @@
 
 'use server';
 
-import { createClient } from '@/utils/supabase/client';
+import { createServiceRoleClient } from '@/utils/supabase/server';
 import { updateDriverStatus } from '../dashboard/actions';
 import { updateVehicleStatus } from '../armada/actions';
 import type { OrderStatus } from '@/lib/types';
@@ -11,7 +11,7 @@ const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || '/admin';
 
 
 export async function updateOrderStatusAction(orderId: string, status: OrderStatus, vehicleId: string, driverId?: string | null) {
-    const supabase = createClient();
+    const supabase = createServiceRoleClient();
     
     const { data, error } = await supabase
         .from('orders')
@@ -39,7 +39,7 @@ export async function updateOrderStatusAction(orderId: string, status: OrderStat
 }
 
 export async function updateOrderDriverAction(orderId: string, driverName: string, driverId: string, oldDriverId?: string | null) {
-    const supabase = createClient();
+    const supabase = createServiceRoleClient();
 
     if (oldDriverId) {
         await updateDriverStatus(oldDriverId, 'Tersedia');

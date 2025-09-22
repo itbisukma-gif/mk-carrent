@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/toaster';
-import { Inter, Space_Grotesk } from 'next/font/google'
+import { Space_Grotesk, Inter } from 'next/font/google'
 import { LanguageProvider } from './language-provider';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
