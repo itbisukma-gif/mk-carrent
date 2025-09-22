@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
-  const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || '/admin';
+  const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || 'admin';
   const sessionCookie = request.cookies.get("session");
   const hasSession = !!sessionCookie;
 
@@ -15,10 +15,10 @@ export async function middleware(request: NextRequest) {
   }
   
   // If user tries to access a path under the secret admin path
-  if (pathname.startsWith(adminPath)) {
+  if (pathname.startsWith(`/${adminPath}`)) {
       if (hasSession) {
           // Valid session, rewrite to internal /admin route but keep URL
-          const internalPath = pathname.replace(adminPath, '/admin');
+          const internalPath = pathname.replace(`/${adminPath}`, '/admin');
           return NextResponse.rewrite(new URL(internalPath, request.url));
       }
        // No session, redirect to the main login page

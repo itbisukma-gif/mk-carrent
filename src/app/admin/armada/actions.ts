@@ -4,7 +4,7 @@ import { createServiceRoleClient, uploadImageFromDataUri } from '@/utils/supabas
 import type { Vehicle } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
 
-const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || '/admin';
+const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || 'admin';
 
 // Define a specific type for form data to handle potential string values from the form
 export type VehicleFormData = Omit<Vehicle, 'price' | 'year' | 'passengers' | 'stock' | 'discountPercentage' | 'rating'> & {
@@ -54,7 +54,7 @@ export async function upsertVehicle(vehicleData: VehicleFormData) {
         return { data: null, error };
     }
 
-    revalidatePath(`${adminPath}/armada`);
+    revalidatePath(`/${adminPath}/armada`);
     revalidatePath('/');
     
     return { data, error: null };
@@ -90,7 +90,7 @@ export async function deleteVehicle(vehicleId: string) {
         }
     }
 
-    revalidatePath(`${adminPath}/armada`);
+    revalidatePath(`/${adminPath}/armada`);
     revalidatePath('/');
 
     return { error: null };
@@ -109,8 +109,8 @@ export async function updateVehicleStatus(vehicleId: string, status: 'tersedia' 
         return { error };
     }
 
-    revalidatePath(`${adminPath}/armada`);
-    revalidatePath(`${adminPath}/orders`);
+    revalidatePath(`/${adminPath}/armada`);
+    revalidatePath(`/${adminPath}/orders`);
 
     return { error: null };
 }

@@ -40,7 +40,14 @@ export default function RootLayout({
         inter.variable, 
         spaceGrotesk.variable
       )}>
-        {children}
+        <LanguageProvider>
+          <WebHeader />
+          <main className="flex-1">
+              {children}
+          </main>
+          <WhatsappFab />
+          <WebFooter />
+        </LanguageProvider>
         <Toaster />
       </body>
     </html>

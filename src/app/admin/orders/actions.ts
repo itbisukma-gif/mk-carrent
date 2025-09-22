@@ -6,7 +6,7 @@ import { updateVehicleStatus } from '../armada/actions';
 import type { OrderStatus } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
 
-const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || '/admin';
+const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || 'admin';
 
 
 export async function updateOrderStatusAction(orderId: string, status: OrderStatus, vehicleId: string, driverId?: string | null) {
@@ -32,9 +32,9 @@ export async function updateOrderStatusAction(orderId: string, status: OrderStat
         }
     }
     
-    revalidatePath(`${adminPath}/orders`);
-    revalidatePath(`${adminPath}/armada`);
-    revalidatePath(`${adminPath}/dashboard`);
+    revalidatePath(`/${adminPath}/orders`);
+    revalidatePath(`/${adminPath}/armada`);
+    revalidatePath(`/${adminPath}/dashboard`);
 
     return { data, error };
 }
@@ -63,8 +63,8 @@ export async function updateOrderDriverAction(orderId: string, driverName: strin
         // For now, we'll let it pass but the admin might see an inconsistency.
     }
     
-    revalidatePath(`${adminPath}/orders`);
-    revalidatePath(`${adminPath}/dashboard`);
+    revalidatePath(`/${adminPath}/orders`);
+    revalidatePath(`/${adminPath}/dashboard`);
 
     return { data, error: null };
 }
