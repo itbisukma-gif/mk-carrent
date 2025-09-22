@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect, useTransition } from 'react';
@@ -23,6 +24,7 @@ import { createClient } from '@/utils/supabase/client';
 import { updateDriverStatus } from '../actions';
 import { updateVehicleStatus } from '../armada/actions';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { WhatsAppIcon } from '@/components/icons';
 
 async function updateOrderStatus(orderId: string, status: OrderStatus) {
     const supabase = createClient();
@@ -127,7 +129,31 @@ function OrderCard({ order, drivers, onDataChange }: { order: Order, drivers: Dr
         handleStatusChange('selesai');
     };
 
-    const invoiceUrl = `/invoice/${order.id}`;
+    const invoiceUrl = useMemo(() => {
+        // Since we don't have start/end dates in the order object,
+        // we can't reliably add them here for now.
+        // The link will still work, just without the period displayed on the invoice page.
+        return `/invoice/${order.id}`;
+    }, [order.id]);
+
+    const whatsAppInvoiceUrl = useMemo(() => {
+        if (!order.customerPhone) return '#';
+
+        const domain = window.location.origin;
+        const shareableInvoiceUrl = `${domain}/invoice/${order.id}/share`;
+        
+        const message = `Halo ${order.customerName}, terima kasih telah memesan di MudaKarya CarRent. Berikut adalah rincian invoice untuk pesanan Anda: ${shareableInvoiceUrl}`;
+        
+        // Basic phone number cleaning and formatting for Indonesia
+        let formattedPhone = order.customerPhone.replace(/\D/g, '');
+        if (formattedPhone.startsWith('0')) {
+            formattedPhone = '62' + formattedPhone.substring(1);
+        } else if (!formattedPhone.startsWith('62')) {
+            formattedPhone = '62' + formattedPhone;
+        }
+
+        return `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`;
+    }, [order.id, order.customerName, order.customerPhone]);
 
     return (
          <Card className="flex flex-col">
@@ -234,6 +260,11 @@ function OrderCard({ order, drivers, onDataChange }: { order: Order, drivers: Dr
                                 <Link href={invoiceUrl} target="_blank">
                                     <Share className="h-3 w-3" />
                                 </Link>
+                            </Button>
+                             <Button size="sm" variant="outline" asChild className="bg-green-500 text-white hover:bg-green-600 hover:text-white border-green-600">
+                                <a href={whatsAppInvoiceUrl} target="_blank" rel="noopener noreferrer">
+                                    <WhatsAppIcon className="h-4 w-4" />
+                                </a>
                             </Button>
                             <AlertDialog>
                                 <AlertDialogTrigger asChild>

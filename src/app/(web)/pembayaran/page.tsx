@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Suspense, useMemo, useState, useEffect } from 'react';
@@ -248,6 +249,7 @@ function PembayaranComponent() {
                             onChange={(e) => setPhone(e.target.value)}
                             required
                         />
+                        <p className="text-xs text-muted-foreground pt-1">{dictionary.payment.personalData.phoneHint}</p>
                     </div>
                 </CardContent>
 

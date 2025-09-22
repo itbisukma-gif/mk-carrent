@@ -119,6 +119,7 @@ const id = {
             fullNamePlaceholder: "Masukkan nama lengkap Anda",
             phone: "Nomor Telepon (WhatsApp)",
             phonePlaceholder: "cth. 081234567890",
+            phoneHint: "Pastikan nomor ini valid untuk pengiriman invoice dan konfirmasi."
         },
         orderSummary: {
             title: "Ringkasan Pesanan",
@@ -391,6 +392,7 @@ const en: typeof id = {
             fullNamePlaceholder: "Enter your full name",
             phone: "Phone Number (WhatsApp)",
             phonePlaceholder: "e.g. 081234567890",
+            phoneHint: "Ensure this number is valid for invoice and confirmation delivery."
         },
         orderSummary: {
             title: "Order Summary",
@@ -552,3 +554,4 @@ export type Language = keyof typeof dictionaries;
     
 
     
+
