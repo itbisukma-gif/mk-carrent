@@ -1,4 +1,4 @@
-// Force cache invalidation
+// Force cache invalidation again to fix build errors.
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     images: {
