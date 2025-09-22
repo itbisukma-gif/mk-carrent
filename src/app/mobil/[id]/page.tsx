@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect, Suspense } from 'react';
@@ -11,7 +12,7 @@ import { Separator } from '@/components/ui/separator';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Car, Cog, Fuel, Users, Star, MessageSquareQuote } from 'lucide-react';
+import { ArrowLeft, Car, Cog, Fuel, Users, Star, MessageSquareQuote, Calendar as CalendarIcon } from 'lucide-react';
 import { StarRating } from '@/components/star-rating';
 import { OrderForm } from '@/components/order-form';
 import { VehicleCard } from '@/components/vehicle-card';
