@@ -10,17 +10,23 @@ export async function middleware(request: NextRequest) {
   const sessionCookie = request.cookies.get("session");
   const hasSession = !!sessionCookie;
 
-  // 2. Check if the current path is the secret admin path or a sub-path
+  // 2. Redirect any access to the old /dashboard path to the new secret admin path
+  if (pathname.startsWith('/dashboard')) {
+    const newPath = pathname.replace('/dashboard', adminPath);
+    return NextResponse.redirect(new URL(newPath, request.url));
+  }
+
+  // 3. Check if the current path is the secret admin path
   const isProtectedRoute = pathname.startsWith(adminPath);
   
-  // 3. Handle logout: delete cookie and redirect to the secret admin path (which will show login)
+  // 4. Handle logout: delete cookie and redirect to the secret admin path (which will show login)
   if (pathname === "/logout") {
     const response = NextResponse.redirect(new URL(adminPath, request.url));
     response.cookies.set("session", "", { expires: new Date(0), path: '/' });
     return response;
   }
 
-  // 4. Handle access to protected routes
+  // 5. Handle access to protected routes
   if (isProtectedRoute) {
     if (hasSession) {
       // User is logged in and accessing a protected route, allow it.
@@ -33,17 +39,9 @@ export async function middleware(request: NextRequest) {
   }
 
   // If a logged-in user tries to access /login directly, redirect them to the dashboard.
-  // This case is unlikely given the rewrite logic but serves as a safeguard.
   if (pathname === '/login' && hasSession) {
      return NextResponse.redirect(new URL(adminPath, request.url));
   }
-
-  // 5. Redirect any access to the old /dashboard path to the new secret admin path
-  if (pathname.startsWith('/dashboard') && adminPath !== '/dashboard') {
-    const newPath = pathname.replace('/dashboard', adminPath);
-    return NextResponse.redirect(new URL(newPath, request.url));
-  }
-
 
   // 6. If none of the above, allow the request to proceed
   return NextResponse.next();
