@@ -33,7 +33,7 @@ export async function updateOrderStatusAction(orderId: string, status: OrderStat
         }
     }
     
-    revalidatePath(`${adminPath}/orders`);
+    revalidatePath(`/admin/orders`);
 
     return { data, error };
 }
@@ -62,8 +62,8 @@ export async function updateOrderDriverAction(orderId: string, driverName: strin
         // For now, we'll let it pass but the admin might see an inconsistency.
     }
     
-    revalidatePath(`${adminPath}/orders`);
-    revalidatePath(`${adminPath}/dashboard`);
+    revalidatePath(`/admin/orders`);
+    revalidatePath(`/admin/dashboard`);
 
     return { data, error: null };
 }

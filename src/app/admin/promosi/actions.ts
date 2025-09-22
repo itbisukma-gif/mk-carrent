@@ -32,7 +32,7 @@ export async function upsertPromotion(promoData: Omit<Promotion, 'created_at'>, 
         if (vehicleToUpdate) {
             const updatedVehicle: VehicleFormData = { 
                 ...vehicleToUpdate, 
-                price: vehicleToUpdate.price || 0,
+                price: vehicleToUpdate.price ?? 0,
                 year: vehicleToUpdate.year,
                 passengers: vehicleToUpdate.passengers,
                 stock: vehicleToUpdate.stock,
@@ -43,7 +43,7 @@ export async function upsertPromotion(promoData: Omit<Promotion, 'created_at'>, 
         }
     }
 
-    revalidatePath(`${adminPath}/promosi`);
+    revalidatePath(`/admin/promosi`);
     revalidatePath('/'); // Revalidate home page where promotions are shown
     return { data, error: null };
 }
@@ -76,7 +76,7 @@ export async function deletePromotion(promo: Promotion, vehicles: Vehicle[]) {
         if(vehicleToUpdate) {
             const updatedVehicle: VehicleFormData = { 
                 ...vehicleToUpdate, 
-                price: vehicleToUpdate.price || 0,
+                price: vehicleToUpdate.price ?? 0,
                 year: vehicleToUpdate.year,
                 passengers: vehicleToUpdate.passengers,
                 stock: vehicleToUpdate.stock,
@@ -87,7 +87,7 @@ export async function deletePromotion(promo: Promotion, vehicles: Vehicle[]) {
         }
     }
 
-    revalidatePath(`${adminPath}/promosi`);
+    revalidatePath(`/admin/promosi`);
     revalidatePath('/'); // Revalidate home page
     return { error: null };
 }

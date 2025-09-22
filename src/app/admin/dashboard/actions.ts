@@ -20,7 +20,7 @@ export async function upsertDriver(driverData: Omit<Driver, 'created_at'>) {
         return { data: null, error };
     }
 
-    revalidatePath(`${adminPath}/dashboard`);
+    revalidatePath(`/admin/dashboard`);
     
     return { data, error: null };
 }
@@ -39,7 +39,7 @@ export async function deleteDriver(driverId: string) {
         return { error };
     }
 
-    revalidatePath(`${adminPath}/dashboard`);
+    revalidatePath(`/admin/dashboard`);
 
     return { error: null };
 }
@@ -57,8 +57,8 @@ export async function updateDriverStatus(driverId: string, status: 'Tersedia' | 
         return { error };
     }
     
-    revalidatePath(`${adminPath}/dashboard`);
-    revalidatePath(`${adminPath}/orders`);
+    revalidatePath(`/admin/dashboard`);
+    revalidatePath(`/admin/orders`);
 
     return { error: null };
 }

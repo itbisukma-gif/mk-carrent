@@ -53,7 +53,7 @@ export async function upsertVehicle(vehicleData: VehicleFormData) {
         return { data: null, error };
     }
 
-    revalidatePath(`${adminPath}/armada`);
+    revalidatePath(`/admin/armada`);
     revalidatePath('/');
     
     return { data, error: null };
@@ -84,7 +84,7 @@ export async function deleteVehicle(vehicleId: string) {
         await supabase.storage.from(bucketName).remove([filePath]);
     }
 
-    revalidatePath(`${adminPath}/armada`);
+    revalidatePath(`/admin/armada`);
     revalidatePath('/');
 
     return { error: null };
@@ -103,8 +103,8 @@ export async function updateVehicleStatus(vehicleId: string, status: 'tersedia' 
         return { error };
     }
 
-    revalidatePath(`${adminPath}/armada`);
-    revalidatePath(`${adminPath}/orders`);
+    revalidatePath(`/admin/armada`);
+    revalidatePath(`/admin/orders`);
 
     return { error: null };
 }

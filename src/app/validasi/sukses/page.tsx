@@ -1,10 +1,12 @@
 
+'use client'
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle2, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
 export default function ValidasiSuksesPage() {
+    const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || '/admin';
     return (
         <Card className="w-full max-w-md text-center shadow-lg">
             <CardHeader>
@@ -23,7 +25,7 @@ export default function ValidasiSuksesPage() {
             </CardContent>
             <CardFooter>
                 <Button asChild className="w-full">
-                    <Link href="/dashboard/orders">
+                    <Link href={`${adminPath}/orders`}>
                         <ArrowLeft className="mr-2 h-4 w-4" />
                         Kembali ke List Order
                     </Link>
@@ -32,4 +34,3 @@ export default function ValidasiSuksesPage() {
         </Card>
     );
 }
-
