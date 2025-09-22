@@ -8,12 +8,13 @@ import { revalidatePath } from 'next/cache';
 const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || '/admin';
 
 // Define a specific type for form data to handle potential string values from the form
-export type VehicleFormData = Omit<Vehicle, 'price' | 'year' | 'passengers' | 'stock' | 'discountPercentage'> & {
+export type VehicleFormData = Omit<Vehicle, 'price' | 'year' | 'passengers' | 'stock' | 'discountPercentage' | 'rating'> & {
     price: string | number;
-    year?: string | number | null;
-    passengers?: string | number | null;
-    stock?: string | number | null;
-    discountPercentage?: string | number | null;
+    year: string | number | null;
+    passengers: string | number | null;
+    stock: string | number | null;
+    discountPercentage: string | number | null;
+    rating: number | null;
 };
 
 
@@ -26,7 +27,7 @@ export async function upsertVehicle(vehicleData: VehicleFormData) {
         price: Number(vehicleData.price) || 0,
         year: vehicleData.year ? Number(vehicleData.year) : null,
         passengers: vehicleData.passengers ? Number(vehicleData.passengers) : null,
-        stock: vehicleData.unitType === 'khusus' ? Number(vehicleData.stock) : null,
+        stock: vehicleData.unitType === 'khusus' ? (vehicleData.stock ? Number(vehicleData.stock) : null) : null,
         discountPercentage: vehicleData.discountPercentage ? Number(vehicleData.discountPercentage) : null,
         status: vehicleData.status || 'tersedia',
         rating: vehicleData.rating || 5, // Default rating

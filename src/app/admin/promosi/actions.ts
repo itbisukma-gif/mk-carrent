@@ -30,7 +30,15 @@ export async function upsertPromotion(promoData: Omit<Promotion, 'created_at'>, 
     if (promoData.vehicleId && promoData.vehicleId !== 'none') {
         const vehicleToUpdate = vehicles.find(v => v.id === promoData.vehicleId);
         if (vehicleToUpdate) {
-            const updatedVehicle: VehicleFormData = { ...vehicleToUpdate, price: vehicleToUpdate.price || 0, discountPercentage: discount || null };
+            const updatedVehicle: VehicleFormData = { 
+                ...vehicleToUpdate, 
+                price: vehicleToUpdate.price || 0,
+                year: vehicleToUpdate.year,
+                passengers: vehicleToUpdate.passengers,
+                stock: vehicleToUpdate.stock,
+                discountPercentage: discount || null,
+                rating: vehicleToUpdate.rating
+             };
             await upsertVehicle(updatedVehicle);
         }
     }
@@ -66,7 +74,15 @@ export async function deletePromotion(promo: Promotion, vehicles: Vehicle[]) {
     if (promo.vehicleId) {
         const vehicleToUpdate = vehicles.find(v => v.id === promo.vehicleId);
         if(vehicleToUpdate) {
-            const updatedVehicle: VehicleFormData = { ...vehicleToUpdate, price: vehicleToUpdate.price || 0, discountPercentage: null };
+            const updatedVehicle: VehicleFormData = { 
+                ...vehicleToUpdate, 
+                price: vehicleToUpdate.price || 0,
+                year: vehicleToUpdate.year,
+                passengers: vehicleToUpdate.passengers,
+                stock: vehicleToUpdate.stock,
+                discountPercentage: null,
+                rating: vehicleToUpdate.rating
+            };
             await upsertVehicle(updatedVehicle);
         }
     }

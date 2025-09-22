@@ -161,7 +161,6 @@ function VehicleForm({ vehicle, onSave, onCancel }: { vehicle?: Vehicle | null; 
     const { toast } = useToast();
     const [isPending, startTransition] = useTransition();
     
-    // Use the specific form data type for useForm
     const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<VehicleFormData>({
         defaultValues: vehicle 
             ? { 
@@ -178,13 +177,18 @@ function VehicleForm({ vehicle, onSave, onCancel }: { vehicle?: Vehicle | null; 
                 name: '',
                 brand: '',
                 type: '',
+                passengers: '',
                 transmission: 'Manual',
                 fuel: 'Bensin',
+                year: '',
+                rating: 5,
+                dataAiHint: '',
                 photo: '',
                 unitType: 'biasa', 
-                stock: 0, 
+                stock: '', 
                 status: 'tersedia',
-                price: ''
+                price: '',
+                discountPercentage: ''
             }
     });
     
