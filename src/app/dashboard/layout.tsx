@@ -1,15 +1,25 @@
 
-
 import { Header } from "@/components/layout/header";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { ThemeProvider } from "next-themes";
+import { redirect } from 'next/navigation';
 
-export default function DashboardLayout({
+const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || '/dashboard';
+
+export default function DashboardRedirectLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // This layout now only serves to redirect from the old /dashboard path
+  // to the new secret admin path if they are different.
+  if (adminPath !== '/dashboard') {
+    redirect(adminPath);
+  }
+
+  // If the admin path IS /dashboard, then we render the actual layout.
+  // This avoids circular redirects.
   return (
     <ThemeProvider
       attribute="class"
