@@ -18,22 +18,15 @@ export async function middleware(request: NextRequest) {
     return response;
   }
   
-  const isAccessingSecretPath = pathname.startsWith(adminPath);
-  const isAccessingInternalAdminPath = pathname.startsWith('/admin');
-
-  // If a logged-in user tries to access the secret path (which would show login if they were logged out), redirect them to the first page of the admin area.
-  if (isAccessingSecretPath && hasSession && pathname === adminPath) {
+  // If a logged-in user tries to access the secret path's root, redirect them to the admin dashboard.
+  if (pathname === adminPath && hasSession) {
      return NextResponse.redirect(new URL(`${adminPath}/dashboard`, request.url));
   }
-
-  // If a user tries to access the internal /admin path directly, block it.
-  if (isAccessingInternalAdminPath && !isAccessingSecretPath) {
-      return new NextResponse('Not Found', { status: 404 });
-  }
-
+  
   // If the current path starts with the secret admin path
-  if (isAccessingSecretPath) {
-    // Rewrite the URL to map it to the actual /admin folder structure.
+  if (pathname.startsWith(adminPath)) {
+    // Rewrite the URL to map it to the actual /app/admin folder structure.
+    // e.g., /mk-portal/orders -> /admin/orders
     const newPath = pathname.replace(adminPath, '/admin');
     const url = new URL(newPath, request.url);
 
@@ -41,9 +34,15 @@ export async function middleware(request: NextRequest) {
       // User is logged in, rewrite to the actual admin page.
       return NextResponse.rewrite(url);
     } else {
-      // User is not logged in. Show the login page, but keep the secret URL in the browser.
+      // User is not logged in. Rewrite to show the login page, 
+      // but keep the secret URL in the browser address bar.
       return NextResponse.rewrite(new URL('/login', request.url));
     }
+  }
+
+  // Explicitly block direct access to /admin/* if it's not the configured secret path
+  if (pathname.startsWith('/admin') && adminPath !== '/admin') {
+      return new NextResponse(null, { status: 404 });
   }
   
   // If a non-admin path is requested, just proceed.

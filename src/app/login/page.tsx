@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Logo } from '@/components/icons';
 import { useToast } from '@/hooks/use-toast';
+import { Loader2 } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -37,7 +38,7 @@ export default function LoginPage() {
 
       // Redirect to the dashboard. Using window.location.href to force a full page reload
       // which ensures the middleware picks up the new cookie.
-      window.location.href = `${adminPath}/dashboard`;
+      window.location.href = adminPath;
 
     } else {
       toast({
@@ -89,6 +90,7 @@ export default function LoginPage() {
             </CardContent>
             <CardFooter>
               <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                 {isLoading ? 'Memproses...' : 'Login'}
               </Button>
             </CardFooter>

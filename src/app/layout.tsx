@@ -3,10 +3,12 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/toaster';
-import { Inter } from 'next/font/google'
+import { Inter, Space_Grotesk } from 'next/font/google'
 import { LanguageProvider } from './language-provider';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
+const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-heading'})
+
 
 export const metadata: Metadata = {
   title: 'MudaKarya CarRent - Solusi Rental Mobil Terbaik',
@@ -31,7 +33,11 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head />
-      <body className={cn('min-h-screen bg-background font-sans antialiased', inter.variable)}>
+      <body className={cn(
+        'min-h-screen bg-background font-sans antialiased', 
+        inter.variable, 
+        spaceGrotesk.variable
+      )}>
         <LanguageProvider>
           {children}
         </LanguageProvider>
