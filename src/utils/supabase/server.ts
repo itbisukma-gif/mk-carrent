@@ -69,12 +69,12 @@ export const createServiceRoleClient = () => {
 
 
 export const uploadImageFromDataUri = async (dataUri: string, folder: string, fileNamePrefix: string) => {
-    // Use the service role client for all storage operations from the server
     const supabase = createServiceRoleClient();
-    const matches = dataUri.match(/^data:(image\/(?:png|jpeg|jpg|webp));base64,(.*)$/);
     
-    if (!matches || matches.length !== 4) {
-        throw new Error('Invalid Data URI format');
+    const matches = dataUri.match(/^data:(image\/(?:png|jpeg|jpg|webp));base64,(.*)$/);
+
+    if (!matches || matches.length !== 3) {
+        throw new Error('Invalid Data URI format. Only PNG, JPG, and WEBP are supported.');
     }
 
     const mimeType = matches[1];
@@ -84,7 +84,7 @@ export const uploadImageFromDataUri = async (dataUri: string, folder: string, fi
     
     // Sanitize the file name prefix by removing problematic characters, specifically the dashes from UUIDs.
     const sanitizedPrefix = fileNamePrefix.replace(/-/g, "");
-    const fileName = `${sanitizedPrefix}-${Date.now()}.${fileExtension}`;
+    const fileName = `${sanitizedPrefix}${Date.now()}.${fileExtension}`;
     const filePath = `${folder}/${fileName}`;
 
     const { error: uploadError } = await supabase.storage

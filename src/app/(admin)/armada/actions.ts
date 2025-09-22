@@ -1,8 +1,9 @@
 'use server';
 
-import { createServiceRoleClient, uploadImageFromDataUri } from '@/utils/supabase/server';
+import { createServiceRoleClient } from '@/utils/supabase/server';
 import type { Vehicle } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
+import { uploadImageFromDataUri } from '@/utils/supabase/server';
 
 const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || '/admin';
 
