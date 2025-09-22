@@ -13,10 +13,12 @@ import { Buffer } from 'buffer';
  */
 export async function uploadFileAction(dataUri: string, folder: string, fileNamePrefix: string): Promise<string> {
     const supabase = createServiceRoleClient();
-    const matches = dataUri.match(/^data:(image\/(?:png|jpeg|jpg));base64,(.*)$/);
+    
+    // Improved regex to handle various image types
+    const matches = dataUri.match(/^data:(image\/(?:png|jpeg|jpg|webp));base64,(.*)$/);
 
     if (!matches || matches.length !== 3) {
-        throw new Error('Invalid Data URI format');
+        throw new Error('Invalid Data URI format. Only PNG, JPG, and WEBP are supported.');
     }
 
     const mimeType = matches[1];
@@ -31,12 +33,12 @@ export async function uploadFileAction(dataUri: string, folder: string, fileName
         .from('mudakarya-bucket')
         .upload(filePath, buffer, {
             contentType: mimeType,
-            upsert: true,
+            upsert: false, // Use false to prevent accidental overwrites
         });
 
     if (uploadError) {
-        console.error(`Supabase upload error for ${filePath}:`, uploadError);
-        throw new Error(uploadError.message);
+        console.error(`Supabase server upload error for ${filePath}:`, uploadError);
+        throw new Error(`Gagal mengunggah file: ${uploadError.message}`);
     }
 
     const { data: publicUrlData } = supabase.storage
@@ -44,7 +46,7 @@ export async function uploadFileAction(dataUri: string, folder: string, fileName
         .getPublicUrl(filePath);
 
     if (!publicUrlData.publicUrl) {
-        throw new Error('Failed to get public URL for the uploaded image.');
+        throw new Error('Gagal mendapatkan URL publik untuk gambar yang diunggah.');
     }
 
     return publicUrlData.publicUrl;
