@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, ChangeEvent, useEffect } from 'react';
@@ -365,7 +364,7 @@ export default function KeuanganPage() {
                                             </div>
                                             <DialogFooter>
                                                 <Button variant="outline" onClick={() => setQrisUploadOpen(false)}>Batal</Button>
-                                                <Button onClick={handleQrisSave} disabled={!previewUrl}>Upload & Simpan</Button>
+                                                <Button onClick={handleQrisSave} disabled={!previewUrl}>Upload &amp; Simpan</Button>
                                             </DialogFooter>
                                         </DialogContent>
                                      </Dialog>

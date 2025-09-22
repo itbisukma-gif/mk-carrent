@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, ChangeEvent, useRef, useEffect, useTransition } from 'react';
@@ -119,7 +118,7 @@ function PromotionForm({ promotion, vehicles, onSave, onCancel }: { promotion?: 
                         </div>
                     </div>
                     <div className="space-y-2">
-                        <Label>Gambar & Pratinjau</Label>
+                        <Label>Gambar &amp; Pratinjau</Label>
                         <div className="mt-2 flex flex-col items-center gap-4">
                             <div className="relative aspect-video w-full rounded-md overflow-hidden border bg-muted">
                                 {previewUrl ? (
