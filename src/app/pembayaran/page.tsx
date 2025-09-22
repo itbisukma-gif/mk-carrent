@@ -2,12 +2,12 @@
 'use client';
 
 import { Suspense } from "react";
-import { ConfirmationPageContent } from "./content";
+import { PaymentPageContent } from "./content";
 
-export default function KonfirmasiPage() {
+export default function PembayaranPage() {
     return (
         <Suspense fallback={<div>Loading...</div>}>
-            <ConfirmationPageContent />
+            <PaymentPageContent />
         </Suspense>
     )
 }

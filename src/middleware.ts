@@ -9,7 +9,7 @@ export async function middleware(request: NextRequest) {
   const hasSession = !!sessionCookie;
 
   if (pathname === "/logout") {
-    const response = NextResponse.redirect(new URL(adminPath, request.url));
+    const response = NextResponse.redirect(new URL('/login', request.url));
     response.cookies.set("session", "", { expires: new Date(0), path: '/' });
     return response;
   }
@@ -17,9 +17,16 @@ export async function middleware(request: NextRequest) {
   if (pathname.startsWith(adminPath)) {
     if (!hasSession) {
       const loginUrl = new URL('/login', request.url);
+      loginUrl.searchParams.set('redirect_to', pathname);
       return NextResponse.redirect(loginUrl);
     }
   }
+
+  // Jika sudah login dan mencoba mengakses halaman login, redirect ke dashboard
+  if (pathname === '/login' && hasSession) {
+    return NextResponse.redirect(new URL(adminPath, request.url));
+  }
+
 
   return NextResponse.next();
 }

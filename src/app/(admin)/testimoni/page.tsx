@@ -22,7 +22,7 @@ import { LanguageProvider } from '@/app/language-provider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { createClient } from '@/utils/supabase/client';
-import { upsertTestimonial, deleteTestimonial, addGalleryItem, deleteGalleryItem, upsertFeature, deleteFeature } from './actions';
+import { upsertTestimonial, deleteTestimonial, addGalleryItem, deleteGalleryItem, upsertFeature, deleteFeature } from '@/app/admin/testimoni/actions';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 export const dynamic = 'force-dynamic';
@@ -45,7 +45,7 @@ function TestimonialForm({ testimonial, vehicles, onSave, onCancel }: { testimon
                 return;
             }
 
-            const dataToSave: Omit<Testimonial, 'created_at'> = {
+            const dataToSave: Omit<Testimonial, 'created_at' | 'id'> & { id?: string } = {
                 id: testimonial?.id || crypto.randomUUID(),
                 customerName,
                 vehicleName: vehicleName || null,

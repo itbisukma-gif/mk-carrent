@@ -1,30 +1,20 @@
-import { NextResponse, type NextRequest } from "next/server";
 
-export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-
-  const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || '/admin';
-  const sessionCookie = request.cookies.get("session");
-  const hasSession = !!sessionCookie;
-
-  if (pathname === "/logout") {
-    const response = NextResponse.redirect(new URL(adminPath, request.url));
-    response.cookies.set("session", "", { expires: new Date(0), path: '/' });
-    return response;
-  }
-  
-  if (pathname.startsWith(adminPath)) {
-    if (!hasSession) {
-      const loginUrl = new URL('/login', request.url);
-      return NextResponse.redirect(loginUrl);
+declare module 'html2pdf.js' {
+    interface Html2PdfOptions {
+      margin?: number | [number, number] | [number, number, number, number];
+      filename?: string;
+      image?: { type: 'jpeg' | 'png' | 'webp', quality: number };
+      html2canvas?: { scale?: number, useCORS?: boolean };
+      jsPDF?: { unit?: 'pt' | 'mm' | 'cm' | 'in', format?: string | [number, number], orientation?: 'portrait' | 'landscape' };
     }
-  }
-
-  return NextResponse.next();
+  
+    interface Html2Pdf {
+      from(element: HTMLElement): this;
+      set(options: Html2PdfOptions): this;
+      save(): Promise<void>;
+      outputPdf(type?: string): Promise<any>;
+    }
+  
+    const html2pdf: () => Html2Pdf;
+    export = html2pdf;
 }
-
-export const config = {
-  matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|logo-icon.png|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
-  ],
-};
