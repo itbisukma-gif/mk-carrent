@@ -5,7 +5,7 @@ import { createServiceRoleClient } from '@/utils/supabase/server';
 import type { Driver } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
 
-const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || '/admin';
+const adminPath = '/admin';
 
 export async function upsertDriver(driverData: Omit<Driver, 'created_at'>) {
     const supabase = createServiceRoleClient();

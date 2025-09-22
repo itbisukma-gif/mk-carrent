@@ -5,7 +5,7 @@ import { createServiceRoleClient } from '@/utils/supabase/server';
 import type { Vehicle } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
 
-const adminPath = process.env.NEXT_PUBLIC_ADMIN_PATH || '/admin';
+const adminPath = '/admin';
 
 export async function upsertVehicle(vehicleData: Vehicle) {
     const supabase = createServiceRoleClient();

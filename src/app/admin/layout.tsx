@@ -3,12 +3,21 @@ import { Header } from "@/components/layout/header";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { ThemeProvider } from "next-themes";
+import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
 
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const cookieStore = cookies();
+  const session = cookieStore.get('session');
+
+  if (!session) {
+    redirect('/login');
+  }
+
   return (
     <ThemeProvider
       attribute="class"
